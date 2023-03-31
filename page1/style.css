@@ -40,7 +40,8 @@ h1 {
 .table1 td,
 .table1 th {
     border: none;
-    padding: 60px;
+    padding: 50px;
+    margin-left: 10px;
 }
 
 .table2 td,
@@ -52,11 +53,11 @@ h1 {
 .table3 td,
 .table3 th {
     border: none;
-    padding: 60px;
+    padding: 50px;
 }
 
 .table4 td,
 .table4 th {
     border: none;
-    padding: 60px;
+    padding: 50px;
 }
