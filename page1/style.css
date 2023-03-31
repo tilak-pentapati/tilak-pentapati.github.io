@@ -40,23 +40,32 @@ h1 {
 .table1 td,
 .table1 th {
     border: none;
-    padding: 50px;
+    padding: 10px;
 }
-
+.table1 td{
+   margin-left: 10px;
+}
 .table2 td,
 .table2 th {
     border: none;
-    padding: 50px;
+    padding: 10px;
 }
-
+.table2 td{
+    margin-left: 10px;
+ }
 .table3 td,
 .table3 th {
     border: none;
-    padding: 50px;
+    padding: 10px;
 }
-
+.table3 td{
+    margin-left: 10px;
+ }
 .table4 td,
 .table4 th {
     border: none;
-    padding: 50px;
+    padding: 10px;
 }
+.table4 td{
+    margin-left: 10px;
+ }
