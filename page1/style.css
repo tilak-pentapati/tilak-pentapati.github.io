@@ -43,7 +43,7 @@ h1 {
     padding: 10px;
 }
 .table1 td{
-   margin-left: 10px;
+   margin-left: 20px;
 }
 .table2 td,
 .table2 th {
@@ -59,7 +59,7 @@ h1 {
     padding: 10px;
 }
 .table3 td{
-   margin-left: 10px;
+   margin-left: 20px;
 }
 .table4 td,
 .table4 th {
@@ -67,5 +67,5 @@ h1 {
     padding: 10px;
 }
 .table4 td{
-   margin-left: 10px;
+   margin-left: 20px;
 }
