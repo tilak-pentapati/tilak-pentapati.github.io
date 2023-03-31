@@ -37,9 +37,26 @@ h1 {
     margin-bottom: 0;
 }
 
-.table td,
-.table th {
+.table1 td,
+.table1 th {
     border: none;
-    padding: 4px;
+    padding: 20px;
 }
 
+.table2 td,
+.table2 th {
+    border: none;
+    padding: 20px;
+}
+
+.table3 td,
+.table3 th {
+    border: none;
+    padding: 20px;
+}
+
+.table4 td,
+.table4 th {
+    border: none;
+    padding: 20px;
+}
