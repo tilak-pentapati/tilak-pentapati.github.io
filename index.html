@@ -3,62 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Form to JSON</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-        }
-        form {
-            display: flex;
-            flex-direction: column;
-            width: 300px;
-            margin: 0 auto;
-        }
-        label {
-            margin-bottom: 10px;
-        }
-        input[type="submit"] {
-            margin-top: 10px;
-        }
-    </style>
-</head>
-<body>
-    <form id="form-data">
-        <label>
-            Name:
-            <input type="text" name="name" required>
-        </label>
-        <label>
-            Email:
-            <input type="email" name="email" required>
-        </label>
-        <label>
-            Phone Number:
-            <input type="tel" name="phone" required>
-        </label>
-        <input type="submit" value="Save to JSON">
-    </form>
-    <script>
-        document.getElementById('form-data').addEventListener('submit', function(event) {
-            event.preventDefault();
-
-            const formData = new FormData(event.target);
-            const jsonData = {};
-
-            for (const [key, value] of formData.entries()) {
-                jsonData[key] = value;
-            }
-
-            const jsonFile = new Blob([JSON.stringify(jsonData, null, 2)], { type: 'application/json' });
-            const jsonURL = URL.createObjectURL(jsonFile);
-
-            const link = document.createElement('a');
-            link.href = jsonURL;
-            link.download = 'form-data.json';
-            link.click();
-
-            URL.revokeObjectURL(jsonURL);
-        });
-    </script>
+    
 </body>
 </html>
