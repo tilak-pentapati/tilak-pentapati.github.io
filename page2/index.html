@@ -1,25 +1,31 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <title>My Projects</title>
-    <link rel="stylesheet" href="style.css">
-    <script src="https://mozilla.github.io/pdf.js/build/pdf.js"></script>
-    <script src="script.js"></script>
-  </head>
-  <body>
-    <div class="project-container">
-      <div class="project-details">
-        <h1>Project 1</h1>
-        <p>Description of Project 1</p>
-        <button class="view-pdf" data-url="./CV_tilak.pdf">View PDF</button>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>My Projects</title>
+  <link rel="stylesheet" href="pdffile.css">
+</head>
+<body>
+  <header>
+    <h1>My Projects</h1>
+  </header>
+  <main>
+    <section class="project">
+      <div class="details">
+        <h2>Project 1</h2>
+        <p>Description of project 1 goes here</p>
+        <button class="view-pdf" data-url="./CV_tilak.pdf">View Report</button>
       </div>
-      <div class="pdf-container">
+      <div class="pdf-viewer">
         <div class="pdf-toolbar">
           <button class="close-pdf">Close PDF</button>
           <button class="open-external">Open in New Tab</button>
         </div>
-        <div class="pdf-viewer"></div>
       </div>
-    </div>
-  </body>
+    </section>
+    <!-- Add more project sections as needed -->
+  </main>
+  <script src="https://mozilla.github.io/pdf.js/build/pdf.js"></script>
+  <script src="script.js"></script>
+</body>
 </html>
