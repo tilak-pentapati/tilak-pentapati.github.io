@@ -35,41 +35,24 @@ h1 {
 
 .table {
     margin-bottom: 0;
+    width: 100%;
 }
 
-.table1 td,
-.table1 th {
-    border: none;
-    padding: 10px;
-}
-.table1 td{
-   margin-left: 30px;
-}
-.table2 td,
-.table2 th {
-    border: none;
-    padding: 10px;
-    
-}
-.table2 td{
-   margin-left: 30px;
-}
-.table3 td,
-.table3 th {
-    border: none;
-    padding: 10px;
-}
-.table3 td{
-   margin-left: 30px;
-}
-.table4 td,
-.table4 th {
-    border: none;
-    padding: 10px;
-}
-.table4 td{
-   margin-left: 30px;
-}
+.table th,
 .table td {
+    border: none;
+    padding: 10px;
     vertical-align: top;
+}
+
+.table th {
+    text-align: left;
+    width: 20%;
+}
+
+.table1,
+.table2,
+.table3,
+.table4 {
+    margin-bottom: 30px;
 }
