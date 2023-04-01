@@ -1,17 +1,12 @@
 // Load the PDF file into the viewer
 function loadPDF(url) {
     const pdfViewer = document.querySelector('.pdf-viewer');
+    const pdfPages = document.querySelector('.pdf-pages');
     const pdfToolbar = document.querySelector('.pdf-toolbar');
     const closeBtn = document.querySelector('.close-pdf');
     const openExternalBtn = document.querySelector('.open-external');
     pdfjsLib.getDocument(url).promise.then((pdfDoc) => {
-      const pdfViewer = document.querySelector('.pdf-viewer');
-      const pdfPages = [];
       for (let i = 1; i <= pdfDoc.numPages; i++) {
-        const pageDiv = document.createElement('div');
-        pageDiv.classList.add('pdf-page');
-        pdfPages.push(pageDiv);
-        pdfViewer.appendChild(pageDiv);
         pdfDoc.getPage(i).then((page) => {
           const viewport = page.getViewport({ scale: 1 });
           const canvas = document.createElement('canvas');
@@ -23,14 +18,14 @@ function loadPDF(url) {
           canvas.height = viewport.height;
           canvas.width = viewport.width;
           page.render(renderContext).promise.then(() => {
-            pageDiv.appendChild(canvas);
+            pdfPages.appendChild(canvas);
           });
         });
       }
       pdfToolbar.style.display = 'flex';
       pdfViewer.style.display = 'block';
       closeBtn.addEventListener('click', () => {
-        pdfViewer.innerHTML = '';
+        pdfPages.innerHTML = '';
         pdfToolbar.style.display = 'none';
         pdfViewer.style.display = 'none';
       });
