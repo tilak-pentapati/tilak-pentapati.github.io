@@ -1,9 +1,25 @@
 <!DOCTYPE html>
 <html>
-<head>
-  <title>Projects</title>
-</head>
-<body>
-   <h1>Welcome to Page 2</h1> 
-</body>
+  <head>
+    <title>My Projects</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://mozilla.github.io/pdf.js/build/pdf.js"></script>
+    <script src="script.js"></script>
+  </head>
+  <body>
+    <div class="project-container">
+      <div class="project-details">
+        <h1>Project 1</h1>
+        <p>Description of Project 1</p>
+        <button class="view-pdf" data-url="project1.pdf">View PDF</button>
+      </div>
+      <div class="pdf-container">
+        <div class="pdf-toolbar">
+          <button class="close-pdf">Close PDF</button>
+          <button class="open-external">Open in New Tab</button>
+        </div>
+        <div class="pdf-viewer"></div>
+      </div>
+    </div>
+  </body>
 </html>

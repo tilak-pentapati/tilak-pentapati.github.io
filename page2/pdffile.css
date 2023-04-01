@@ -1,0 +1,41 @@
+.project-container {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 50px;
+  }
+  
+  .project-details {
+    width: 50%;
+  }
+  
+  .pdf-container {
+    width: 50%;
+    display: none;
+  }
+  
+  .pdf-toolbar {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+  
+  .pdf-viewer {
+    height: 600px;
+  }
+  
+  button {
+    font-size: 16px;
+    padding: 10px;
+    border: none;
+    background-color: #f0f0f0;
+    cursor: pointer;
+  }
+  
+  .close-pdf {
+    color: #ff0000;
+  }
+  
+  .open-external {
+    color: #0088cc;
+  }
+  
