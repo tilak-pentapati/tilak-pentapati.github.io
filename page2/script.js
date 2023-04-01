@@ -1,9 +1,5 @@
 function loadPDF(url) {
-    const pdfViewer = document.querySelector('.pdf-viewer');
-    const pdfPages = document.querySelector('.pdf-pages');
-    const pdfToolbar = document.querySelector('.pdf-toolbar');
-    const closeBtn = document.querySelector('.close-pdf');
-    const openExternalBtn = document.querySelector('.open-external');
+    const pdfPages = document.querySelector('#pdf-pages');
     pdfjsLib.getDocument(url).promise.then((pdfDoc) => {
       for (let i = 1; i <= pdfDoc.numPages; i++) {
         pdfDoc.getPage(i).then((page) => {
@@ -21,21 +17,11 @@ function loadPDF(url) {
           });
         });
       }
-      pdfToolbar.style.display = 'flex';
-      pdfViewer.style.display = 'block';
-      closeBtn.addEventListener('click', () => {
-        pdfPages.innerHTML = '';
-        pdfToolbar.style.display = 'none';
-        pdfViewer.style.display = 'none';
-      });
-      openExternalBtn.addEventListener('click', () => {
-        window.open(url, '_blank');
-      });
     });
   }
   
   window.addEventListener('load', () => {
-    const pdfUrl = './cv.pdf';
+    const pdfUrl = './CV_tilak.pdf';
     loadPDF(pdfUrl);
   });
   
