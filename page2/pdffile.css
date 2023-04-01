@@ -1,55 +1,61 @@
-.project {
+.pdf-viewer {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 9999;
+    background-color: rgba(0, 0, 0, 0.8);
+    overflow-y: auto;
+  }
+  
+  .pdf-pages {
     display: flex;
     flex-wrap: wrap;
-    margin: 1em;
-    border: 1px solid #ccc;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
   }
   
-  .project .details {
-    flex-basis: 100%;
-    padding: 1em;
+  .pdf-pages canvas {
+    margin: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
   }
   
-  .project h2 {
-    font-size: 1.5em;
-    margin-bottom: 0.5em;
-  }
-  
-  .project p {
-    margin-bottom: 1em;
-  }
-  
-  .project .pdf-viewer {
-    flex-basis: 50%;
-    max-width: 500px;
-    max-height: 500px;
-    overflow: auto;
+  .pdf-toolbar {
     display: none;
-  }
-  
-  .pdf-viewer .pdf-toolbar {
-    display: flex;
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    right: 20px;
+    z-index: 10000;
     justify-content: space-between;
-    background-color: #333;
-    color: #fff;
-    padding: 0.5em;
+    align-items: center;
+    background-color: rgba(255, 255, 255, 0.8);
+    padding: 10px;
+    border-radius: 5px;
   }
   
-  .pdf-viewer .pdf-toolbar button {
+  .pdf-toolbar button {
     background-color: transparent;
     border: none;
-    color: #fff;
+    color: #333;
+    font-size: 16px;
+    font-weight: bold;
     cursor: pointer;
-    font-size: 1em;
-    margin-right: 0.5em;
-    padding: 0.5em;
+    transition: color 0.2s;
   }
   
-  .pdf-viewer .pdf-toolbar button:hover {
-    background-color: #666;
+  .pdf-toolbar button:hover {
+    color: #666;
   }
   
-  .pdf-viewer .pdf-pages {
-    margin: 1em;
+  .pdf-toolbar .close-pdf {
+    margin-right: auto;
+  }
+  
+  .pdf-toolbar .open-external {
+    margin-left: 20px;
   }
   

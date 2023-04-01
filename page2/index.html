@@ -14,14 +14,13 @@
       <div class="details">
         <h2>Project 1</h2>
         <p>Description of project 1 goes here</p>
-        <button class="view-pdf" data-url=".CV_tilak.pdf">View Report</button>
       </div>
       <div class="pdf-viewer">
         <div class="pdf-toolbar">
           <button class="close-pdf">Close PDF</button>
           <button class="open-external">Open in New Tab</button>
         </div>
-        <div class="pdf-pages"></div>
+        <div id="pdf-pages"></div>
       </div>
     </section>
     
@@ -29,5 +28,34 @@
   </main>
   <script src="https://mozilla.github.io/pdf.js/build/pdf.js"></script>
   <script src="script.js"></script>
+  <script>
+    function loadPDF(url) {
+      const pdfPages = document.querySelector('#pdf-pages');
+      pdfjsLib.getDocument(url).promise.then((pdfDoc) => {
+        for (let i = 1; i <= pdfDoc.numPages; i++) {
+          pdfDoc.getPage(i).then((page) => {
+            const viewport = page.getViewport({ scale: 1 });
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            const renderContext = {
+              canvasContext: ctx,
+              viewport: viewport,
+            };
+            canvas.height = viewport.height;
+            canvas.width = viewport.width;
+            page.render(renderContext).promise.then(() => {
+              pdfPages.appendChild(canvas);
+            });
+          });
+        }
+      });
+    }
+
+    window.addEventListener('load', () => {
+      const pdfUrl = './CV_tilak.pdf';
+      loadPDF(pdfUrl);
+    });
+  </script>
 </body>
 </html>
+

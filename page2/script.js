@@ -1,4 +1,3 @@
-// Load the PDF file into the viewer
 function loadPDF(url) {
     const pdfViewer = document.querySelector('.pdf-viewer');
     const pdfPages = document.querySelector('.pdf-pages');
@@ -35,13 +34,8 @@ function loadPDF(url) {
     });
   }
   
-  // Set up event listener for view PDF button
-  const viewPdfBtns = document.querySelectorAll('.view-pdf');
-  viewPdfBtns.forEach((btn) => {
-    btn.addEventListener('click', (e) => {
-      // Get PDF URL from button data attribute
-      const url = e.target.dataset.url;
-      loadPDF(url);
-    });
+  window.addEventListener('load', () => {
+    const pdfUrl = './cv.pdf';
+    loadPDF(pdfUrl);
   });
   
