@@ -80,35 +80,5 @@ embed {
   background-color: #3e7dc8;
 }
 
-/* Responsive styles */
-@media (max-width: 1024px) {
-  .project {
-    flex-direction: column;
-  }
 
-  .description,
-  .pdf-container {
-    min-width: 100%;
-  }
 
-  .pdf-container {
-    margin-left: 0;
-    margin-right: 0;
-    margin-top: 2rem;
-  }
-}
-
-@media (max-width: 768px) {
-  h1 {
-    font-size: 2rem;
-  }
-
-  h2 {
-    font-size: 1.5rem;
-  }
-
-  .open-btn {
-    font-size: 0.9rem;
-    padding: 0.4rem 0.8rem;
-  }
-}
