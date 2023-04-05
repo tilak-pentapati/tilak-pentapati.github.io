@@ -1,61 +1,19 @@
+.project {
+  display: flex;
+}
+
+.description {
+  flex: 1;
+}
+
 .pdf-viewer {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    z-index: 9999;
-    background-color: rgba(0, 0, 0, 0.8);
-    overflow-y: auto;
-  }
-  
-  .pdf-pages {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    align-items: center;
-    padding: 20px;
-  }
-  
-  .pdf-pages canvas {
-    margin: 10px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-  }
-  
-  .pdf-toolbar {
-    display: none;
-    position: absolute;
-    top: 20px;
-    left: 20px;
-    right: 20px;
-    z-index: 10000;
-    justify-content: space-between;
-    align-items: center;
-    background-color: rgba(255, 255, 255, 0.8);
-    padding: 10px;
-    border-radius: 5px;
-  }
-  
-  .pdf-toolbar button {
-    background-color: transparent;
-    border: none;
-    color: #333;
-    font-size: 16px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: color 0.2s;
-  }
-  
-  .pdf-toolbar button:hover {
-    color: #666;
-  }
-  
-  .pdf-toolbar .close-pdf {
-    margin-right: auto;
-  }
-  
-  .pdf-toolbar .open-external {
-    margin-left: 20px;
-  }
+  flex: 1;
+  position: relative;
+}
+
+.open-btn {
+  position: absolute;
+  top: 0;
+  right: 0;
+}
   
