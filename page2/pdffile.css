@@ -38,7 +38,7 @@ main {
   background-color: #fff;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   min-width: 300px;
-  
+  max-width: 50%;
 }
 
 h2 {
@@ -82,3 +82,35 @@ embed {
   background-color: #3e7dc8;
 }
 
+/* Responsive styles */
+@media (max-width: 992px) {
+  .project {
+    flex-direction: column;
+  }
+
+  .description,
+  .pdf-container {
+    min-width: 100%;
+    max-width: 100%;
+  }
+
+  .pdf-container {
+    margin-left: 0;
+    margin-top: 2rem;
+  }
+}
+
+@media (max-width: 576px) {
+  h1 {
+    font-size: 2rem;
+  }
+
+  h2 {
+    font-size: 1.5rem;
+  }
+
+  .open-btn {
+    font-size: 0.9rem;
+    padding: 0.4rem 0.8rem;
+  }
+}
