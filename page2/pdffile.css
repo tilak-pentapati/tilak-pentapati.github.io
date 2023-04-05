@@ -28,7 +28,7 @@ main {
   display: flex;
   flex-wrap: wrap;
   margin-bottom: 2rem;
-  padding-bottom: 2rem;
+  padding-bottom: 3.5rem;
   border-bottom: 1px solid #ccc;
 }
 
