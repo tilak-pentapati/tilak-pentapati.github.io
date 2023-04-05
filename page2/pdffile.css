@@ -37,7 +37,8 @@ main {
   padding: 1rem;
   background-color: #fff;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  min-width: 100px;
+  min-width: 300px;
+  max-width: 50%;
 }
 
 h2 {
@@ -50,6 +51,7 @@ h2 {
   position: relative;
   margin-left: 2rem;
   min-width: 300px;
+  max-width: 50%;
 }
 
 .pdf-viewer {
@@ -89,13 +91,10 @@ embed {
   .description,
   .pdf-container {
     min-width: 100%;
+    max-width: 100%;
   }
 
   .pdf-container {
-    margin-left: 0;
-    margin-top: 2rem;
-  }
-  .description{
     margin-left: 0;
     margin-top: 2rem;
   }
@@ -115,5 +114,4 @@ embed {
     padding: 0.4rem 0.8rem;
   }
 }
-
 
