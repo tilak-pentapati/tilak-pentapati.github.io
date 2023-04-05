@@ -95,6 +95,10 @@ embed {
     margin-left: 0;
     margin-top: 2rem;
   }
+  .description{
+    margin-left: 0;
+    margin-top: 2rem;
+  }
 }
 
 @media (max-width: 768px) {
