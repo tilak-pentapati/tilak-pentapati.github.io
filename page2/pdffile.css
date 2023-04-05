@@ -83,7 +83,7 @@ embed {
 }
 
 /* Responsive styles */
-@media (max-width: 1200px) {
+@media (max-width: 1024px) {
   .project {
     flex-direction: column;
   }
