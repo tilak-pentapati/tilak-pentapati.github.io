@@ -102,13 +102,10 @@ embed {
     .pdf-container {
       min-width: auto;
       min-height: auto;
-      max-height: auto;
+      max-height: 80%;
       max-width: 100%;
       padding-left: 0;
       margin-top: 1rem;
-    }
-    .pdf-viewer {
-        height: 400px;
     }
 }
   
