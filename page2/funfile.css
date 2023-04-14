@@ -39,6 +39,7 @@ main {
     background-color: #fff;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     min-width: 300px;
+    min-height: 300px;
 }
   
 h2 {
@@ -59,6 +60,7 @@ h2 {
     min-width: 300px;
     display: flex;
     flex-direction: column;
+    min-height: 300px;
 }
 
 embed {
