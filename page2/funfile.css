@@ -4,63 +4,70 @@ body {
     background-color: #f2f2f2;
     margin: 0;
     padding: 0;
-  }
+}
   
-  header {
+header {
     background-color: #4a90e2;
     padding: 1rem;
     text-align: center;
     position: relative;
     z-index: 2;
-  }
+}
   
-  h1 {
+h1 {
     color: #fff;
     font-size: 2.5rem;
-  }
+}
   
-  main {
+main {
     padding: 2rem;
     margin-top: 2rem;
-  }
+}
   
-  .project {
+.project {
     display: flex;
-    
+    flex-direction: row;
     flex-wrap: wrap;
     margin-bottom: 2rem;
     padding-bottom: 2rem;
     border-bottom: 1px solid #ccc;
-  }
+}
   
-  .description {
+.description {
     flex: 1;
     padding: 1rem;
-    flex-direction: row;
     background-color: #fff;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     min-width: 300px;
-  }
+}
   
-  h2 {
+h2 {
     font-size: 2rem;
     margin-bottom: 1rem;
-  }
+}
   
-  .pdf-viewer {
+.pdf-viewer {
     flex: 1;
     padding-left: 1rem;
     min-width: 300px;
-  }
-  
-  embed {
+}
+
+.pdf-container {
+    flex: 1;
+    padding-left: 1rem;
+    min-width: 300px;
+    display: flex;
+    flex-direction: column;
+}
+
+embed {
     background-color: #fff;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     width: 100%;
     height: 100%;
-  }
+}
   
-  .open-btn {
+.open-btn {
     display: block;
     margin-top: 1rem;
     padding: 0.5rem 1rem;
@@ -70,14 +77,15 @@ body {
     border: none;
     cursor: pointer;
     transition: background-color 0.3s;
-  }
+}
   
-  .open-btn:hover {
+.open-btn:hover {
     background-color: #3e7dc8;
-  }
+}
   
   /* Responsive design for smaller devices */
-  @media (max-width: 768px) {
+
+@media (max-width: 768px) {
     .project {
       flex-direction: column;
     }
@@ -87,11 +95,11 @@ body {
       max-width: 100%;
     }
   
-    .pdf-viewer {
+    .pdf-container {
       min-width: auto;
       max-width: 100%;
       padding-left: 0;
       margin-top: 1rem;
     }
-  }
+}
   
