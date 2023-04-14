@@ -114,7 +114,7 @@ embed {
       .pdf-container {
         flex: 1;
         position: relative;
-        margin-left: 2rem;
+
         min-width: 300px;
       }
       
