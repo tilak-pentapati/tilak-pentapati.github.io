@@ -1,0 +1,7 @@
+/* custom_styles.css */
+.scrollable-output {
+  max-height: 400px;
+  max-width: 100%;
+  overflow: auto;
+  border: 1px solid #ccc;
+}
