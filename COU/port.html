@@ -13,6 +13,7 @@
   <select id="projectSelect" style="margin-left: 33px; margin-right: 20px;margin-top: 20px;margin-bottom: 20px;width: 300px; height: 40px;">
     <option value="project1">Optimizing Convenience Store Location in Liverpool Using GIS</option>
     <option value="project2">Geo-Demographic Insights for Bay Area Policy Making</option>
+    <option value="project3">Analyzing Global Satellite Coverage Using Spatial Data APIs</option>
     <!-- Add more options for more projects -->
   </select>
   <main>
@@ -51,8 +52,8 @@
             <li><strong>GIS Methods:</strong>  Employed Geographic Information Systems (GIS) and R programming to map and analyze data, using <em>EPSG: 2227 - NAD 83 California zone 3</em> (ftUS) projection for accurate spatial representation.</li>
             <li><strong>Data Preprocessing:</strong> Cleaned and merged datasets, including Airbnb data, ACS data for median household income and internet use, and additional datasets on vehicle counts and electricity rates.</li>
             <li><strong>Spatial Analysis:</strong> Conducted spatial joins to overlay Airbnb listings with ZIP code areas, performed spatial clustering using K-means, and calculated spatial auto-correlation metrics like Moran's I.</li>
-            <li><strong>Visualization:</strong> Created various maps to visualize Airbnb listings, median household income, internet usage, and other socio-economic indicators across the Bay Area.</li>
-            <li><strong>Findings:  </strong> Identified distinct neighborhood typologies such as tourist-focused areas, residential areas, and economically diverse areas based on clustering results and socio-economic indicators.</li>
+            <li><strong>Visualization:</strong> Created various maps to visualize Airbnb listings, median household income, internet usage, and other socio-economic indicators across the Bay Area.
+            <li><strong>Findings:</strong> Identified distinct neighborhood typologies such as tourist-focused areas, residential areas, and economically diverse areas based on clustering results and socio-economic indicators.</li>
             <li><strong>Policy Implications:</strong> Provided recommendations for targeting areas in need of development, managing tourist activities, improving public transportation, and enhancing community services based on spatial analysis findings.</li>
           </ul>
         </div>
@@ -62,6 +63,31 @@
           </div>
           <button class="open-btn" onclick="window.open('Courseworks/assignment2_ENVS563.html')">Open in new tab</button>
         </div>
+    </div>
+
+
+
+    <div class="project" id="project3">
+      <!-- Project 1 -->
+      <div class="description">
+        <h2><a href="#project3">Analyzing Global Satellite Coverage Using Spatial Data APIs</a></h2>
+        <ul>
+          <li><strong>Objective:</strong> To analyze the spatial distribution of active satellites overhead for each country using RESTful APIs to access and process spatial datasets.</li>
+          <li><strong>APIs Used:</strong> Utilized APIs such as Opendatasoft’s Explore API for geographical boundaries and CelesTrak’s API for active satellite TLE (Two-Line Element Set) data.</li>
+          <li><strong>Data Preprocessing: </strong> Retrieved and cleaned data from APIs, ensuring compatibility and consistency, particularly with GeoJSON formats for country boundaries.</li>
+          <li><strong>Satellite Position Calculation: </strong> Employed the Skyfield library to calculate satellite positions over time, creating a comprehensive dataset of satellite coordinates at 4-hour intervals.</li>
+          <li><strong>Spatial Analysis:</strong> Conducted spatial joins between satellite positions and country boundaries to determine the number of satellites overhead per country at different timestamps.</li>
+          <li><strong>CRS Utilization:</strong> Used <em>EPSG:4326-WGS84</em> as the Coordinate Reference System (CRS) for spatial analysis to ensure compatibility with GPS and web mapping services.</li>
+          <li><strong>Visualization:</strong> Created static and interactive maps to visualize satellite distribution, using techniques like natural breaks classification to highlight areas with high satellite activity.</li>
+          <li><strong>Policy Implications:</strong> Provided insights into satellite coverage that can aid in addressing global issues such as digital repression and mass surveillance, enabling data-driven policymaking.</li>
+        </ul>
+      </div>
+      <div class="pdf-container">
+        <div class="pdf-viewer">
+          <iframe src="Courseworks/SateEst.html" width="100%" height="1200px"></iframe>
+        </div>
+        <button class="open-btn" onclick="window.open('Courseworks/SateEst.html')">Open in new tab</button>
+      </div>
     </div>
 
     <!-- Add more projects by copying and pasting the project div -->
