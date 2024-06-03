@@ -182,13 +182,12 @@ Note:
 </div>
 <div id="includedContent"></div>
 
-<button style="position: fixed; top: 120px; left: 10px;" onclick="goBack()">Go Back</button>
+<button id="goBackButton" style="position: fixed; top: 120px; left: 10px;" onclick="goBack()">Go Back</button>
 
 <script>
 function goBack() {
   window.location.href = 'CaseStudies.html';
 }
-
 window.onload = function() {
   fetch('https://tilak-pentapati.github.io/SateEst.html')
     .then(response => response.text())
@@ -197,6 +196,19 @@ window.onload = function() {
     });
 };
 </script>
+
+<style>
+/* Light mode */
+body.light-mode .quarto-color-scheme-toggle {
+    color: black; /* Text color */
+}
+
+/* Dark mode */
+body.dark-mode .quarto-color-scheme-toggle {
+    color: white; /* Text color */
+}
+</style>
+
 
 
 
