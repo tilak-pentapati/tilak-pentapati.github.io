@@ -1,0 +1,460 @@
+---
+title: "Analysing active satellites overhead for each country"
+
+author: "Jay T. Pentapati"
+date: "04 March, 2024"
+image: satellite.jpg
+
+description: "Interactive Map and RestFUL API"
+categories:
+  - Python
+  - Spatial Analysis
+  - Geopandas
+  - CelesTrak
+  - Data Cleaning
+  - RESTFul API
+toc: true
+format: 
+  html:
+    theme:
+      light: flatly
+      dark: darkly
+    
+editor: visual
+execute: 
+  warning: false
+engine: jupyter
+---
+
+::: {style="margin-bottom: 40px;"}
+:::
+
+::: callout-tip
+## Note:
+
+Please click 'Go Back' Button for Central Page
+:::
+
+```{python}
+# code for installing libaries
+import subprocess
+import sys
+import importlib
+
+# List of required packages
+required_packages = ["requests", "skyfield", "numpy", "pandas", "geopandas", "shapely", "matplotlib", "pyproj", "contextily", "mapclassify", "folium"]  # Add all required packages here 
+
+# defining Function to install packages
+def install_package(package):
+    subprocess.check_call([sys.executable, "-m", "pip", "install", package])
+
+# Checking and installing missing packages
+for package in required_packages:
+    try:
+        # Tries to import the package
+        importlib.import_module(package)
+    except ImportError:
+        # If the package is not found, this 'll install it
+        print(f"{package} not found, installing...")
+        install_package(package)
+
+# below message is differently coded output
+```
+
+```{python}
+# Importing Required Packages with aliases and functions
+import requests
+from skyfield.api import load, wgs84, EarthSatellite
+from datetime import datetime, timedelta
+import numpy as np
+import pandas as pd
+import geopandas as gpd
+from shapely.geometry import Point, shape, Polygon, MultiPolygon
+import json
+from shapely.ops import transform
+import pyproj
+import matplotlib.pyplot as plt
+import contextily as ctx
+
+import folium
+from mpl_toolkits.axes_grid1.anchored_artists import AnchoredSizeBar
+from mapclassify import Quantiles
+import matplotlib.font_manager as fm
+```
+
+```{python}
+
+# Using Celes Trak, to get TLE Data for active satellites
+try:
+    Sat_TLE = requests.get("https://celestrak.org/NORAD/elements/gp.php?GROUP=active&FORMAT=tle")
+    if Sat_TLE.status_code == 200:
+     print("Data Retrieved successfully.")
+except requests.exceptions.RequestException as e:
+    # This will catch HTTP errors, connection errors, etc
+    print(f"An error occurred: {e}")
+
+# first we split after every line, then we strip '\r' at end of every line
+tle_lines = [line.strip('\r') for line in Sat_TLE.text.strip().split('\n')]
+
+# Checking if the number of lines is a multiple of 3
+if len(tle_lines) % 3 != 0:
+    print("Warning: The TLE data might be incomplete or corrupted.")
+
+satellites = [tle_lines[i:i+3] for i in range(0, len(tle_lines), 3)]
+```
+
+```{python}
+
+satellites_data = []
+for sat in satellites:
+    # Each item in satellites list is a list with three elements: name, line1, line2
+    satellite_info = {
+        'name': sat[0],
+        'line1': sat[1],
+        'line2': sat[2]
+    }
+    satellites_data.append(satellite_info)
+
+satellites_df = pd.DataFrame(satellites_data);
+satellites_df.head()
+
+```
+
+```{python}
+
+ts = load.timescale() # timescale object from skyfield API, used to create time objects like UTC, delphi date
+
+start_datetime = datetime(2024, 3, 4, 0, 0, 0)  # datetime object of 04 march 2024.
+# we want time intervals as column headers, so creating an times variable
+times = [(start_datetime + timedelta(minutes=240*i)).strftime('%Y-%m-%dT%H:%M:%SZ') for i in range(6)]
+
+# Defining Function to calculate satellite positions
+def calculate_positions(name, line1, line2):
+    # Creating satellite object from TLE lines using Skyfield Library
+    satellite = EarthSatellite(line1, line2, name, ts)
+    
+    # saving an particular the start date
+    year, month, day = 2024, 3, 4
+    
+    # Generating a list of times at 240-minute intervals over 24 hours i.e. for every four hours
+    times = ts.utc(year, month, day, 0, range(0, 1440, 240))
+
+    # Getting  the satellite's position for every four hours using satellite object
+    geocentric = satellite.at(times)
+    subpoint = wgs84.subpoint(geocentric)
+    lons, lats = subpoint.longitude.degrees, subpoint.latitude.degrees
+    
+    
+    
+    # at end,  returns a list of formatted positions (longitude, latitude) to be consitent with shapley objects
+    return [f"{lon},{lat}" for lon, lat in zip(lons, lats)]
+
+positions_dict = {}  # defining empty dict to store satellite coords at diff time 
+
+
+
+for index, row in satellites_df.iterrows():
+    positions = calculate_positions(row['name'], row['line1'], row['line2'])
+    positions_dict[row['name']] = positions
+
+```
+
+```{python}
+# Converting  above dictionary to a DataFrame
+
+positions_df = pd.DataFrame.from_dict(positions_dict, orient='index', columns=times) # times variable is used for column names
+
+# Resetting the index to move the satellite names into a regular column
+positions_df.reset_index(inplace=True)
+
+# Renaming the new column (previously the index) to 'Satellite'
+positions_df.rename(columns={'index': 'Satellite'}, inplace=True)
+```
+
+```{python}
+
+for timestamp in times:
+    positions_df[timestamp] = positions_df[timestamp].apply(lambda x: Point([float(coord) for coord in x.split(',')]))
+```
+
+```{python}
+positions_df.head()
+
+```
+
+<!-- Completed Code transfer till before  'World Admin Boundaries' section -->
+
+```{python}
+
+
+
+base_url = 'https://public.opendatasoft.com/api/explore/v2.1/catalog/datasets/world-administrative-boundaries/records'
+total_count = 256     # Total no.of countries exists, according to opendatasoft server
+limit = 100  # Number of results per API call, According to opendatasoft site
+offset = 0  # starting at the beginning
+
+all_countries = []  # empty list for adding info 
+
+while offset < total_count:
+    response = requests.get(base_url, params={'limit': limit, 'offset': offset})
+    if response.status_code == 200:
+        data = response.json()   # converting into JSON
+        all_countries.extend(data['results'])  # Extracting 'results' item in list
+        offset += limit  # For API call to get next set of results
+        # We dont need to trim all_countries because API has correctly 256 countries, no additional polygons
+    else:
+        print(f"Failed to fetch data: HTTP {response.status_code}")
+        break  # will exit the loop in case of an error
+
+# Now, `all_countries` contains data for up to 256 countries, fetched in chunks of 100
+
+```
+
+```{python}
+
+
+# Assuming `data` is your JSON object
+results = all_countries
+
+# Preparing lists to hold data from 'results'
+geometries = []
+properties = []
+
+for item in results:
+    if 'geo_shape' in item and 'geometry' in item['geo_shape'] and 'name' in item:
+        geom = shape(item['geo_shape']['geometry'])
+        geometries.append(geom)
+        properties.append(item['name'])
+        
+    else:
+        geometries.append(None)
+        properties.append(None)
+
+        
+
+countries_df = pd.DataFrame({'Countries' : properties})
+
+# Converting the DataFrame to a GeoDataFrame
+countries_gdf = gpd.GeoDataFrame(countries_df, geometry=geometries);
+
+countries_gdf.set_crs(epsg=4326, inplace=True) # setting crs to EPSG: 4326
+
+countries_gdf.head()
+
+```
+
+```{python}
+
+def ensure_multipolygon(geometry):
+    """
+    Ensures that the input geometry is of type MultiPolygon.
+    If the geometry is a Polygon, it converts it to a MultiPolygon.
+    If the geometry is already a MultiPolygon, it returns it as is.
+    """
+    if geometry is None:
+        return None
+    elif isinstance(geometry, Polygon):
+        return MultiPolygon([geometry])
+    elif isinstance(geometry, MultiPolygon):
+        return geometry
+    else:
+        raise ValueError("Geometry must be a Polygon or MultiPolygon.")
+
+```
+
+```{python}
+
+# Applying the conversion function (hided in above cell ) to the 'geometry' column of your GeoDataFrame
+countries_gdf['geometry'] = countries_gdf['geometry'].apply(ensure_multipolygon);
+
+```
+
+```{python}
+def shift_geom(geometry, offset):
+    """
+    For coordinates with longitude < 0, increase by 2 * offset.
+    For longitude >= 0, keep as is.
+    Latitude remains unchanged.
+    """
+    if geometry is None:
+        return None
+
+    def shift_special(x, y, z=None):
+        if x < 0:
+            new_x = x + 2 * offset
+        else:
+            new_x = x
+        return new_x, y
+
+    return transform(shift_special, geometry)
+
+```
+
+```{python}
+
+# Before Shift function, and it is hided in above chunk 
+russia_gdf_bs= countries_gdf[countries_gdf['Countries'] == 'Russian Federation']
+
+# Applying the shift function to the Russian geometries.
+russia_gdf = countries_gdf[countries_gdf['Countries'] == 'Russian Federation'].copy()
+russia_gdf['geometry'] = russia_gdf['geometry'].apply(lambda geom: shift_geom(geom, 180))
+
+```
+
+```{python}
+
+fig, axs = plt.subplots(1, 2, figsize=(15, 14))  # 1 row, 2 columns
+
+# first GeoDataFrame
+russia_gdf_bs.plot(ax=axs[0], color='blue')  # Plot on the first subplot
+axs[0].set_title('Geography of Russia on 2D Map - Before using Shift Function') 
+
+# Increasing the y-limit of the left plot
+ymin, ymax = axs[0].get_ylim()
+axs[0].set_ylim(ymin*0.6, ymax * 1.4)
+
+#  second GeoDataFrame
+russia_gdf.plot(ax=axs[1], color='green')  # Plot on the second subplot
+axs[1].set_title('Geography of Russia on 2D Map - After using Shift Function')  
+
+
+plt.tight_layout() 
+plt.show()
+
+```
+
+```{python}
+# temporal satellite count matrix estimtion
+
+# empty dict var
+counts_dict = {}
+
+countries_gdf_copy = countries_gdf.copy()
+
+for timestamp in positions_df.columns[1:]:  # Skipping the 'name' column
+   
+    # creating copy of first(Satellite), second col of postions_df
+
+    temp_df = positions_df[['Satellite', timestamp]].copy()
+    temp_df.rename(columns={timestamp: 'position'}, inplace=True)
+    
+    
+    # Convert the DataFrame to a GeoDataFrame
+    temp_gdf = gpd.GeoDataFrame(temp_df, geometry='position')
+    temp_gdf.set_crs(epsg=4326, inplace=True)  # Assuming positions are in lat/lon
+    
+    countries_gdf_copy = countries_gdf_copy.dropna(subset=['Countries'])
+    # Performing spatial join with countries_gdf to find positions within each country
+    joined_gdf = gpd.sjoin(temp_gdf, countries_gdf_copy, how="inner", predicate='intersects')
+
+    counts_series = joined_gdf.groupby('Countries').size()  # Placeholder for your count computation logic
+    counts_series = counts_series.reindex(countries_gdf_copy['Countries'].unique(), fill_value=0)
+    
+    counts_dict[timestamp] = counts_series
+
+# Converting the dictionary of Series to a DataFrame
+counts_df = pd.DataFrame(counts_dict)
+
+# Ensuring the index of counts_df matches countries_gdf (e.g., country names)
+
+# Reset the index of counts_df
+counts_df_reset = counts_df.reset_index()
+counts_df_reset.rename(columns={'index': 'Countries'}, inplace=True)
+
+# Merge counts_df_reset with countries_gdf
+temporal_satellite_cm = pd.merge(countries_gdf_copy, counts_df_reset, how='left', on='Countries')
+
+temporal_satellite_cm.head()
+```
+
+```{python}
+# plot_classification function hided above
+plot_classifications(temporal_satellite_cm, '2024-03-04T00:00:00Z')
+```
+
+```{python}
+def add_scalebar(ax, length, location=(0.05, 0.05), linewidth=3,
+                 units='km', fontsize=10, color='black'):
+    """
+    Add a scale bar to a matplotlib Axes object.
+    
+    Parameters:
+    - ax: The Axes object to draw the scale bar on.
+    - length: The length of the scale bar in units.
+    - location: A tuple indicating the location of the scale bar (x, y) in axis coordinates (0 to 1).
+    - linewidth: The thickness of the scale bar line.
+    - units: The units of the scale bar length ('km', 'miles', etc.).
+    - fontsize: The font size of the scale bar label.
+    - color: The color of the scale bar and text.
+    """
+    # Calculate the end point of the scale bar
+    x = location[0]
+    y = location[1]
+    xend = x + length / 44448 # Example scale; you may need to adjust this
+    
+    # Draw the scale bar
+    ax.plot([x, xend], [y, y], color=color, linewidth=linewidth, transform=ax.transAxes)
+    
+    # Label the scale bar
+    ax.text((x + xend) / 1.35, y - 0.01, f'{length} {units}',
+            horizontalalignment='center', verticalalignment='top',
+            transform=ax.transAxes, fontsize=fontsize, color=color)
+
+```
+
+```{python}
+
+
+fig, axs = plt.subplots(2, 1, figsize=(20, 15))  # 1 row, 2 columns for side by side plots
+
+# Plot 1: Simple color map
+temporal_satellite_cm.plot(column='2024-03-04T00:00:00Z', ax=axs[0], legend=True,
+                           cmap='Greens', edgecolor='black', lw=0.6)
+axs[0].set_title(f"No. of Satellites Overhead per country - {times[0]}")
+
+
+# Increasing the y-limit of the left plot
+ymin, ymax = axs[0].get_ylim()
+axs[0].set_ylim(ymin, ymax * 1.3)
+# Increasing the x-limit of the left plot
+xmin, xmax = axs[0].get_xlim()
+axs[0].set_xlim(xmin*0.975, xmax * 1)
+add_scalebar(axs[0], length=5556, location=(0.01, 0.05), units='km')
+
+
+# Plot 2: Natural breaks classification
+temporal_satellite_cm.plot(column='2024-03-04T00:00:00Z', ax=axs[1], legend=True,
+                           cmap='YlGnBu', scheme='naturalbreaks', k=5, 
+                           edgecolor='black', lw=0.6, legend_kwds={'loc': 'center right'})
+axs[1].set_title(f"No. of Satellites Overhead per country (Natural Breaks) - {times[0]}")
+add_scalebar(axs[1], length=5556, location=(0.01, 0.05), units='km')
+
+
+plt.tight_layout()
+plt.show()
+
+```
+
+# Interactive Map
+
+```{python}
+# below map use mapbbox basemap
+
+mbox_url = f'https://api.mapbox.com/styles/v1/mapbox/light-v9/tiles/{{z}}/{{x}}/{{y}}?access_token={mapbox_access_token}'
+i_map = folium.Map(location=[35,0], zoom_start=2, tiles = mbox_url, attr='Mapbox')
+
+# below code is for choropleth map to show spatial variations
+satellites_map = folium.Choropleth(geo_data=temporal_satellite_cm, data=temporal_satellite_cm, columns=("id_str", "2024-03-04T00:00:00Z"), key_on="feature.id",fill_color="Greens", line_weight=0.6, line_color='black', fill_opacity=0.7,
+                                    legend_name=f"No. of Satellites Overhead per Country, {times[0]}", 
+                                    highlight = True) 
+satellites_map.add_to(i_map)
+```
+
+```{python}
+# Created funtions to add popups and highlight values
+folium.GeoJson(temporal_satellite_cm, style_function = custom_style, highlight_function=value_show, tooltip= folium.features.GeoJsonTooltip(fields=['Countries'], aliases=("Country Name:",)), 
+               popup=folium.features.GeoJsonPopup(fields=['Countries','2024-03-04T00:00:00Z', 'Time-averaged'], aliases = ['Country Name: ', 'No. of Satellites at 2024-03-04 T00:00:00 : ', 'No. of Satellites averaged over 24 hrs: '])
+    ).add_to(i_map)
+# interactive map
+i_map
+```

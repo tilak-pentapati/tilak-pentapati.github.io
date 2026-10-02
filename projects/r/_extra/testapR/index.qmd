@@ -1,0 +1,21 @@
+---
+title: "R Analysis Test"
+format: html
+---
+
+## Basic R Analysis
+
+This document tests the Quarto configuration using the specified R conda environment.
+
+```{r}
+# Generate some random data
+set.seed(42)
+x <- rnorm(100)
+y <- 2 * x + rnorm(100)
+
+# Perform a basic linear regression
+model <- lm(y ~ x)
+
+# Print the summary of the model
+summary(model)
+```

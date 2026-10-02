@@ -1,0 +1,10 @@
+---
+title: "My Projects"
+listing:
+  contents: 
+    - "projects/python/*/index.qmd"
+    - "projects/r/*/index.qmd"
+  type: grid
+  categories: true
+  sort: "date desc"
+---

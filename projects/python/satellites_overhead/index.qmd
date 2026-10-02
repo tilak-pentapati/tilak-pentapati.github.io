@@ -1,0 +1,618 @@
+---
+title: "Analysing active satellites overhead for each country"
+
+author: "Jay T. Pentapati"
+date: "04 March, 2024"
+image: satellite.jpg
+
+description: "Interactive Map and RestFUL API"
+categories:
+  - Python
+  - Spatial Analysis
+  - Geopandas
+  - CelesTrak
+  - Data Cleaning
+  - RESTFul API
+toc: true
+format: 
+  html:
+    theme:
+      light: flatly
+      dark: darkly
+    
+editor: visual
+execute: 
+  warning: false
+engine: jupyter
+---
+
+::: {style="margin-bottom: 40px;"}
+:::
+
+::: callout-tip
+## Note:
+
+Please click 'Go Back' Button for Central Page
+:::
+
+# **Installing Libaries**
+
+```{python}
+# code for installing libaries
+import subprocess
+import sys
+import importlib
+
+# List of required packages
+required_packages = ["requests", "skyfield", "numpy", "pandas", "geopandas", "shapely", "matplotlib", "pyproj", "contextily", "mapclassify", "folium", "seaborn"]  # Add all required packages here 
+
+# defining Function to install packages
+def install_package(package):
+    subprocess.check_call([sys.executable, "-m", "pip", "install", package])
+
+# Checking and installing missing packages
+for package in required_packages:
+    try:
+        # Tries to import the package
+        importlib.import_module(package)
+    except ImportError:
+        # If the package is not found, this 'll install it
+        print(f"{package} not found, installing...")
+        install_package(package)
+
+# below message is differently coded output
+```
+
+# **Introduction**
+
+## **Analysis of Spatial Datasets through APIs**
+
+In the rapidly evolving field of Geoinforamtics to address complex scientific questions, the ability to access, analyze, and inference from spatial datasets stands as a cornerstone of research and development. Scientists around the world, trying to gain deeper understanding of many complex geographical phenomena, the dependence on accurate, latest and real-time spatial data has never been more critical. This Assignment uses richness of APIs (Application Programming Interfaces) to access different spatial datasets, offering opportunity to explore satellites/ objects patterns over geographic area.
+
+APIs work as gatekeepers for programmatically retrieving data from remote servers, enabling researchers to tap into a vast amount of spatial data resources maintained by governments, non-profits, and private organizations. There are many types of APIs, but we are going to use RESTful API which is an type of API that relies on HTTP protocol to retrieve information from remote databases. Not all APIs which use HTTP protocol are RESTful.
+
+RESTful APIs means APIs which adheres to principles and constraints of REST, stands for Representational State Transfer, starting with Null style, which are client-server architecture, statelessness, cacheability, uniform interface, layered system and Code-On-Demand(optional) ([Fielding, 2000](https://ics.uci.edu/~fielding/pubs/dissertation/top.htm)). Terms ‘REST APIs’ and ‘RESTful APIs’ are often used interchangeably in context of web services, saying an APIs is RESTful typically implies strict compliance with REST principles or to REST Architectural Constraints. By leveraging API technology,
+
+**Finally, This assignment aims to analyze active satellites overhead for each country, same methodology can be implemented to track space objects overhead. It also outlines methodology used in accessing and utilizing various spatial datasets for analysis through APIs.**
+
+## **Datasets**
+
+Opendatasoft’s Explore API was used to get geographical boundaries of all countries in GeoJSON format. It has limit of getting boundaries of 100 countries in one API Call. This dataset is called World Administrative Boundaries - Countries and Territories in Opendatasoft’s catalog (). Then, Active Satellites information is collected using API developed by Celes Trak ([CelesTrak](https://celestrak.org/NORAD/elements/), 2024), This is also the data providers for TLE API which is one of the NASA APIs that provides two line element set data for earth orbiting objects in JSON format ([NASA Open APIs](https://api.nasa.gov/), 2024).
+
+```{python}
+# Importing Required Packages with aliases and functions
+import requests
+from skyfield.api import load, wgs84, EarthSatellite
+from datetime import datetime, timedelta
+import numpy as np
+import pandas as pd
+import geopandas as gpd
+from shapely.geometry import Point, shape, Polygon, MultiPolygon
+import json
+from shapely.ops import transform
+import pyproj
+import matplotlib.pyplot as plt
+import contextily as ctx
+
+import folium
+from mpl_toolkits.axes_grid1.anchored_artists import AnchoredSizeBar
+from mapclassify import Quantiles, EqualInterval, FisherJenks, NaturalBreaks
+import matplotlib.font_manager as fm
+import seaborn as sns
+```
+
+# **TLE or rarely known as Two-Line Element Set**
+
+Three-Line Element Set (TLE) data is a type of format used to store orbital parameters of Earth-orbiting objects, commonly used by the satellite tracking and astronomy discipline. It is Developed by NORAD and NASA, a TLE consists of two lines of alphanumerical data that represent a satellite’s orbital parameters at a specific point in time, enabling the prediction of its future positions. Each line contains crucial information such as the satellite’s inclination, right ascension of the ascending node, eccentricity, argument of perigee, mean anomaly, mean motion, and the epoch of the element set ([Space-Track.org](https://www.space-track.org/documentation#/tle), 2024). This format is instrumental for satellite tracking software to calculate satellite positions and velocities in the orbits of Earth. TLE data is widely used for various applications, including satellite communication, navigation, space debris tracking, and amateur satellite observation, making it a fundamental resource for understanding and monitoring man-made objects in Earth orbit.
+
+Below we are going get TLE data for all active satellites orbiting the earth, using an API developed by Celes Trak([CelesTrak](https://celestrak.org/NORAD/elements/), 2024). Resulting response will be stored as plain text format. Then, we create an dataframe with satellite name, Line1 , Line 2 as columns.
+
+```{python}
+
+import os
+# Using Celes Trak, to get TLE Data for active satellites
+tle_file_path = "active_satellites_cache.txt"
+tle_text = ""
+
+if os.path.exists(tle_file_path):
+    print("Loading data from local cache.")
+    with open(tle_file_path, 'r') as f:
+        tle_text = f.read()
+else:
+    try:
+        Sat_TLE = requests.get("https://celestrak.org/NORAD/elements/gp.php?GROUP=active&FORMAT=tle")
+        if Sat_TLE.status_code == 200 and "GP data has not updated" not in Sat_TLE.text:
+            print("Data Retrieved successfully from CelesTrak.")
+            tle_text = Sat_TLE.text
+            with open(tle_file_path, 'w') as f:
+                f.write(tle_text)
+        else:
+            print("Received notice: Data has not updated, but no cache exists!")
+            tle_text = Sat_TLE.text
+    except requests.exceptions.RequestException as e:
+        # This will catch HTTP errors, connection errors, etc
+        print(f"An error occurred: {e}")
+
+# first we split after every line, then we strip '\r' at end of every line
+tle_lines = [line.strip('\r') for line in tle_text.strip().split('\n')]
+
+# Checking if the number of lines is a multiple of 3
+if len(tle_lines) % 3 != 0:
+    print("Warning: The TLE data might be incomplete or corrupted. Bypassing error check to prevent index out of bounds.")
+    tle_lines = [] # Blank out so it doesn't crash if it's an error message
+
+satellites = [tle_lines[i:i+3] for i in range(0, len(tle_lines), 3)]
+```
+
+```{python}
+
+satellites_data = []
+for sat in satellites:
+    # Each item in satellites list is a list with three elements: name, line1, line2
+    satellite_info = {
+        'name': sat[0],
+        'line1': sat[1],
+        'line2': sat[2]
+    }
+    satellites_data.append(satellite_info)
+
+satellites_df = pd.DataFrame(satellites_data);
+satellites_df.head()
+
+```
+
+# **Satellite Coordinates using Skyfield Library**
+
+Skyfield library provides precise astronomical calculations for users, offering a interface to compute positions of planets, stars, and satellites within the solar system and beyond. Leveraging state-of-the-art algorithms and astronomical theories, Skyfield translates complex celestial mechanics into straightforward Python code, enabling the calculation of celestial events, satellite orbits (using TLE data), and astrophotography planning with high accuracy. This library is Ideal for our case, as we need to calculate satellites coordinates in given point in time, then it is possible to estimate **satellites overhead** per country at that instance.
+
+```{python}
+
+ts = load.timescale() # timescale object from skyfield API, used to create time objects like UTC, delphi date
+
+start_datetime = datetime(2024, 3, 4, 0, 0, 0)  # datetime object of 04 march 2024.
+# we want time intervals as column headers, so creating an times variable
+times = [(start_datetime + timedelta(minutes=240*i)).strftime('%Y-%m-%dT%H:%M:%SZ') for i in range(6)]
+
+# Defining Function to calculate satellite positions
+def calculate_positions(name, line1, line2):
+    # Creating satellite object from TLE lines using Skyfield Library
+    satellite = EarthSatellite(line1, line2, name, ts)
+    
+    # saving an particular the start date
+    year, month, day = 2024, 3, 4
+    
+    # Generating a list of times at 240-minute intervals over 24 hours i.e. for every four hours
+    times = ts.utc(year, month, day, 0, range(0, 1440, 240))
+
+    # Getting  the satellite's position for every four hours using satellite object
+    geocentric = satellite.at(times)
+    subpoint = wgs84.subpoint(geocentric)
+    lons, lats = subpoint.longitude.degrees, subpoint.latitude.degrees
+    
+    
+    
+    # at end,  returns a list of formatted positions (longitude, latitude) to be consitent with shapley objects
+    return [f"{lon},{lat}" for lon, lat in zip(lons, lats)]
+
+positions_dict = {}  # defining empty dict to store satellite coords at diff time 
+
+
+
+for index, row in satellites_df.iterrows():
+    positions = calculate_positions(row['name'], row['line1'], row['line2'])
+    positions_dict[row['name']] = positions
+
+```
+
+```{python}
+# Converting  above dictionary to a DataFrame
+
+positions_df = pd.DataFrame.from_dict(positions_dict, orient='index', columns=times) # times variable is used for column names
+
+# Resetting the index to move the satellite names into a regular column
+positions_df.reset_index(inplace=True)
+
+# Renaming the new column (previously the index) to 'Satellite'
+positions_df.rename(columns={'index': 'Satellite'}, inplace=True)
+```
+
+To have computational efficiency, We used dictionary type object in intermediate process of function (calculate_positions). Latitude and Longitude are stored as string dataframe(postions_df). We will convert every coords which are as strings to Point Geometry using Shapely Library.
+
+Note: In python, we use (longtiude, latitude). Below code splits the string for each value when encountered an comma and converts to float-type data before passing into Point Function in Shapely Library.
+
+```{python}
+
+for timestamp in times:
+    positions_df[timestamp] = positions_df[timestamp].apply(lambda x: Point([float(coord) for coord in x.split(',')]))
+```
+
+```{python}
+positions_df.head()
+
+```
+
+<!-- Completed Code transfer till before  'World Admin Boundaries' section -->
+
+## **Rationale for CRS**
+
+As this assignment covered, satellites overhead per country, which involves calculating coordinates of satellites i.e. Latitude and Longitude. We are going to use *EPSG:4326-WGS84* as CRS for our spatial analyses, also for its compatibility with global positioning systems (GPS) and web mapping services. WGS84 is cordinate reference system for GPS satellites ([GISGeography, 2023](https://gisgeography.com/wgs84-world-geodetic-system/)).
+
+# **World Administrative Boundaries**
+
+OpenDataSoft is a comprehensive website designed to ease the process of publishing, sharing, and utilization of data by organizations and governments. It facilitates users to have access to a wide range of datasets across various domains, enhancing innovation, and collaboration. This API provided by OpenDataSoft, offers access to detailed geographic boundaries of countries and administrative regions around the globe ().
+
+```{python}
+
+
+
+base_url = 'https://public.opendatasoft.com/api/explore/v2.1/catalog/datasets/world-administrative-boundaries/records'
+total_count = 256     # Total no.of countries exists, according to opendatasoft server
+limit = 100  # Number of results per API call, According to opendatasoft site
+offset = 0  # starting at the beginning
+
+all_countries = []  # empty list for adding info 
+
+while offset < total_count:
+    response = requests.get(base_url, params={'limit': limit, 'offset': offset})
+    if response.status_code == 200:
+        data = response.json()   # converting into JSON
+        all_countries.extend(data['results'])  # Extracting 'results' item in list
+        offset += limit  # For API call to get next set of results
+        # We dont need to trim all_countries because API has correctly 256 countries, no additional polygons
+    else:
+        print(f"Failed to fetch data: HTTP {response.status_code}")
+        break  # will exit the loop in case of an error
+
+# Now, `all_countries` contains data for up to 256 countries, fetched in chunks of 100
+
+
+```
+
+The GeoJSON retrieved from the OpenDataSoft API for world administrative boundaries deviates from the standard naming in GeoJSON structure, which needed an additional cleaning process to ensure compatibility. To address these issues, like features are stored as results in GeoJSON, So I modified response by reformatting the GeoJSON to align with the standards as below.
+
+```{python}
+
+
+# Assuming `data` is your JSON object
+results = all_countries
+
+# Preparing lists to hold data from 'results'
+geometries = []
+properties = []
+
+for item in results:
+    if 'geo_shape' in item and 'geometry' in item['geo_shape'] and 'name' in item:
+        geom = shape(item['geo_shape']['geometry'])
+        geometries.append(geom)
+        properties.append(item['name'])
+        
+    else:
+        geometries.append(None)
+        properties.append(None)
+
+        
+
+countries_df = pd.DataFrame({'Countries' : properties})
+
+# Converting the DataFrame to a GeoDataFrame
+countries_gdf = gpd.GeoDataFrame(countries_df, geometry=geometries);
+
+countries_gdf.set_crs(epsg=4326, inplace=True) # setting crs to EPSG: 4326
+
+countries_gdf.head()
+
+```
+
+As we can see from the ‘geometry’ column, some of them are polygons, we need to ensure consistency for mapping and visualizations So, we convert to polygons into MultiPolygon. Conversion function, defined, is hided in cell.
+
+```{python}
+
+def ensure_multipolygon(geometry):
+    """
+    Ensures that the input geometry is of type MultiPolygon.
+    If the geometry is a Polygon, it converts it to a MultiPolygon.
+    If the geometry is already a MultiPolygon, it returns it as is.
+    """
+    if geometry is None:
+        return None
+    elif isinstance(geometry, Polygon):
+        return MultiPolygon([geometry])
+    elif isinstance(geometry, MultiPolygon):
+        return geometry
+    else:
+        raise ValueError("Geometry must be a Polygon or MultiPolygon.")
+
+```
+
+```{python}
+
+# Applying the conversion function (hided in above cell ) to the 'geometry' column of your GeoDataFrame
+countries_gdf['geometry'] = countries_gdf['geometry'].apply(ensure_multipolygon);
+
+```
+
+## **Map Projection Problem**
+
+The issue of map projections where geography of countries extending into the International Date Line presents a challenge in plotting latitude and longitude on 2D maps, particularly for areas like east russia near the 180-degree meridian. This problem arises due to the representation of the Earth’s surface on a two-dimensional plane which requires distortions, and the International Date Line acts as a discontinuity for spatial datasets. As a result, geographical features that span across this meridian may appear fragmented or inaccurately placed on either side of the map. Below code rectifies this issue and adds geometry back to Geo dataframe(countries_gdf).
+
+```{python}
+def shift_geom(geometry, offset):
+    """
+    For coordinates with longitude < 0, increase by 2 * offset.
+    For longitude >= 0, keep as is.
+    Latitude remains unchanged.
+    """
+    if geometry is None:
+        return None
+
+    def shift_special(x, y, z=None):
+        if x < 0:
+            new_x = x + 2 * offset
+        else:
+            new_x = x
+        return new_x, y
+
+    return transform(shift_special, geometry)
+
+```
+
+```{python}
+
+# Before Shift function, and it is hided in above chunk 
+russia_gdf_bs= countries_gdf[countries_gdf['Countries'] == 'Russian Federation']
+
+# Applying the shift function to the Russian geometries.
+russia_gdf = countries_gdf[countries_gdf['Countries'] == 'Russian Federation'].copy()
+russia_gdf['geometry'] = russia_gdf['geometry'].apply(lambda geom: shift_geom(geom, 180))
+
+```
+
+```{python}
+
+fig, axs = plt.subplots(1, 2, figsize=(15, 14))  # 1 row, 2 columns
+
+# first GeoDataFrame
+russia_gdf_bs.plot(ax=axs[0], color='blue')  # Plot on the first subplot
+axs[0].set_title('Geography of Russia on 2D Map - Before using Shift Function') 
+
+# Increasing the y-limit of the left plot
+ymin, ymax = axs[0].get_ylim()
+axs[0].set_ylim(ymin*0.6, ymax * 1.4)
+
+#  second GeoDataFrame
+russia_gdf.plot(ax=axs[1], color='green')  # Plot on the second subplot
+axs[1].set_title('Geography of Russia on 2D Map - After using Shift Function')  
+
+
+plt.tight_layout() 
+plt.show()
+
+```
+
+# **Estimation of Satellites Overhead**
+
+In this assignment, I am interested to analyze the spatial distribution of satellite positions over time and their intersection with various countries around the globe. The core of below process involves iterating over a series of timestamps, each representing a distinct snapshot of satellite positions. For each timestamp, we extracted corresponding satellite position data and transformed it into a GeoDataFrame. This transformation allowed to perform a spatial join with a pre-existing GeoDataFrame of country boundaries, effectively determining which satellites were located within the boundaries of each country at any given moment.
+
+Then, we aggregated these results to compute the count of satellites per country for each timestamp, generating a Series object that mapped each country to its respective satellite count. These counts were then combined into a new DataFrame, where columns represented individual timestamps and rows corresponded to different countries. This DataFrame can serve as a temporal satellite count matrix, capturing the dynamics of satellite distributions across countries over time.
+
+To facilitate visualization of static and interactive maps, we merged this matrix with our original GeoDataFrame of country boundaries. This merge operation creates a unified dataset that has spatial resolution of countries and temporal resolution of 4 hours. Due to constraints of assignment, We calculated satellites distribution with temporal resolution of 4 hours. This resultant spatial dataset can be used to find insights into various issues regarding global digital repression, mass surveillance etc.
+
+```{python}
+# temporal satellite count matrix estimtion
+
+# empty dict var
+counts_dict = {}
+
+countries_gdf_copy = countries_gdf.copy()
+
+for timestamp in positions_df.columns[1:]:  # Skipping the 'name' column
+   
+    # creating copy of first(Satellite), second col of postions_df
+
+    temp_df = positions_df[['Satellite', timestamp]].copy()
+    temp_df.rename(columns={timestamp: 'position'}, inplace=True)
+    
+    
+    # Convert the DataFrame to a GeoDataFrame
+    temp_gdf = gpd.GeoDataFrame(temp_df, geometry='position')
+    temp_gdf.set_crs(epsg=4326, inplace=True)  # Assuming positions are in lat/lon
+    
+    countries_gdf_copy = countries_gdf_copy.dropna(subset=['Countries'])
+    # Performing spatial join with countries_gdf to find positions within each country
+    joined_gdf = gpd.sjoin(temp_gdf, countries_gdf_copy, how="inner", predicate='intersects')
+
+    counts_series = joined_gdf.groupby('Countries').size()  # Placeholder for your count computation logic
+    counts_series = counts_series.reindex(countries_gdf_copy['Countries'].unique(), fill_value=0)
+    
+    counts_dict[timestamp] = counts_series
+
+# Converting the dictionary of Series to a DataFrame
+counts_df = pd.DataFrame(counts_dict)
+
+# Ensuring the index of counts_df matches countries_gdf (e.g., country names)
+
+# Reset the index of counts_df
+counts_df_reset = counts_df.reset_index()
+counts_df_reset.rename(columns={'index': 'Countries'}, inplace=True)
+
+# Merge counts_df_reset with countries_gdf
+temporal_satellite_cm = pd.merge(countries_gdf_copy, counts_df_reset, how='left', on='Countries')
+
+temporal_satellite_cm.head()
+```
+
+## **Data Classifications**
+
+## 
+
+```{python}
+def plot_classifications(df, col):
+    if df[col].nunique() <= 1:
+        print(f"Skipping classification plots: all values in '{col}' are identical (Value: {df[col].unique()[0]}). This is usually caused by an upstream API failure (like Celestrak or OpenDataSoft) resulting in empty spatial joins.")
+        return
+        
+    fig, axes = plt.subplots(4, 1, figsize=(15, 20))
+    
+    # 1. Equal Interval
+    ei = EqualInterval(df[col], k=5)
+    sns.kdeplot(df[col], fill=True, color='lightblue', ax=axes[0])
+    sns.rugplot(df[col], ax=axes[0], color='lightblue')
+    for b in ei.bins:
+        axes[0].axvline(b, color='red', lw=1)
+    axes[0].set_title('equal_interval classification')
+    
+    # 2. Quantiles
+    qu = Quantiles(df[col], k=5)
+    sns.kdeplot(df[col], fill=True, color='lightblue', ax=axes[1])
+    sns.rugplot(df[col], ax=axes[1], color='lightblue')
+    for b in qu.bins:
+        axes[1].axvline(b, color='red', lw=1)
+    axes[1].set_title('quantiles classification')
+    
+    # 3. Fisher Jenks
+    fj = FisherJenks(df[col], k=5)
+    sns.kdeplot(df[col], fill=True, color='lightblue', ax=axes[2])
+    sns.rugplot(df[col], ax=axes[2], color='lightblue')
+    for b in fj.bins:
+        axes[2].axvline(b, color='red', lw=1)
+    axes[2].set_title('fisher_jenks classification')
+    
+    # 4. Natural Breaks
+    nb = NaturalBreaks(df[col], k=5)
+    sns.kdeplot(df[col], fill=True, color='lightblue', ax=axes[3])
+    sns.rugplot(df[col], ax=axes[3], color='lightblue')
+    for b in nb.bins:
+        axes[3].axvline(b, color='red', lw=1)
+    axes[3].set_title('natural_breaks classification')
+    
+    plt.tight_layout()
+    plt.show()
+
+# plot_classification function hided above
+plot_classifications(temporal_satellite_cm, '2024-03-04T00:00:00Z')
+```
+
+After observing distribution of satellites distribution at **2024-03-04T00:00:00Z** , To distinguish High satellites overhead from low, We can plot either Natural Breaks or fisher jenks classification. Therefore, We are going to plot Natural Breaks classification map along with normal map.
+
+```{python}
+def add_scalebar(ax, length, location=(0.05, 0.05), linewidth=3,
+                 units='km', fontsize=10, color='black'):
+    """
+    Add a scale bar to a matplotlib Axes object.
+    
+    Parameters:
+    - ax: The Axes object to draw the scale bar on.
+    - length: The length of the scale bar in units.
+    - location: A tuple indicating the location of the scale bar (x, y) in axis coordinates (0 to 1).
+    - linewidth: The thickness of the scale bar line.
+    - units: The units of the scale bar length ('km', 'miles', etc.).
+    - fontsize: The font size of the scale bar label.
+    - color: The color of the scale bar and text.
+    """
+    # Calculate the end point of the scale bar
+    x = location[0]
+    y = location[1]
+    xend = x + length / 44448 # Example scale; you may need to adjust this
+    
+    # Draw the scale bar
+    ax.plot([x, xend], [y, y], color=color, linewidth=linewidth, transform=ax.transAxes)
+    
+    # Label the scale bar
+    ax.text((x + xend) / 1.35, y - 0.01, f'{length} {units}',
+            horizontalalignment='center', verticalalignment='top',
+            transform=ax.transAxes, fontsize=fontsize, color=color)
+
+```
+
+```{python}
+
+
+fig, axs = plt.subplots(2, 1, figsize=(20, 15))  # 1 row, 2 columns for side by side plots
+
+# Plot 1: Simple color map
+temporal_satellite_cm.plot(column='2024-03-04T00:00:00Z', ax=axs[0], legend=True,
+                           cmap='Greens', edgecolor='black', lw=0.6)
+axs[0].set_title(f"No. of Satellites Overhead per country - {times[0]}")
+
+
+# Increasing the y-limit of the left plot
+ymin, ymax = axs[0].get_ylim()
+axs[0].set_ylim(ymin, ymax * 1.3)
+# Increasing the x-limit of the left plot
+xmin, xmax = axs[0].get_xlim()
+axs[0].set_xlim(xmin*0.975, xmax * 1)
+add_scalebar(axs[0], length=5556, location=(0.01, 0.05), units='km')
+
+
+# Plot 2: Natural breaks classification
+temporal_satellite_cm.plot(column='2024-03-04T00:00:00Z', ax=axs[1], legend=True,
+                           cmap='YlGnBu', scheme='naturalbreaks', k=5, 
+                           edgecolor='black', lw=0.6, legend_kwds={'loc': 'center right'})
+axs[1].set_title(f"No. of Satellites Overhead per country (Natural Breaks) - {times[0]}")
+add_scalebar(axs[1], length=5556, location=(0.01, 0.05), units='km')
+
+
+plt.tight_layout()
+plt.show()
+
+```
+
+# Interactive Map
+
+```{python}
+# Create Time-averaged column for the popup
+temporal_satellite_cm['Time-averaged'] = temporal_satellite_cm[times].mean(axis=1).round(2)
+
+# Provide a default Mapbox token for testing if one isn't defined
+mapbox_access_token = 'YOUR_MAPBOX_TOKEN'
+
+# below map use mapbbox basemap
+
+mbox_url = f'https://api.mapbox.com/styles/v1/mapbox/light-v9/tiles/{{z}}/{{x}}/{{y}}?access_token={mapbox_access_token}'
+i_map = folium.Map(location=[35,0], zoom_start=2, tiles = mbox_url, attr='Mapbox')
+
+# below code is for choropleth map to show spatial variations
+satellites_map = folium.Choropleth(geo_data=temporal_satellite_cm, data=temporal_satellite_cm, columns=("Countries", "2024-03-04T00:00:00Z"), key_on="feature.properties.Countries",fill_color="Greens", line_weight=0.6, line_color='black', fill_opacity=0.7,
+                                    legend_name=f"No. of Satellites Overhead per Country, {times[0]}", 
+                                    highlight = True) 
+satellites_map.add_to(i_map)
+```
+
+```{python}
+# Created funtions to add popups and highlight values
+def custom_style(feature):
+    return {
+        'fillColor': 'transparent',
+        'fillOpacity': 0,
+        'color': 'black',
+        'weight': 0.5
+    }
+
+def value_show(feature):
+    return {
+        'fillColor': 'white',
+        'fillOpacity': 0.3,
+        'color': 'black',
+        'weight': 2
+    }
+
+folium.GeoJson(temporal_satellite_cm, style_function = custom_style, highlight_function=value_show, tooltip= folium.features.GeoJsonTooltip(fields=['Countries'], aliases=("Country Name:",)), 
+               popup=folium.features.GeoJsonPopup(fields=['Countries','2024-03-04T00:00:00Z', 'Time-averaged'], aliases = ['Country Name: ', 'No. of Satellites at 2024-03-04 T00:00:00 : ', 'No. of Satellites averaged over 24 hrs: '])
+    ).add_to(i_map)
+# interactive map
+i_map
+```
+
+Please click on the geometry of each country to see - No. of satellites at exactly *2024-03-04T00:00:00Z* and Averaged Count over 24 hrs for every country.
+
+# **References**
+
+1.  Fielding, R (2000). *Architectural Styles and the Design of Network-based Software Architectures*. Doctoral dissertation, University of California, Irvine. Available at: <https://ics.uci.edu/~fielding/pubs/dissertation/top.htm> (Accessed: 06 March 2024).
+
+2.  NASA (2024) *NASA Open APIs*. Available at: <https://api.nasa.gov/> (Accessed: 06 March 2024).
+
+3.  Space-Track.org (2024) *Help Documentation*. Available at: <https://www.space-track.org/documentation#/tle> (Accessed: 06 March 2024).
+
+4.  CelesTrak (2024) *CelesTrak: Current GP Element Sets*. Available at: <https://celestrak.org/NORAD/elements/> (Accessed: 06 March 2024).
+
+5.  GISGeography (2023) *World Geodetic System (WGS84) - GIS Geography*. Available at: <https://gisgeography.com/wgs84-world-geodetic-system/> (Accessed: 06 March 2024).
