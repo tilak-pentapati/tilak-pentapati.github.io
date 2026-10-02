@@ -5,7 +5,7 @@ about:
   template: solana
   image-width: 10em
   image-shape: rounded
-  image: Photo_Linkedin.jpg
+  image: pic_linkedin_V2.jpg
   links:
     - icon: linkedin
       text: LinkedIn
