@@ -4,6 +4,9 @@ description: "End-to-end clinical machine learning pipeline in R: exploratory da
 date: "2023-12-30"
 image: strokePM.svg
 categories: [R, Machine Learning, Healthcare Analytics, Data Preprocessing]
+bibliography: references.bib
+nocite: |
+  @vanbuuren2011mice
 aliases:
   - /projects/r/StorkePredictionModel/index.html
 ---
@@ -11,11 +14,11 @@ aliases:
 
 ## Project Overview
 
-According to the **World Health Organization (WHO)**, stroke is the second leading cause of mortality globally, responsible for approximately $11\%$ of total deaths worldwide (over 6.6 million deaths annually)[cite: who2020stroke, feigin2021global]. Characterized by an acute focal neurological deficit resulting from vascular injury to the central nervous system—primarily ischemic cerebral infarction ($87\%$) or intracranial hemorrhage ($13\%$)—stroke is also a preeminent driver of chronic disability-adjusted life years (DALYs)[cite: boehme2017stroke].
+According to the **World Health Organization (WHO)**, stroke is the second leading cause of mortality globally, responsible for approximately $11\%$ of total deaths worldwide (over 6.6 million deaths annually) [@who2020stroke; @feigin2021global]. Characterized by an acute focal neurological deficit resulting from vascular injury to the central nervous system—primarily ischemic cerebral infarction ($87\%$) or intracranial hemorrhage ($13\%$)—stroke is also a preeminent driver of chronic disability-adjusted life years (DALYs) [@boehme2017stroke].
 
-Epidemiological evidence indicates that up to **$80\%$ of premature strokes are preventable** through early detection, clinical risk stratification, and targeted management of modifiable vascular risk factors, including hypertension, hyperglycemia, dyslipidemia, and smoking[cite: goldstein2011primary, wolf1991probability]. 
+Epidemiological evidence indicates that up to **$80\%$ of premature strokes are preventable** through early detection, clinical risk stratification, and targeted management of modifiable vascular risk factors, including hypertension, hyperglycemia, dyslipidemia, and smoking [@goldstein2011primary; @wolf1991probability]. 
 
-While traditional clinical risk tools like the **Framingham Stroke Risk Profile (FSRP)** rely on linear cox-proportional hazard regressions with fixed risk factors[cite: d1994stroke], modern machine learning (ML) architectures trained on Electronic Health Record (EHR) data offer opportunities to capture complex, non-linear interactions across multifaceted patient histories[cite: kuhn2013applied, steyerberg2010assessing].
+While traditional clinical risk tools like the **Framingham Stroke Risk Profile (FSRP)** rely on linear cox-proportional hazard regressions with fixed risk factors [@d1994stroke], modern machine learning (ML) architectures trained on Electronic Health Record (EHR) data offer opportunities to capture complex, non-linear interactions across multifaceted patient histories [@kuhn2013applied; @steyerberg2010assessing].
 
 ```
 +---------------------------------------------------------------------------------------------------+
@@ -109,7 +112,7 @@ In statistical computing, transforming raw categorical data into R `factor` data
 
 1. **Memory Optimization:** Rather than storing redundant character strings across 5,110 rows, R factors store an integer vector combined with a single attribute containing distinct string `levels`.
 2. **Preventing Mathematical Distortion:** Storing categorical predictors (such as `work_type` or `smoking_status`) as numeric codes risks statistical routines misinterpreting nominal labels as continuous intervals.
-3. **Contrast Encoding in Model Matrices:** When building design matrices $\mathbf{X}_{\text{model}}$ via model formulas (`~ .`), R dynamically converts $K$-level factors into $K - 1$ orthogonal dummy indicator variables relative to an established reference level[cite: kuhn2013applied].
+3. **Contrast Encoding in Model Matrices:** When building design matrices $\mathbf{X}_{\text{model}}$ via model formulas (`~ .`), R dynamically converts $K$-level factors into $K - 1$ orthogonal dummy indicator variables relative to an established reference level [@kuhn2013applied].
 
 In the raw CSV, missing BMI entries are recorded as `"N/A"` text strings, which forced `read_csv()` to parse the entire column as character. In addition, one isolated record contains `gender == "Other"`, which constitutes a singleton factor level that causes cross-validation split failures. We resolve these issues below:
 
@@ -142,7 +145,7 @@ stroke_clean <- stroke_raw %>%
 
 ### Missing Data Taxonomy: Imputation vs. Informative Missingness
 
-Missing data represents a critical challenge in clinical biostatistics. According to Little and Rubin's taxonomy[cite: little2019statistical], missingness falls into three classes:
+Missing data represents a critical challenge in clinical biostatistics. According to Little and Rubin's taxonomy [@little2019statistical], missingness falls into three classes:
 
 1. **Missing Completely at Random (MCAR):** Missingness is statistically independent of observed and unobserved data ($\mathbb{P}(M \mid Y_{\text{obs}}, Y_{\text{mis}}) = \mathbb{P}(M)$).
 2. **Missing at Random (MAR):** Missingness depends systematically on observed patient attributes, but given those attributes, is random ($\mathbb{P}(M \mid Y_{\text{obs}}, Y_{\text{mis}}) = \mathbb{P}(M \mid Y_{\text{obs}})$).
@@ -166,7 +169,7 @@ kable(missing_audit,
 
 For `bmi`, exactly $201$ values ($3.93\%$) are missing. Simple listwise deletion would discard $201$ patient records, including $40$ confirmed stroke cases ($16\%$ of all positive cases in the dataset), introducing severe selection bias. Because BMI displays a pronounced positive skew ($\text{Skewness} > 1.0$), we impute missing values via the **conditional median stratified by sex and age cohort**.
 
-In `smoking_status`, $1,544$ records ($30.22\%$) are labeled `"Unknown"`. In medical informatics, **missingness in electronic health records is rarely random—it is informative**[cite: groenwold2020informative, sterne2009multiple]. Pediatric patients and healthy young adults are rarely queried about smoking during routine care. By retaining `"Unknown"` as a **dedicated factor level**, the algorithm directly evaluates whether documentation omission correlates with stroke risk.
+In `smoking_status`, $1,544$ records ($30.22\%$) are labeled `"Unknown"`. In medical informatics, **missingness in electronic health records is rarely random—it is informative** [@groenwold2020informative; @sterne2009multiple]. Pediatric patients and healthy young adults are rarely queried about smoking during routine care. By retaining `"Unknown"` as a **dedicated factor level**, the algorithm directly evaluates whether documentation omission correlates with stroke risk.
 
 ```{r impute-bmi}
 # Conditional median imputation for BMI stratified by age deciles and biological sex
@@ -298,7 +301,7 @@ Collinearities are modest ($r < 0.35$). Age correlates moderately with BMI ($r =
 
 ## Part 3: Clinical Feature Engineering
 
-Informed by clinical practice guidelines[cite: ada2023standards, boehme2017stroke], we engineer three domain-specific biomarkers:
+Informed by clinical practice guidelines [@ada2023standards; @boehme2017stroke], we engineer three domain-specific biomarkers:
 
 1. **`glucose_tier` (ADA Criteria):**
    - *Normal:* $< 100 \text{ mg/dL}$
@@ -352,13 +355,13 @@ stroke_features %>%
 
 ### The Accuracy Paradox
 
-In this cohort, $4,860$ out of $5,109$ patients ($95.13\%$) are stroke-free. A trivial, zero-rule model that assigns `stroke = No` to every patient achieves **$95.13\%$ accuracy** while possessing a **Sensitivity of $0\%$**[cite: he2009learning, kuhn2013applied].
+In this cohort, $4,860$ out of $5,109$ patients ($95.13\%$) are stroke-free. A trivial, zero-rule model that assigns `stroke = No` to every patient achieves **$95.13\%$ accuracy** while possessing a **Sensitivity of $0\%$** [@he2009learning; @kuhn2013applied].
 
-Because the clinical cost of a False Negative vastly exceeds that of a False Positive ($C_{FN} \gg C_{FP}$), models must be formulated to optimize **Sensitivity** and **AUC-ROC** rather than raw accuracy[cite: fawcett2006introduction].
+Because the clinical cost of a False Negative vastly exceeds that of a False Positive ($C_{FN} \gg C_{FP}$), models must be formulated to optimize **Sensitivity** and **AUC-ROC** rather than raw accuracy [@fawcett2006introduction].
 
 ### Synthetic Minority Over-sampling (SMOTE)
 
-We employ **SMOTE** via the `themis` package[cite: chawla2002smote]. Rather than duplicating minority records, SMOTE synthesizes novel minority cases by identifying the $K$ nearest neighbors for each minority instance $\mathbf{x}_i \in S_{\text{min}}$ and interpolating in feature space:
+We employ **SMOTE** via the `themis` package [@chawla2002smote]. Rather than duplicating minority records, SMOTE synthesizes novel minority cases by identifying the $K$ nearest neighbors for each minority instance $\mathbf{x}_i \in S_{\text{min}}$ and interpolating in feature space:
 
 $$\mathbf{x}_{\text{synthetic}} = \mathbf{x}_i + \lambda (\mathbf{x}_{zi} - \mathbf{x}_i), \quad \lambda \sim U(0, 1)$$
 
@@ -557,7 +560,7 @@ vip(rf_engine_fit, num_features = 10, geom = "col",
 
 ## Part 6: Clinical Decision Threshold Calibration (Youden's J)
 
-In clinical risk screening, setting the decision threshold to $p = 0.50$ is rarely optimal because event prevalence is low ($4.9\%$). Using the `pROC` package, we determine the optimal operating threshold via **Youden's $J$ statistic**, which maximizes the trade-off between sensitivity and specificity[cite: fawcett2006introduction]:
+In clinical risk screening, setting the decision threshold to $p = 0.50$ is rarely optimal because event prevalence is low ($4.9\%$). Using the `pROC` package, we determine the optimal operating threshold via **Youden's $J$ statistic**, which maximizes the trade-off between sensitivity and specificity [@fawcett2006introduction]:
 
 $$J = \max_p (\text{Sensitivity}(p) + \text{Specificity}(p) - 1)$$
 
@@ -785,7 +788,7 @@ Why Observable JS rather than Shinylive? A logistic regression is a dot product 
 
 ### Key Clinical Findings
 
-1. **Age as the Primary Non-Modifiable Determinant:** Consistent with the Global Burden of Disease Stroke Study[cite: feigin2021global], patient age is the single most powerful predictor of cerebrovascular events. Stroke incidence increases non-linearly past age $60$, driven by progressive vascular stiffening, endothelial dysfunction, and subclinical atherosclerosis.
+1. **Age as the Primary Non-Modifiable Determinant:** Consistent with the Global Burden of Disease Stroke Study [@feigin2021global], patient age is the single most powerful predictor of cerebrovascular events. Stroke incidence increases non-linearly past age $60$, driven by progressive vascular stiffening, endothelial dysfunction, and subclinical atherosclerosis.
 2. **Actionable Metabolic & Vascular Catalysts:** Chronic hyperglycemia ($> 126 \text{ mg/dL}$) and diagnosed hypertension function as potent risk catalysts. Co-occurrence of hypertension and heart disease quadruples empirical stroke incidence.
 3. **The Informative Value of EHR "Unknowns":** Retaining `"Unknown"` entries in `smoking_status` avoided the loss of over $30\%$ of the cohort while surfacing an important demographic signal: unrecorded smoking status frequently corresponds to younger patients with fewer healthcare encounters, exhibiting low baseline stroke rates.
 
@@ -798,20 +801,3 @@ Why Observable JS rather than Shinylive? A logistic regression is a dot product 
 ---
 
 ## References
-
-1. American Diabetes Association. (2023). Standards of Care in Diabetes—2023. *Diabetes Care*, 46(Suppl. 1), S1–S291.
-2. Boehme, A. K., Esenwa, C., & Elkind, M. S. (2017). Stroke risk factors, genetics, and prevention. *Circulation Research*, 120(3), 472–495.
-3. Chawla, N. V., Bowyer, K. W., Hall, L. O., & Kegelmeyer, W. P. (2002). SMOTE: Synthetic minority over-sampling technique. *Journal of Artificial Intelligence Research*, 16, 321–357.
-4. D'Agostino, R. B., Wolf, P. A., Belanger, A. J., & Kannel, W. B. (1994). Stroke risk profile: Adjustment for antihypertensive medication. The Framingham Study. *Stroke*, 25(1), 40–43.
-5. Fawcett, T. (2006). An introduction to ROC analysis. *Pattern Recognition Letters*, 27(8), 861–874.
-6. Feigin, V. L., Stark, B. A., Johnson, C. O., et al. (2021). Global, regional, and national burden of stroke and its risk factors, 1990–2019: A systematic analysis for the Global Burden of Disease Study 2019. *The Lancet Neurology*, 20(10), 795–820.
-7. Goldstein, L. B., Bushnell, C. D., Adams, R. J., et al. (2011). Guidelines for the primary prevention of stroke: A guideline for healthcare professionals from the American Heart Association/American Stroke Association. *Stroke*, 42(2), 517–584.
-8. Groenwold, R. H. (2020). Informative missingness in electronic health record data: Challenges and potential solutions. *Journal of Clinical Epidemiology*, 121, 149–153.
-9. He, H., & Garcia, E. A. (2009). Learning from imbalanced data. *IEEE Transactions on Knowledge and Data Engineering*, 21(9), 1263–1284.
-10. Kuhn, M., & Johnson, K. (2013). *Applied Predictive Modeling*. Springer New York.
-11. Little, R. J., & Rubin, D. B. (2019). *Statistical Analysis with Missing Data* (3rd ed.). John Wiley & Sons.
-12. Steyerberg, E. W., Vickers, A. J., Cook, N. R., et al. (2010). Assessing the performance of prediction models: A framework for traditional and novel measures. *Epidemiology*, 21(1), 128–138.
-13. Sterne, J. A., White, I. R., Carlin, J. B., et al. (2009). Multiple imputation for missing data in epidemiological and research: Potential and pitfalls. *BMJ*, 338, b2393.
-14. Van Buuren, S., & Groothuis-Oudshoorn, K. (2011). mice: Multivariate imputation by chained equations in R. *Journal of Statistical Software*, 45(3), 1–67.
-15. Wolf, P. A., D'Agostino, R. B., Belanger, A. J., & Kannel, W. B. (1991). Probability of stroke: A risk profile from the Framingham Study. *Stroke*, 22(3), 312–318.
-16. World Health Organization. (2020). *The Top 10 Causes of Death*. World Health Organization Fact Sheets.
