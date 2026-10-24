@@ -3,35 +3,78 @@ title: "Real-Time Orbital Tracking and Country-Level Satellite Density Analysis"
 description: "An automated geoinformatics workflow and interactive Folium web map evaluating global satellite distributions overhead through RESTful API ingestion, Skyfield astrodynamics and spatial polygon intersections."
 date: "2024-03-04"
 image: satellite.jpg
-categories: [Python, Spatial Analysis]
+categories: [Python, Spatial Analysis, Live data]
 toc-expand: 1
 ---
 
 ```{python}
-# code for installing libaries
-import subprocess
-import sys
-import importlib
+#| code-summary: "Data refresh: one CelesTrak request per run (live in CI, cache-first locally)"
+#| output: asis
+# Packages are pinned in requirements.txt next to this page; nothing is installed at render time.
+import os
+from datetime import datetime, timedelta, timezone
+import requests
 
-# List of required packages
-required_packages = ["requests", "skyfield", "numpy", "pandas", "geopandas", "shapely", "matplotlib", "pyproj", "contextily", "mapclassify", "folium", "seaborn", "itables"]  # Add all required packages here 
+TLE_URL = os.environ.get("SAT_TLE_URL", "https://celestrak.org/NORAD/elements/gp.php?GROUP=active&FORMAT=tle")
+tle_file_path = "active_satellites_cache.txt"   # committed fallback copy of the feed
+SAT_LIVE = os.environ.get("SAT_LIVE") == "1"     # set by the nightly GitHub Action
 
-# defining Function to install packages
-def install_package(package):
-    subprocess.check_call([sys.executable, "-m", "pip", "install", package])
+def looks_like_tle(text):
+    lines = [l for l in text.strip().splitlines() if l.strip()]
+    return len(lines) >= 3 and len(lines) % 3 == 0 and lines[1].startswith("1 ") and lines[2].startswith("2 ")
 
-# Checking and installing missing packages
-for package in required_packages:
+run_utc = datetime.now(timezone.utc)
+tle_text, tle_source, tle_note = None, None, ""
+
+# CelesTrak updates GP data every 2 hours and asks clients not to re-download unchanged data,
+# so a run makes at most this one request and never retries it.
+if SAT_LIVE or not os.path.exists(tle_file_path):
     try:
-        # Tries to import the package
-        importlib.import_module(package)
-    except ImportError:
-        # If the package is not found, this 'll install it
-        print(f"{package} not found, installing...")
-        install_package(package)
+        Sat_TLE = requests.get(TLE_URL, timeout=60,
+                               headers={"User-Agent": "tilak-pentapati.github.io nightly build"})
+        Sat_TLE.raise_for_status()
+        if looks_like_tle(Sat_TLE.text):
+            tle_text, tle_source = Sat_TLE.text, "live"
+            if not os.path.exists(tle_file_path):   # seed the cache; delete the file to refresh it
+                with open(tle_file_path, "w") as f:
+                    f.write(tle_text)
+        else:
+            tle_note = "CelesTrak answered without element sets: " + Sat_TLE.text.strip()[:120]
+    except requests.exceptions.RequestException as e:
+        tle_note = f"CelesTrak request failed: {type(e).__name__}"
 
-# below message is differently coded output
+if tle_text is None:
+    with open(tle_file_path, "r") as f:
+        tle_text = f.read()
+    tle_source = "cache"
+
+def tle_epoch(line1):
+    # TLE line 1, columns 19-32: two-digit year + fractional day of year
+    yy, doy = int(line1[18:20]), float(line1[20:32])
+    year = 2000 + yy if yy < 57 else 1900 + yy
+    return datetime(year, 1, 1, tzinfo=timezone.utc) + timedelta(days=doy - 1)
+
+epochs = sorted(tle_epoch(l) for l in tle_text.splitlines() if l.startswith("1 "))
+# Positions are propagated over the UTC day of the data: today for a live fetch,
+# the day of the newest element set when falling back to the cache.
+snap_day = run_utc.date() if tle_source == "live" else epochs[-1].date()
+
+fmt = "%Y-%m-%d %H:%M UTC"
+source_label = {"live": "fresh CelesTrak feed", "cache": "cached CelesTrak feed"}[tle_source]
+print(f'<p class="live-badge live-{tle_source}"><span class="live-dot" aria-hidden="true"></span>'
+      f'<strong>{"Live" if tle_source == "live" else "Cached"}</strong>'
+      f'<span>Last updated: {run_utc.strftime(fmt)}</span>'
+      f'<span>TLE epochs {epochs[0]:%Y-%m-%d} to {epochs[-1]:%Y-%m-%d %H:%M} UTC</span>'
+      f'<span>{len(epochs):,} satellites · {source_label}</span></p>\n')
+if SAT_LIVE and tle_source == "cache":
+    print(f"\n::: {{.callout-warning}}\nThe live CelesTrak request did not succeed in this build "
+          f"({tle_note}), so this page uses the committed cache of element sets instead.\n:::\n")
 ```
+
+::: {.callout-note}
+## Live data
+This page is re-executed every night by a GitHub Action: it downloads the current two-line element sets for all active satellites from CelesTrak, propagates them over the current UTC day and rebuilds the maps, chart and table below. The badge above shows when that last happened and how old the element sets are.
+:::
 
 # Introduction
 
@@ -79,30 +122,7 @@ Three-Line Element Set (TLE) data is a type of format used to store orbital para
 Below we are going get TLE data for all active satellites orbiting the earth, using an API developed by Celes Trak([CelesTrak](https://celestrak.org/NORAD/elements/), 2024). Resulting response will be stored as plain text format. Then, we create an dataframe with satellite name, Line1 , Line 2 as columns.
 
 ```{python}
-
-import os
-# Using Celes Trak, to get TLE Data for active satellites
-tle_file_path = "active_satellites_cache.txt"
-tle_text = ""
-
-if os.path.exists(tle_file_path):
-    print("Loading data from local cache.")
-    with open(tle_file_path, 'r') as f:
-        tle_text = f.read()
-else:
-    try:
-        Sat_TLE = requests.get("https://celestrak.org/NORAD/elements/gp.php?GROUP=active&FORMAT=tle")
-        if Sat_TLE.status_code == 200 and "GP data has not updated" not in Sat_TLE.text:
-            print("Data Retrieved successfully from CelesTrak.")
-            tle_text = Sat_TLE.text
-            with open(tle_file_path, 'w') as f:
-                f.write(tle_text)
-        else:
-            print("Received notice: Data has not updated, but no cache exists!")
-            tle_text = Sat_TLE.text
-    except requests.exceptions.RequestException as e:
-        # This will catch HTTP errors, connection errors, etc
-        print(f"An error occurred: {e}")
+# tle_text comes from the data-refresh cell at the top (one CelesTrak request per run)
 
 # first we split after every line, then we strip '\r' at end of every line
 tle_lines = [line.strip('\r') for line in tle_text.strip().split('\n')]
@@ -140,7 +160,7 @@ Skyfield library provides precise astronomical calculations for users, offering 
 
 ts = load.timescale() # timescale object from skyfield API, used to create time objects like UTC, delphi date
 
-start_datetime = datetime(2024, 3, 4, 0, 0, 0)  # datetime object of 04 march 2024.
+start_datetime = datetime(snap_day.year, snap_day.month, snap_day.day)  # 00:00 UTC of the propagation day
 # we want time intervals as column headers, so creating an times variable
 times = [(start_datetime + timedelta(minutes=240*i)).strftime('%Y-%m-%dT%H:%M:%SZ') for i in range(6)]
 
@@ -149,8 +169,8 @@ def calculate_positions(name, line1, line2):
     # Creating satellite object from TLE lines using Skyfield Library
     satellite = EarthSatellite(line1, line2, name, ts)
     
-    # saving an particular the start date
-    year, month, day = 2024, 3, 4
+    # the propagation day chosen in the data-refresh cell
+    year, month, day = snap_day.year, snap_day.month, snap_day.day
     
     # Generating a list of times at 240-minute intervals over 24 hours i.e. for every four hours
     times = ts.utc(year, month, day, 0, range(0, 1440, 240))
@@ -223,16 +243,18 @@ offset = 0  # starting at the beginning
 
 all_countries = []  # empty list for adding info 
 
+# retry transient errors; a hard failure stops the render instead of mapping an empty world
+session = requests.Session()
+session.mount('https://', requests.adapters.HTTPAdapter(max_retries=requests.adapters.Retry(
+    total=3, backoff_factor=2, status_forcelist=[429, 500, 502, 503, 504])))
+
 while offset < total_count:
-    response = requests.get(base_url, params={'limit': limit, 'offset': offset})
-    if response.status_code == 200:
-        data = response.json()   # converting into JSON
-        all_countries.extend(data['results'])  # Extracting 'results' item in list
-        offset += limit  # For API call to get next set of results
-        # We dont need to trim all_countries because API has correctly 256 countries, no additional polygons
-    else:
-        print(f"Failed to fetch data: HTTP {response.status_code}")
-        break  # will exit the loop in case of an error
+    response = session.get(base_url, params={'limit': limit, 'offset': offset}, timeout=60)
+    response.raise_for_status()
+    data = response.json()   # converting into JSON
+    all_countries.extend(data['results'])  # Extracting 'results' item in list
+    offset += limit  # For API call to get next set of results
+    # We dont need to trim all_countries because API has correctly 256 countries, no additional polygons
 
 # Now, `all_countries` contains data for up to 256 countries, fetched in chunks of 100
 
@@ -458,10 +480,10 @@ def plot_classifications(df, col):
     plt.show()
 
 # plot_classification function hided above
-plot_classifications(temporal_satellite_cm, '2024-03-04T00:00:00Z')
+plot_classifications(temporal_satellite_cm, times[0])
 ```
 
-After observing distribution of satellites distribution at **2024-03-04T00:00:00Z** , To distinguish High satellites overhead from low, We can plot either Natural Breaks or fisher jenks classification. Therefore, We are going to plot Natural Breaks classification map along with normal map.
+After observing distribution of satellites distribution at **`{python} times[0]`**, To distinguish High satellites overhead from low, We can plot either Natural Breaks or fisher jenks classification. Therefore, We are going to plot Natural Breaks classification map along with normal map.
 
 ```{python}
 def add_scalebar(ax, length, location=(0.05, 0.05), linewidth=3,
@@ -499,7 +521,7 @@ def add_scalebar(ax, length, location=(0.05, 0.05), linewidth=3,
 fig, axs = plt.subplots(2, 1, figsize=(20, 15))  # 1 row, 2 columns for side by side plots
 
 # Plot 1: Simple color map
-temporal_satellite_cm.plot(column='2024-03-04T00:00:00Z', ax=axs[0], legend=True,
+temporal_satellite_cm.plot(column=times[0], ax=axs[0], legend=True,
                            cmap='Greens', edgecolor='black', lw=0.6)
 axs[0].set_title(f"No. of Satellites Overhead per country - {times[0]}")
 
@@ -514,7 +536,7 @@ add_scalebar(axs[0], length=5556, location=(0.01, 0.05), units='km')
 
 
 # Plot 2: Natural breaks classification
-temporal_satellite_cm.plot(column='2024-03-04T00:00:00Z', ax=axs[1], legend=True,
+temporal_satellite_cm.plot(column=times[0], ax=axs[1], legend=True,
                            cmap='YlGnBu', scheme='naturalbreaks', k=5, 
                            edgecolor='black', lw=0.6, legend_kwds={'loc': 'center right'})
 axs[1].set_title(f"No. of Satellites Overhead per country (Natural Breaks) - {times[0]}")
@@ -571,7 +593,7 @@ satellites_map.add_to(i_map)
 i_map
 ```
 
-Click on a country to see the number of satellites overhead at exactly *2024-03-04T00:00:00Z* and the count averaged over 24 hours.
+Click on a country to see the number of satellites overhead at exactly *`{python} times[0]`* and the count averaged over 24 hours.
 
 ## Chart
 

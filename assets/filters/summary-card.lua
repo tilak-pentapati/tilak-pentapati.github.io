@@ -11,6 +11,7 @@
 --     result: ...
 --     stack: [Python, GeoPandas]
 --     code: {text: ..., href: ...}   # optional; defaults to first code-links entry
+--     live: "Live · updated nightly"  # optional badge in the card title
 --
 -- Values are markdown. Any value starting with "TODO" is flagged visually.
 
@@ -93,6 +94,10 @@ function Pandoc(doc)
     pandoc.RawInline("html", '<i class="bi bi-clipboard-data" aria-hidden="true"></i>'),
     pandoc.Str("At a glance"),
   }) }, pandoc.Attr("", { "es-title" }))
+  if summary.live ~= nil then
+    title.content[1].content:insert(pandoc.Span({ pandoc.Str(stringify(summary.live)) },
+      pandoc.Attr("", { "es-live" })))
+  end
 
   table.insert(rows, 1, title)
   local card = pandoc.Div(rows, pandoc.Attr("project-summary", { "eng-summary" },

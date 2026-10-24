@@ -1,6 +1,14 @@
-# Publish the site to GitHub Pages from the committed _freeze/ results.
-# No Python or R is installed: every computational page is rendered from
-# _freeze/, so the raw data under data/ (gitignored) is never needed.
+# Publish the site to GitHub Pages.
+#
+# Every page is rendered from the committed _freeze/ results, so the raw data
+# under data/ (gitignored) is never needed. The one exception is the live
+# satellites page, which is re-executed with fresh CelesTrak TLEs:
+#   - schedule (nightly) and workflow_dispatch (unless `live` is unticked);
+#   - push to main, only when something under projects/python/satellites_overhead/ changed.
+# A plain push skips Python entirely and deploys the committed freeze (fast path).
+#
+# The re-executed result is deployed only, never committed back, so main does
+# not collect a nightly bot commit; the committed _freeze/ stays the fallback.
 #
 # Requires Settings > Pages > Build and deployment > Source = "GitHub Actions".
 name: Publish site
@@ -8,7 +16,15 @@ name: Publish site
 on:
   push:
     branches: [main]
+  schedule:
+    # 02:17 UTC nightly (off the top of the hour, when GitHub's scheduler is busiest)
+    - cron: "17 2 * * *"
   workflow_dispatch:
+    inputs:
+      live:
+        description: "Re-execute the live satellites page with fresh TLEs"
+        type: boolean
+        default: true
 
 permissions:
   contents: read
@@ -19,22 +35,80 @@ concurrency:
   group: pages
   cancel-in-progress: false
 
+env:
+  SAT_DIR: projects/python/satellites_overhead
+
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
+
+      - name: Decide whether to re-execute the live page
+        id: mode
+        env:
+          EVENT: ${{ github.event_name }}
+          INPUT_LIVE: ${{ inputs.live }}
+          BEFORE: ${{ github.event.before }}
+        run: |
+          case "$EVENT" in
+            schedule) live=true ;;
+            workflow_dispatch) live="$INPUT_LIVE" ;;
+            push)
+              # Diff against the previous tip of main; if it is unknown, take the safe (live) path.
+              if [ -z "$BEFORE" ] || [ "$BEFORE" = "0000000000000000000000000000000000000000" ] \
+                 || ! git fetch --quiet --depth=1 origin "$BEFORE"; then
+                live=true
+              elif git diff --quiet "$BEFORE" HEAD -- "$SAT_DIR"; then
+                live=false
+              else
+                live=true
+              fi ;;
+            *) live=false ;;
+          esac
+          echo "live=$live" >> "$GITHUB_OUTPUT"
+          echo "Live satellites render: $live ($EVENT)" >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/setup-python@v5
+        if: steps.mode.outputs.live == 'true'
+        id: py
+        with:
+          python-version: "3.14"
+          cache: pip
+          cache-dependency-path: ${{ env.SAT_DIR }}/requirements.txt
+
+      - name: Install satellites page requirements
+        if: steps.mode.outputs.live == 'true'
+        run: python -m pip install -r "$SAT_DIR/requirements.txt"
 
       - uses: quarto-dev/quarto-actions/setup@v2
         with:
           version: 1.10.18
 
-      # A later nightly job re-executes only the live satellite page before
-      # this step (`quarto render projects/python/satellites_overhead/index.qmd`
-      # with Python set up), which refreshes its _freeze/ entry; everything
-      # else still comes from _freeze/.
+      # Rendering a single file always executes it, whatever `freeze` says, and
+      # rewrites its _freeze/ entry; the full render below then reuses that entry.
+      # SAT_LIVE=1 makes the page fetch fresh TLEs (falling back to its committed
+      # cache, with a notice on the page, if CelesTrak fails).
+      - name: Re-execute live satellites page
+        id: live
+        if: steps.mode.outputs.live == 'true'
+        continue-on-error: true
+        env:
+          SAT_LIVE: "1"
+          QUARTO_PYTHON: ${{ steps.py.outputs.python-path }}
+        run: quarto render "$SAT_DIR/index.qmd" --execute
+
+      # Any other failure (e.g. the boundaries API is down): deploy last committed result.
+      - name: Fall back to the committed satellites freeze
+        if: steps.live.outcome == 'failure'
+        run: |
+          git checkout -- "_freeze/$SAT_DIR"
+          git clean -fdq -- "_freeze/$SAT_DIR"
+          echo "::warning::Live satellites render failed; deploying the committed _freeze/ result."
+
       - name: Render site from freeze
-        uses: quarto-dev/quarto-actions/render@v2
+        run: quarto render
 
       - uses: actions/upload-pages-artifact@v3
         with:

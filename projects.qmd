@@ -23,5 +23,15 @@ document.addEventListener("click", function (e) {
     link.setAttribute("rel", "noopener noreferrer");
   }
 });
+
+// Pages with the "Live data" category are re-executed nightly: give that chip a live style.
+document.addEventListener("DOMContentLoaded", function () {
+  document.querySelectorAll(".quarto-listing .listing-category").forEach(function (chip) {
+    if (chip.textContent.trim() === "Live data") {
+      chip.classList.add("live-category");
+      chip.textContent = "Live · updated nightly";
+    }
+  });
+});
 </script>
 ```
