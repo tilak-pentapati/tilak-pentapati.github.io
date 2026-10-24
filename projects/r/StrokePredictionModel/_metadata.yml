@@ -1,0 +1,14 @@
+# Per-page metadata for this project (kept out of index.qmd so its
+# _freeze/ hash is unaffected). Read by assets/filters/summary-card.lua.
+date-modified: 2026-10-24
+keywords: ["stroke prediction", "clinical machine learning", "class imbalance", "SMOTE", "tidymodels", "ROC analysis", "risk stratification"]
+code-links:
+  - text: Page source (.qmd)
+    icon: github
+    href: https://github.com/tilak-pentapati/tilak-pentapati.github.io/blob/main/projects/r/StrokePredictionModel/index.qmd
+summary:
+  problem: "Can routine clinical and lifestyle variables flag patients at high risk of stroke?"
+  data: "Healthcare Dataset Stroke Data: 5,110 patients × 12 clinical and lifestyle features, with a strongly imbalanced outcome."
+  methods: "Stratified BMI imputation, clinical feature engineering, SMOTE inside tidymodels recipes, 5-fold stratified CV, logistic regression vs random forest vs XGBoost, Youden's J threshold."
+  result: "SMOTE-balanced logistic regression reaches AUC = 0.83, matching random forest and XGBoost (≈ 0.81–0.82) while keeping interpretable odds ratios."
+  stack: ["R", "tidymodels", "themis", "ranger", "xgboost", "pROC", "ggplot2"]

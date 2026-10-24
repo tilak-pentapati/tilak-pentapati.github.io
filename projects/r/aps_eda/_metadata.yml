@@ -1,0 +1,14 @@
+# Per-page metadata for this project (kept out of index.qmd so its
+# _freeze/ hash is unaffected). Read by assets/filters/summary-card.lua.
+date-modified: 2026-10-24
+keywords: ["Annual Population Survey", "occupational skill level", "SOC 2020", "residential mobility", "cross-tabulation", "chi-square test", "post-stratification"]
+code-links:
+  - text: Page source (.qmd)
+    icon: github
+    href: https://github.com/tilak-pentapati/tilak-pentapati.github.io/blob/main/projects/r/aps_eda/index.qmd
+summary:
+  problem: "Is occupational skill level related to how long people have lived at their current address?"
+  data: "APS 2021 teaching extract: 249,997 respondents × 60 variables (108,964 complete cases), plus UK mid-year population estimates."
+  methods: "Recoding SOC 2020 into 4 ONS skill levels, median and SRDI summaries, two-way cross-tabulation, chi-square test, age-based post-stratification reweighting."
+  result: "A significant association (χ² = 637.8, df = 9, p < 2.2 × 10⁻¹⁶); age reweighting lowers the \"10 years or longer\" share from 47.9% to 44.5%."
+  stack: ["R", "tidyverse", "knitr"]

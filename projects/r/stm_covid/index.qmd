@@ -5,7 +5,6 @@ date: "2024-05-16"
 image: stm_map.svg
 categories: [R, Spatial Modelling, Multilevel Modelling, GWR, Spatio-Temporal Analysis]
 bibliography: references.bib
-csl: https://raw.githubusercontent.com/citation-style-language/styles/master/ieee.csl
 ---
 
 

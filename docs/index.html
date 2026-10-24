@@ -37,19 +37,21 @@ ul.task-list li input[type="checkbox"] {
 <script src="site_libs/quarto-search/quarto-search.js"></script>
 <meta name="quarto:offset" content="./">
 <link href="./favicon.svg" rel="icon" type="image/svg+xml">
+<script src="site_libs/quarto-listing/list.min.js"></script>
+<script src="site_libs/quarto-listing/quarto-listing.js"></script>
 <script src="site_libs/quarto-html/quarto.js" type="module"></script>
 <script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
 <script src="site_libs/quarto-html/popper.min.js"></script>
 <script src="site_libs/quarto-html/tippy.umd.min.js"></script>
 <link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-dark-b85bc7c33db8c58e0ec93c3465666fed.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-0f05cba98e93abd5bfacabf37e46c573.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-dark-36489fe9f95e83378e31b3375ef0b6a4.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-0f05cba98e93abd5bfacabf37e46c573.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap-445b8638c3d06994fee0907d791121c4.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="site_libs/bootstrap/bootstrap-dark-df07115ad9f15e2ef3479c789e6873c8.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="site_libs/bootstrap/bootstrap-445b8638c3d06994fee0907d791121c4.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-04b0a9911fb86bbe5489438f77d4b2d0.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-dark-03ffa4f776e234fcb568f977651cd4de.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="site_libs/bootstrap/bootstrap-04b0a9911fb86bbe5489438f77d4b2d0.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -77,16 +79,73 @@ ul.task-list li input[type="checkbox"] {
     "search-label": "Search"
   }
 }</script>
+<script>
 
+  window.document.addEventListener("DOMContentLoaded", function (_event) {
+    const listingTargetEl = window.document.querySelector('#listing-featured .list');
+    if (!listingTargetEl) {
+      // No listing discovered, do not attach.
+      return; 
+    }
 
-<link rel="stylesheet" href="styles.css">
+    const options = {
+      valueNames: ['listing-image','listing-title','listing-description',{ data: ['index'] },{ data: ['categories'] },{ data: ['listing-date-sort'] },{ data: ['listing-file-modified-sort'] }],
+      
+      searchColumns: ["listing-title","listing-author","listing-date","listing-image","listing-description"],
+    };
+
+    window['quarto-listings'] = window['quarto-listings'] || {};
+    window['quarto-listings']['listing-featured'] = new List('listing-featured', options);
+
+    if (window['quarto-listing-loaded']) {
+      window['quarto-listing-loaded']();
+    }
+  });
+
+  window.addEventListener('hashchange',() => {
+    if (window['quarto-listing-loaded']) {
+      window['quarto-listing-loaded']();
+    }
+  })
+  </script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
 <meta property="og:title" content="Jay Tilak Pentapati">
-<meta property="og:description" content="Geographic data science and engineering portfolio of Jay Tilak Pentapati: spatial analysis, statistical modelling, machine learning and systems design.">
-<meta property="og:image" content="https://tilak-pentapati.github.io/pic_linkedin_V2.jpg">
+<meta property="og:description" content="Geographic data science · Engineering">
+<meta property="og:image" content="https://tilak-pentapati.github.io/projects/r/stm_covid/stm_map.svg">
 <meta property="og:site_name" content="Jay Tilak Pentapati">
 <meta name="twitter:title" content="Jay Tilak Pentapati">
-<meta name="twitter:description" content="Geographic data science and engineering portfolio of Jay Tilak Pentapati: spatial analysis, statistical modelling, machine learning and systems design.">
-<meta name="twitter:image" content="https://tilak-pentapati.github.io/pic_linkedin_V2.jpg">
+<meta name="twitter:description" content="Geographic data science · Engineering">
+<meta name="twitter:image" content="https://tilak-pentapati.github.io/projects/r/stm_covid/stm_map.svg">
 <meta name="twitter:card" content="summary_large_image">
 </head>
 
@@ -259,6 +318,10 @@ ul.task-list li input[type="checkbox"] {
     <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
+    <a href="./index.html" class="navbar-brand navbar-brand-logo">
+    <img src="./assets/logo/jtp-mark-light.svg" alt="JTP monogram" class="navbar-logo light-content">
+    <img src="./assets/logo/jtp-mark-dark.svg" alt="JTP monogram" class="navbar-logo dark-content">
+    </a>
     <a class="navbar-brand" href="./index.html">
     <span class="navbar-title">Jay Tilak Pentapati</span>
     </a>
@@ -314,6 +377,7 @@ ul.task-list li input[type="checkbox"] {
       <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
 <h1 class="title">Jay Tilak Pentapati</h1>
+<p class="subtitle lead">Geographic data science · Engineering</p>
 </div>
 <div class="quarto-title-meta">
   </div>
@@ -324,34 +388,121 @@ ul.task-list li input[type="checkbox"] {
   </a>
   <a href="https://github.com/tilak-pentapati" class="about-link" rel="" target="_blank">
     <i class="bi bi-github"></i>
-     <span class="about-link-text">Github</span>
+     <span class="about-link-text">GitHub</span>
   </a>
 </div>
       <div class="about-contents"><main class="content" id="quarto-document-content">
 
-<!-- Write summary of Profile -->
-<div style="margin-bottom: 25px;">
+<div class="todo-note">
+<p><strong>Research &amp; engineering statement.</strong> Two or three sentences in your own words: what questions you work on, how your petroleum-engineering training shapes the way you model spatial systems, and what you want to do next.</p>
 </div>
+<section id="research-interests" class="level3">
+<h3 data-anchor-id="research-interests">Research interests</h3>
+<!-- TODO: confirm or edit. Drawn from the topics of the projects on this site. -->
+<div class="interest-chips">
+<p><span>Spatial econometrics</span> <span>Spatio-temporal modelling</span> <span>Geodemographics</span> <span>Machine learning</span> <span>Big-data pipelines</span> <span>Remote sensing &amp; satellites</span> <span>Energy systems</span> <span>Space systems &amp; robotics</span></p>
+</div>
+</section>
+<section id="featured-work" class="level2">
+<h2 data-anchor-id="featured-work">Featured work</h2>
+<div id="listing-featured" class="quarto-listing quarto-listing-container-grid">
+<div class="list grid quarto-listing-cols-3">
+<div class="g-col-1" data-index="0" data-categories="UiUyQ1NwYXRpYWwlMjBNb2RlbGxpbmclMkNNdWx0aWxldmVsJTIwTW9kZWxsaW5nJTJDR1dSJTJDU3BhdGlvLVRlbXBvcmFsJTIwQW5hbHlzaXM=" data-listing-date-sort="1715814000000" data-listing-file-modified-sort="1792841520310" data-listing-date-modified-sort="1792796400000" data-listing-reading-time-sort="39" data-listing-word-count-sort="7607">
+<a href="./projects/r/stm_covid/index.html" class="quarto-grid-link">
+<div class="quarto-grid-item card h-100 card-left">
+<p class="card-img-top">
+<img loading="lazy" src="./projects/r/stm_covid/stm_map.svg" class="thumbnail-image card-img" style="height: 140px;">
+</p>
+<div class="card-body post-contents">
+<h5 class="no-anchor card-title listing-title">
+Multilevel, Geographically Weighted and Spatio-Temporal Modelling of COVID-19 in England
+</h5>
+<div class="card-text listing-description delink">
+<p>Empirical investigation of England’s Alpha variant wave revealing how household overcrowding, ethnic diversity and health vulnerability…</p>
+</div>
+</div>
+</div></a>
+</div>
+<div class="g-col-1" data-index="1" data-categories="UiUyQ01hY2hpbmUlMjBMZWFybmluZyUyQ0hlYWx0aGNhcmUlMjBBbmFseXRpY3MlMkNEYXRhJTIwUHJlcHJvY2Vzc2luZw==" data-listing-date-sort="1703894400000" data-listing-file-modified-sort="1792840692975" data-listing-date-modified-sort="1792796400000" data-listing-reading-time-sort="33" data-listing-word-count-sort="6404">
+<a href="./projects/r/StrokePredictionModel/index.html" class="quarto-grid-link">
+<div class="quarto-grid-item card h-100 card-left">
+<p class="card-img-top">
+<img loading="lazy" src="./projects/r/StrokePredictionModel/strokePM.svg" class="thumbnail-image card-img" style="height: 140px;">
+</p>
+<div class="card-body post-contents">
+<h5 class="no-anchor card-title listing-title">
+Clinical Stroke Prediction &amp; Risk Stratification: Machine Learning Pipeline in R
+</h5>
+<div class="card-text listing-description delink">
+<p>End-to-end clinical machine learning pipeline in R: exploratory data analysis, SMOTE resampling with themis/tidymodels, multi-model…</p>
+</div>
+</div>
+</div></a>
+</div>
+<div class="g-col-1" data-index="2" data-categories="UHl0aG9uJTJDU3BhdGlhbCUyMEFuYWx5c2lz" data-listing-date-sort="1709510400000" data-listing-file-modified-sort="1792840698751" data-listing-date-modified-sort="1792796400000" data-listing-reading-time-sort="23" data-listing-word-count-sort="4528">
+<a href="./projects/python/satellites_overhead/index.html" class="quarto-grid-link">
+<div class="quarto-grid-item card h-100 card-left">
+<p class="card-img-top">
+<img loading="lazy" src="./projects/python/satellites_overhead/satellite.jpg" class="thumbnail-image card-img" style="height: 140px;">
+</p>
+<div class="card-body post-contents">
+<h5 class="no-anchor card-title listing-title">
+Real-Time Orbital Tracking and Country-Level Satellite Density Analysis
+</h5>
+<div class="card-text listing-description delink">
+<p>An automated geoinformatics workflow and interactive Folium web map evaluating global satellite distributions overhead through RESTful API…</p>
+</div>
+</div>
+</div></a>
+</div>
+</div>
+<div class="listing-no-matching d-none">No matching items</div>
+</div>
+<p><a href="./projects.html" class="btn btn-outline-primary btn-sm">All projects →</a></p>
+</section>
 <section id="education" class="level2">
 <h2 data-anchor-id="education">Education</h2>
-<div class="line-block">1. University of Liverpool | Liverpool, UK | September 2023 - September 2024<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<em>M.Sc in Geographic Data Science</em><br>
+<div class="timeline">
+<div class="tl-item">
+<p><span class="tl-when">September 2023 – September 2024 · Liverpool, UK</span></p>
+<p><span class="tl-what">M.Sc. Geographic Data Science</span></p>
+<p><span class="tl-where">University of Liverpool</span></p>
+<p><strong>Key modules:</strong> Geographic Data Science, Applied Geographic Information Systems, Spatial Modelling for Data Scientists.</p>
 </div>
-<ul>
-<li><strong>Key Modules</strong>: Geographic Data Science, Applied Geographic Information Systems, Spatial Modelling for Data Scientists.</li>
-</ul>
-<div style="margin-bottom: 15px;">
+<div class="tl-item">
+<p><span class="tl-when">August 2018 – May 2022 · India</span></p>
+<p><span class="tl-what">B.Tech. Petroleum Engineering</span></p>
+<p><span class="tl-where">Indian Institute of Petroleum and Energy</span></p>
+<p><strong>Key modules:</strong> Advanced Drilling Engineering, Reservoir Engineering, Hydrocarbon Production Engineering, Engineering Mathematics.</p>
 </div>
-<div class="line-block">2. Indian Institute of Petroleum and Energy | India | August 2018 - May 2022<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<em>B.Tech in Petroleum Engineering</em><br>
 </div>
-<ul>
-<li><strong>Key Modules</strong>: Advanced Drilling Engineering, Reservoir Engineering, Hydrocarbon Production Engineering, Engineering Mathematics.</li>
-</ul>
 </section>
 <section id="skills" class="level2">
 <h2 data-anchor-id="skills">Skills</h2>
-<p><strong>Languages</strong>: Python, R, SQL (Google BigQuery), HTML/CSS, MATLAB. <strong>Technical</strong>: Microsoft Office, Data Analytics, Linux OS, Spark, Spatial Data Science. <strong>Developer Tools</strong>: Git, Octave, ArcGIS, QGIS, SolidWorks, PyCharm, VS Code, MATLAB, Docker, Google Earth Engine.</p>
+<div class="grid">
+<div class="g-col-12 g-col-md-4">
+<div class="skill-card">
+<p><span class="skill-head">Languages</span></p>
+<p>Python, R, SQL (Google BigQuery), HTML/CSS, MATLAB</p>
+</div>
+</div>
+<div class="g-col-12 g-col-md-4">
+<div class="skill-card">
+<p><span class="skill-head">Technical</span></p>
+<p>Data analytics, spatial data science, Spark, Linux, Microsoft Office</p>
+</div>
+</div>
+<div class="g-col-12 g-col-md-4">
+<div class="skill-card">
+<p><span class="skill-head">Developer tools</span></p>
+<p>Git, Docker, VS Code, PyCharm, QGIS, ArcGIS, Google Earth Engine, SolidWorks, MATLAB, Octave</p>
+</div>
+</div>
+</div>
+</section>
+<section id="where-my-work-is" class="level2">
+<h2 data-anchor-id="where-my-work-is">Where my work is</h2>
+<!-- Next phase: Leaflet map of project locations + skills network go here. -->
 
 
 </section>

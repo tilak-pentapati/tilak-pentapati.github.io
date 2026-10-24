@@ -6,8 +6,9 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="author" content="Jay Tilak P.">
+<meta name="author" content="Jay Tilak Pentapati">
 <meta name="dcterms.date" content="2023-12-30">
+<meta name="keywords" content="stroke prediction, clinical machine learning, class imbalance, SMOTE, tidymodels, ROC analysis, risk stratification">
 <meta name="description" content="End-to-end clinical machine learning pipeline in R: exploratory data analysis, SMOTE resampling with themis/tidymodels, multi-model evaluation, and live interactive decision tool.">
 
 <title>Clinical Stroke Prediction &amp; Risk Stratification: Machine Learning Pipeline in R – Jay Tilak Pentapati</title>
@@ -81,14 +82,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../../../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting-bb62276ab45c84d9efd712f51ff97b5a.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting-dark-5a1953863e1f72ef3b996ef827f01ca7.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting-bb62276ab45c84d9efd712f51ff97b5a.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting-886401abd66b684bd75f2f6e9275b3c8.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting-dark-168a0324ff7a238321a97431c880757d.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting-886401abd66b684bd75f2f6e9275b3c8.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../../site_libs/bootstrap/bootstrap-101545cf1cd2d34117649106470ec2fa.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../../site_libs/bootstrap/bootstrap-dark-a286df8d3673e19799a98780244438ae.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../../site_libs/bootstrap/bootstrap-101545cf1cd2d34117649106470ec2fa.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../../site_libs/bootstrap/bootstrap-a3b3a79561dd8c69a9cbcf3cc3a760f7.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../../site_libs/bootstrap/bootstrap-dark-147d61ffea3aed791dc110db6c193046.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../../site_libs/bootstrap/bootstrap-a3b3a79561dd8c69a9cbcf3cc3a760f7.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -165,7 +166,6 @@ window.Quarto = {
 };
 </script>
 
-<link rel="stylesheet" href="../../../styles.css">
 <meta property="og:title" content="Clinical Stroke Prediction &amp; Risk Stratification: Machine Learning Pipeline in R – Jay Tilak Pentapati">
 <meta property="og:description" content="End-to-end clinical machine learning pipeline in R: exploratory data analysis, SMOTE resampling with themis/tidymodels, multi-model evaluation, and live interactive decision tool.">
 <meta property="og:image" content="https://tilak-pentapati.github.io/projects/r/StrokePredictionModel/strokePM.svg">
@@ -174,6 +174,17 @@ window.Quarto = {
 <meta name="twitter:description" content="End-to-end clinical machine learning pipeline in R: exploratory data analysis, SMOTE resampling with themis/tidymodels, multi-model evaluation, and live interactive decision tool.">
 <meta name="twitter:image" content="https://tilak-pentapati.github.io/projects/r/StrokePredictionModel/strokePM.svg">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="citation_title" content="Clinical Stroke Prediction &amp;amp; Risk Stratification: Machine Learning Pipeline in R">
+<meta name="citation_keywords" content="stroke prediction,clinical machine learning,class imbalance,SMOTE,tidymodels,ROC analysis,risk stratification">
+<meta name="citation_author" content="Jay Tilak Pentapati">
+<meta name="citation_publication_date" content="2023-12-30">
+<meta name="citation_cover_date" content="2023-12-30">
+<meta name="citation_year" content="2023">
+<meta name="citation_online_date" content="2023-12-30">
+<meta name="citation_fulltext_html_url" content="https://tilak-pentapati.github.io/projects/r/StrokePredictionModel/">
+<meta name="citation_language" content="en">
+<meta name="citation_journal_title" content="Jay Tilak Pentapati: Geographic Data Science &amp;amp; Engineering Portfolio">
+<meta name="citation_publisher" content="Jay Tilak Pentapati">
 </head>
 
 <body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
@@ -345,6 +356,10 @@ window.Quarto = {
     <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
+    <a href="../../../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../../../assets/logo/jtp-mark-light.svg" alt="JTP monogram" class="navbar-logo light-content">
+    <img src="../../../assets/logo/jtp-mark-dark.svg" alt="JTP monogram" class="navbar-logo dark-content">
+    </a>
     <a class="navbar-brand" href="../../../index.html">
     <span class="navbar-title">Jay Tilak Pentapati</span>
     </a>
@@ -433,7 +448,7 @@ window.Quarto = {
   </ul></li>
   <li><a href="#references" id="toc-references" class="nav-link" data-scroll-target="#references"><span class="header-section-number">11</span> References</a></li>
   </ul>
-<div class="toc-actions"><ul><li><a href="https://github.com/tilak-pentapati/tilak-pentapati.github.io/blob/main/projects/r/StrokePredictionModel/index.qmd" class="toc-action"><i class="bi bi-github"></i>View source</a></li><li><a href="https://github.com/tilak-pentapati/tilak-pentapati.github.io/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+<div class="toc-actions"><ul><li><a href="https://github.com/tilak-pentapati/tilak-pentapati.github.io/blob/main/projects/r/StrokePredictionModel/index.qmd" class="toc-action"><i class="bi bi-github"></i>View source</a></li><li><a href="https://github.com/tilak-pentapati/tilak-pentapati.github.io/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div><div class="quarto-code-links"><h2>Code Links</h2><ul><li><a href="https://github.com/tilak-pentapati/tilak-pentapati.github.io/blob/main/projects/r/StrokePredictionModel/index.qmd"><i class="bi bi-github"></i>Page source (.qmd)</a></li></ul></div></nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
@@ -462,7 +477,7 @@ window.Quarto = {
     <div>
     <div class="quarto-title-meta-heading">Author</div>
     <div class="quarto-title-meta-contents">
-             <p>Jay Tilak P. </p>
+             <p><a href="https://tilak-pentapati.github.io">Jay Tilak Pentapati</a> </p>
           </div>
   </div>
     
@@ -473,14 +488,79 @@ window.Quarto = {
     </div>
   </div>
   
+    <div>
+    <div class="quarto-title-meta-heading">Modified</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date-modified">October 24, 2026</p>
+    </div>
+  </div>
     
   </div>
   
 
+<div>
+  <div class="keywords">
+    <div class="block-title">Keywords</div>
+    <p>stroke prediction, clinical machine learning, class imbalance, SMOTE, tidymodels, ROC analysis, risk stratification</p>
+  </div>
+</div>
 
 </header>
 
 
+<div id="project-summary" class="eng-summary" role="note" aria-label="Project summary">
+<div class="es-title">
+<i class="bi bi-clipboard-data" aria-hidden="true"></i>At a glance
+</div>
+<div class="es-row">
+<div class="es-label">
+Problem
+</div>
+<div class="es-value">
+Can routine clinical and lifestyle variables flag patients at high risk of stroke?
+</div>
+</div>
+<div class="es-row">
+<div class="es-label">
+Data
+</div>
+<div class="es-value">
+Healthcare Dataset Stroke Data: 5,110 patients × 12 clinical and lifestyle features, with a strongly imbalanced outcome.
+</div>
+</div>
+<div class="es-row">
+<div class="es-label">
+Methods
+</div>
+<div class="es-value">
+Stratified BMI imputation, clinical feature engineering, SMOTE inside tidymodels recipes, 5-fold stratified CV, logistic regression vs random forest vs XGBoost, Youden’s J threshold.
+</div>
+</div>
+<div class="es-row es-result">
+<div class="es-label">
+Key result
+</div>
+<div class="es-value">
+SMOTE-balanced logistic regression reaches AUC = 0.83, matching random forest and XGBoost (≈ 0.81–0.82) while keeping interpretable odds ratios.
+</div>
+</div>
+<div class="es-row">
+<div class="es-label">
+Stack
+</div>
+<div class="es-value">
+<span class="es-chip">R</span> <span class="es-chip">tidymodels</span> <span class="es-chip">themis</span> <span class="es-chip">ranger</span> <span class="es-chip">xgboost</span> <span class="es-chip">pROC</span> <span class="es-chip">ggplot2</span>
+</div>
+</div>
+<div class="es-row">
+<div class="es-label">
+Code
+</div>
+<div class="es-value">
+<a href="https://github.com/tilak-pentapati/tilak-pentapati.github.io/blob/main/projects/r/StrokePredictionModel/index.qmd">Page source (.qmd)</a>
+</div>
+</div>
+</div>
 <section id="project-overview" class="level2" data-number="1">
 <h2 data-number="1" class="anchored" data-anchor-id="project-overview"><span class="header-section-number">1</span> Project Overview</h2>
 <p>According to the <strong>World Health Organization (WHO)</strong>, stroke is the second leading cause of mortality globally, responsible for approximately <span class="math inline">11\%</span> of total deaths worldwide (over 6.6 million deaths annually)[cite: who2020stroke, feigin2021global]. Characterized by an acute focal neurological deficit resulting from vascular injury to the central nervous system—primarily ischemic cerebral infarction (<span class="math inline">87\%</span>) or intracranial hemorrhage (<span class="math inline">13\%</span>)—stroke is also a preeminent driver of chronic disability-adjusted life years (DALYs)[cite: boehme2017stroke].</p>
@@ -1476,7 +1556,22 @@ if (document.readyState === 'loading') {
 
 </section>
 
-<a onclick="window.scrollTo(0, 0); return false;" role="button" id="quarto-back-to-top"><i class="bi bi-arrow-up"></i> Back to top</a></main> <!-- /main -->
+<a onclick="window.scrollTo(0, 0); return false;" role="button" id="quarto-back-to-top"><i class="bi bi-arrow-up"></i> Back to top</a><div id="quarto-appendix" class="default"><section class="quarto-appendix-contents" id="quarto-citation"><h2 class="anchored quarto-appendix-heading">Citation</h2><div><div class="quarto-appendix-secondary-label">BibTeX citation:</div><pre class="sourceCode code-with-copy quarto-appendix-bibtex"><code class="sourceCode bibtex">@online{pentapati2023,
+  author = {Pentapati, Jay Tilak},
+  publisher = {Jay Tilak Pentapati},
+  title = {Clinical {Stroke} {Prediction} \&amp; {Risk} {Stratification:}
+    {Machine} {Learning} {Pipeline} in {R}},
+  date = {2023-12-30},
+  url = {https://tilak-pentapati.github.io/projects/r/StrokePredictionModel/},
+  langid = {en}
+}
+</code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre><div class="quarto-appendix-secondary-label">For attribution, please cite this work as:</div><div id="ref-pentapati2023" class="csl-entry quarto-appendix-citeas" role="listitem">
+<div class="">J.
+T. Pentapati, <span>“Clinical Stroke Prediction &amp; Risk
+Stratification: Machine Learning Pipeline in R,”</span> Jay Tilak
+Pentapati: Geographic Data Science &amp; Engineering Portfolio.
+[Online]. Available: <a href="https://tilak-pentapati.github.io/projects/r/StrokePredictionModel/">https://tilak-pentapati.github.io/projects/r/StrokePredictionModel/</a></div>
+</div></div></section></div></main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
   window.document.addEventListener("DOMContentLoaded", function (event) {
     // Ensure there is a toggle, if there isn't float one in the top right

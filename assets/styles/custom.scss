@@ -1,0 +1,220 @@
+/*-- scss:defaults --*/
+// Colours and fonts come from _brand.yml (brand palette variables).
+$es-radius: 0.6rem !default;
+
+/*-- scss:rules --*/
+
+// System fallbacks behind the brand.yml Google Fonts.
+body { font-family: $font-family-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; }
+h1, h2, h3, h4, h5, h6, .title { font-family: $headings-font-family, Georgia, serif; }
+code, pre, kbd, samp { font-family: $font-family-monospace, ui-monospace, Menlo, monospace; }
+
+// Compact navbar with the same height in light and dark (its colours come
+// from site-navbar-colours.scss).
+.navbar {
+  --bs-navbar-padding-y: 0.5rem !important;
+  padding-top: 0.5rem !important;
+  padding-bottom: 0.5rem !important;
+  border-bottom: 1px solid rgba($body-color, 0.08);
+}
+
+.navbar-brand .navbar-logo,
+.navbar-brand img {
+  max-height: 1.75rem;
+}
+
+// Mermaid flowcharts: warm amber palette (identical in both modes)
+.mermaid .node rect,
+.mermaid .node polygon {
+  fill: $brand-amber-soft !important;
+  stroke: $brand-amber !important;
+  stroke-width: 1.5px !important;
+}
+
+.mermaid .node .label,
+.mermaid .node text,
+.mermaid .node span,
+.mermaid .node div {
+  color: $brand-ink !important;
+  fill: $brand-ink !important;
+}
+
+.mermaid .cluster rect {
+  fill: $brand-amber-pale !important;
+  stroke: $brand-amber-line !important;
+  stroke-width: 2px !important;
+}
+
+.mermaid .cluster text,
+.mermaid .cluster span {
+  fill: $brand-ink !important;
+  color: $brand-ink !important;
+  font-weight: bold !important;
+}
+
+.mermaid .edgePath path {
+  stroke: $brand-graphite !important;
+  stroke-width: 1.5px !important;
+}
+
+// Keep maps and figures on screen without scrolling
+.cell-output-display img,
+.figure-img {
+  max-height: 70vh !important;
+  width: auto !important;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+// ---------------------------------------------------------------------------
+// Engineering summary card (assets/filters/summary-card.lua)
+// ---------------------------------------------------------------------------
+.eng-summary {
+  border: 1px solid rgba($body-color, 0.14);
+  border-left: 4px solid $primary;
+  border-radius: $es-radius;
+  background: rgba($primary, 0.04);
+  padding: 0.9rem 1.1rem 0.8rem;
+  margin: 0 0 2rem;
+  font-size: 0.95rem;
+
+  .es-title {
+    font-family: $headings-font-family;
+    font-weight: 600;
+    font-size: 1.05rem;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  .es-row {
+    display: grid;
+    grid-template-columns: 7.5rem 1fr;
+    gap: 0.75rem;
+    padding: 0.3rem 0;
+    border-top: 1px dashed rgba($body-color, 0.12);
+  }
+
+  .es-label {
+    font-weight: 700;
+    font-size: 0.75rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: $secondary;
+    padding-top: 0.15rem;
+  }
+
+  .es-value p:last-child { margin-bottom: 0; }
+
+  .es-result .es-value { font-weight: 600; }
+
+  .es-chip {
+    display: inline-block;
+    font-family: $font-family-monospace;
+    font-size: 0.78rem;
+    padding: 0.05rem 0.5rem;
+    margin: 0 0.3rem 0.3rem 0;
+    border-radius: 999px;
+    border: 1px solid rgba($primary, 0.35);
+    background: rgba($primary, 0.08);
+  }
+
+  .es-todo { color: $warning; font-style: italic; }
+}
+
+@media (max-width: 575.98px) {
+  .eng-summary .es-row {
+    grid-template-columns: 1fr;
+    gap: 0.1rem;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// About page (index.qmd)
+// ---------------------------------------------------------------------------
+.interest-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0.5rem 0 1.5rem;
+
+  span {
+    padding: 0.2rem 0.75rem;
+    border-radius: 999px;
+    font-size: 0.9rem;
+    border: 1px solid rgba($primary, 0.35);
+    background: rgba($primary, 0.07);
+  }
+}
+
+.todo-note {
+  border: 1px dashed $warning;
+  border-radius: $es-radius;
+  padding: 0.6rem 0.9rem;
+  margin-bottom: 1rem;
+
+  &::before {
+    content: "TODO";
+    font-weight: 700;
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    color: $warning;
+    margin-right: 0.5rem;
+  }
+}
+
+.timeline {
+  border-left: 2px solid rgba($primary, 0.4);
+  padding-left: 1.25rem;
+  margin-left: 0.4rem;
+
+  .tl-item {
+    position: relative;
+    margin-bottom: 1.25rem;
+
+    &::before {
+      content: "";
+      position: absolute;
+      left: calc(-1.25rem - 7px);
+      top: 0.45rem;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: $primary;
+      border: 2px solid $body-bg;
+    }
+  }
+
+  .tl-when {
+    font-size: 0.85rem;
+    color: $secondary;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .tl-what {
+    font-weight: 700;
+    margin: 0;
+  }
+
+  .tl-where { font-style: italic; margin: 0 0 0.3rem; }
+}
+
+.skill-card {
+  height: 100%;
+  border: 1px solid rgba($body-color, 0.12);
+  border-radius: $es-radius;
+  padding: 0.7rem 0.9rem;
+
+  .skill-head {
+    font-weight: 700;
+    font-size: 0.8rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: $secondary;
+    margin-bottom: 0.3rem;
+  }
+
+  p:last-child { margin-bottom: 0; }
+}

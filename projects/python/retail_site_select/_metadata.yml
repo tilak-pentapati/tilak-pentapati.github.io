@@ -1,0 +1,14 @@
+# Per-page metadata for this project (kept out of index.qmd so its
+# _freeze/ hash is unaffected). Read by assets/filters/summary-card.lua.
+date-modified: 2026-10-24
+keywords: ["retail site selection", "catchment analysis", "network analysis", "Click & Collect", "Internet User Classification", "Liverpool"]
+code-links:
+  - text: Page source (.qmd)
+    icon: github
+    href: https://github.com/tilak-pentapati/tilak-pentapati.github.io/blob/main/projects/python/retail_site_select/index.qmd
+summary:
+  problem: "Where should Marks & Spencer open a new convenience store with Click & Collect in Liverpool?"
+  data: "298 Liverpool LSOAs: CDRC Internet User Classification 2018, IMD 2019, BRES daytime population 2020, Geolytix retail points 2023, road-network service areas."
+  methods: "Three-stage multi-criteria screening (demand → competition → site), fixed vs network drive-distance catchments, store-to-LSOA distance matrix."
+  result: "Optimal site on the Wavertree / Childwall / Allerton border, outside competitors' 1,500 m drive catchments; a 500 m network catchment covers 27.9% less area than a Euclidean buffer."
+  stack: ["Python", "GeoPandas", "pandas", "Matplotlib", "QGIS", "ArcGIS Pro"]

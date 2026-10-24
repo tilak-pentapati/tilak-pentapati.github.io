@@ -1,0 +1,14 @@
+# Per-page metadata for this project (kept out of index.qmd so its
+# _freeze/ hash is unaffected). Read by assets/filters/summary-card.lua.
+date-modified: 2026-10-24
+keywords: ["COVID-19", "multilevel modelling", "geographically weighted regression", "spatio-temporal modelling", "Fixed Rank Kriging", "negative binomial", "England"]
+code-links:
+  - text: Page source (.qmd)
+    icon: github
+    href: https://github.com/tilak-pentapati/tilak-pentapati.github.io/blob/main/projects/r/stm_covid/index.qmd
+summary:
+  problem: "What drove local COVID-19 infection risk in England's third (Alpha) wave, and how did it spread?"
+  data: "Daily COVID-19 cases for 149 upper-tier local authorities in 9 regions (Dec 2020 – Jan 2021) with census covariates."
+  methods: "Multilevel varying-intercept and varying-slope models, fixed and adaptive GWR, Fixed Rank Kriging basis functions in Poisson and negative binomial space-time GLMs."
+  result: "Overcrowding, ethnic diversity and long-term illness raise risk; the negative binomial cuts deviance from 171,098 to 9,261; a significant latitude × time term shows south-to-north spread."
+  stack: ["R", "lme4", "spgwr", "FRK", "spacetime", "sf", "tmap"]

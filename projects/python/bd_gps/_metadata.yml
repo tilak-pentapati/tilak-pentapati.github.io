@@ -1,0 +1,14 @@
+# Per-page metadata for this project (kept out of index.qmd so its
+# _freeze/ hash is unaffected). Read by assets/filters/summary-card.lua.
+date-modified: 2026-10-24
+keywords: ["Apache Spark", "PySpark", "GPS trajectories", "GeoLife", "human mobility", "geodesic distance", "big data"]
+code-links:
+  - text: Page source (.qmd)
+    icon: github
+    href: https://github.com/tilak-pentapati/tilak-pentapati.github.io/blob/main/projects/python/bd_gps/index.qmd
+summary:
+  problem: "Extract per-user mobility metrics (activity, extremes, distance, speed) from raw GPS trajectory logs with distributed processing."
+  data: "A sample of the Microsoft GeoLife GPS Trajectory Dataset (12 users, IDs 130–141)."
+  methods: "Explicit Spark schema → GMT to GMT+8 timestamp conversion → window functions with `lag` → geodesic-distance UDF → grouped aggregation and ranking."
+  result: "73,712 km of cumulative geodesic distance across all users, plus top-5 rankings for active days, weekly volume, altitude span and peak speed."
+  stack: ["Python", "PySpark", "Spark SQL", "geopy"]

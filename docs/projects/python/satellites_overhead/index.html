@@ -6,8 +6,9 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="author" content="Jay Tilak P.">
+<meta name="author" content="Jay Tilak Pentapati">
 <meta name="dcterms.date" content="2024-03-04">
+<meta name="keywords" content="satellite tracking, two-line element sets, Skyfield, REST API, spatial join, choropleth, Folium">
 <meta name="description" content="An automated geoinformatics workflow and interactive Folium web map evaluating global satellite distributions overhead through RESTful API ingestion, Skyfield astrodynamics and spatial polygon intersections.">
 
 <title>Real-Time Orbital Tracking and Country-Level Satellite Density Analysis – Jay Tilak Pentapati</title>
@@ -81,14 +82,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../../../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting-bb62276ab45c84d9efd712f51ff97b5a.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting-dark-5a1953863e1f72ef3b996ef827f01ca7.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting-bb62276ab45c84d9efd712f51ff97b5a.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting-886401abd66b684bd75f2f6e9275b3c8.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting-dark-168a0324ff7a238321a97431c880757d.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting-886401abd66b684bd75f2f6e9275b3c8.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../../site_libs/bootstrap/bootstrap-101545cf1cd2d34117649106470ec2fa.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../../site_libs/bootstrap/bootstrap-dark-a286df8d3673e19799a98780244438ae.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../../site_libs/bootstrap/bootstrap-101545cf1cd2d34117649106470ec2fa.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../../site_libs/bootstrap/bootstrap-a3b3a79561dd8c69a9cbcf3cc3a760f7.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../../site_libs/bootstrap/bootstrap-dark-147d61ffea3aed791dc110db6c193046.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../../site_libs/bootstrap/bootstrap-a3b3a79561dd8c69a9cbcf3cc3a760f7.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -121,7 +122,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script type="application/javascript">define('jquery', [],function() {return window.jQuery;})</script>
 
 
-<link rel="stylesheet" href="../../../styles.css">
 <meta property="og:title" content="Real-Time Orbital Tracking and Country-Level Satellite Density Analysis – Jay Tilak Pentapati">
 <meta property="og:description" content="An automated geoinformatics workflow and interactive Folium web map evaluating global satellite distributions overhead through RESTful API ingestion, Skyfield astrodynamics and spatial polygon intersections.">
 <meta property="og:image" content="https://tilak-pentapati.github.io/projects/python/satellites_overhead/satellite.jpg">
@@ -130,6 +130,17 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <meta name="twitter:description" content="An automated geoinformatics workflow and interactive Folium web map evaluating global satellite distributions overhead through RESTful API ingestion, Skyfield astrodynamics and spatial polygon intersections.">
 <meta name="twitter:image" content="https://tilak-pentapati.github.io/projects/python/satellites_overhead/satellite.jpg">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="citation_title" content="Real-Time Orbital Tracking and Country-Level Satellite Density Analysis">
+<meta name="citation_keywords" content="satellite tracking,two-line element sets,Skyfield,REST API,spatial join,choropleth,Folium">
+<meta name="citation_author" content="Jay Tilak Pentapati">
+<meta name="citation_publication_date" content="2024-03-04">
+<meta name="citation_cover_date" content="2024-03-04">
+<meta name="citation_year" content="2024">
+<meta name="citation_online_date" content="2024-03-04">
+<meta name="citation_fulltext_html_url" content="https://tilak-pentapati.github.io/projects/python/satellites_overhead/">
+<meta name="citation_language" content="en">
+<meta name="citation_journal_title" content="Jay Tilak Pentapati: Geographic Data Science &amp;amp; Engineering Portfolio">
+<meta name="citation_publisher" content="Jay Tilak Pentapati">
 </head>
 
 <body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
@@ -301,6 +312,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
+    <a href="../../../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../../../assets/logo/jtp-mark-light.svg" alt="JTP monogram" class="navbar-logo light-content">
+    <img src="../../../assets/logo/jtp-mark-dark.svg" alt="JTP monogram" class="navbar-logo dark-content">
+    </a>
     <a class="navbar-brand" href="../../../index.html">
     <span class="navbar-title">Jay Tilak Pentapati</span>
     </a>
@@ -374,7 +389,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#interactive-map" id="toc-interactive-map" class="nav-link" data-scroll-target="#interactive-map"><span class="header-section-number">6</span> Interactive Map</a></li>
   <li><a href="#references" id="toc-references" class="nav-link" data-scroll-target="#references"><span class="header-section-number">7</span> References</a></li>
   </ul>
-<div class="toc-actions"><ul><li><a href="https://github.com/tilak-pentapati/tilak-pentapati.github.io/blob/main/projects/python/satellites_overhead/index.qmd" class="toc-action"><i class="bi bi-github"></i>View source</a></li><li><a href="https://github.com/tilak-pentapati/tilak-pentapati.github.io/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+<div class="toc-actions"><ul><li><a href="https://github.com/tilak-pentapati/tilak-pentapati.github.io/blob/main/projects/python/satellites_overhead/index.qmd" class="toc-action"><i class="bi bi-github"></i>View source</a></li><li><a href="https://github.com/tilak-pentapati/tilak-pentapati.github.io/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div><div class="quarto-code-links"><h2>Code Links</h2><ul><li><a href="https://github.com/tilak-pentapati/tilak-pentapati.github.io/blob/main/projects/python/satellites_overhead/index.qmd"><i class="bi bi-github"></i>Page source (.qmd)</a></li></ul></div></nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
@@ -401,7 +416,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <div>
     <div class="quarto-title-meta-heading">Author</div>
     <div class="quarto-title-meta-contents">
-             <p>Jay Tilak P. </p>
+             <p><a href="https://tilak-pentapati.github.io">Jay Tilak Pentapati</a> </p>
           </div>
   </div>
     
@@ -412,14 +427,81 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     </div>
   </div>
   
+    <div>
+    <div class="quarto-title-meta-heading">Modified</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date-modified">October 24, 2026</p>
+    </div>
+  </div>
     
   </div>
   
 
+<div>
+  <div class="keywords">
+    <div class="block-title">Keywords</div>
+    <p>satellite tracking, two-line element sets, Skyfield, REST API, spatial join, choropleth, Folium</p>
+  </div>
+</div>
 
 </header>
 
 
+<div id="project-summary" class="eng-summary" aria-label="Project summary" role="note">
+<div class="es-title">
+<i class="bi bi-clipboard-data" aria-hidden="true"></i>At a glance
+</div>
+<div class="es-row">
+<div class="es-label">
+Problem
+</div>
+<div class="es-value">
+How many active satellites are above each country at a given moment, and how does that change over a day?
+</div>
+</div>
+<div class="es-row">
+<div class="es-label">
+Data
+</div>
+<div class="es-value">
+CelesTrak two-line element sets for all active satellites (REST API); Opendatasoft World Administrative Boundaries (256 countries, GeoJSON).
+</div>
+</div>
+<div class="es-row">
+<div class="es-label">
+Methods
+</div>
+<div class="es-value">
+Skyfield orbit propagation at 4-hour steps on 2024-03-04 → sub-satellite points → antimeridian fix → point-in-polygon spatial join → Natural Breaks classification.
+</div>
+</div>
+<div class="es-row es-result">
+<div class="es-label">
+Key result
+</div>
+<div class="es-value">
+<div class="es-todo">
+TODO: headline figure (e.g.&nbsp;the country with the most satellites overhead). The page builds a country × time satellite-count matrix and an interactive choropleth; counts depend on the live TLE feed.
+</div>
+</div>
+</div>
+<div class="es-row">
+<div class="es-label">
+Stack
+</div>
+<div class="es-value">
+<span class="es-chip">Python</span> <span class="es-chip">requests</span> <span class="es-chip">Skyfield</span> <span class="es-chip">GeoPandas</span> <span class="es-chip">Shapely</span> <span class="es-chip">mapclassify</span> <span class="es-chip">Folium</span>
+</div>
+</div>
+<div class="es-row">
+<div class="es-label">
+Code
+</div>
+<div class="es-value">
+<a href="https://github.com/tilak-pentapati/tilak-pentapati.github.io/blob/main/projects/python/satellites_overhead/index.qmd">Page source (.qmd)</a>
+</div>
+</div>
+</div>
 <div id="73455238" class="cell" data-execution_count="1">
 <details class="code-fold">
 <summary>Code</summary>
@@ -1701,7 +1783,21 @@ document.addEventListener("DOMContentLoaded", function() {
 
 </section>
 
-<a onclick="window.scrollTo(0, 0); return false;" role="button" id="quarto-back-to-top"><i class="bi bi-arrow-up"></i> Back to top</a></main> <!-- /main -->
+<a onclick="window.scrollTo(0, 0); return false;" role="button" id="quarto-back-to-top"><i class="bi bi-arrow-up"></i> Back to top</a><div id="quarto-appendix" class="default"><section class="quarto-appendix-contents" id="quarto-citation"><h2 class="anchored quarto-appendix-heading">Citation</h2><div><div class="quarto-appendix-secondary-label">BibTeX citation:</div><pre class="sourceCode code-with-copy quarto-appendix-bibtex"><code class="sourceCode bibtex">@online{pentapati2024,
+  author = {Pentapati, Jay Tilak},
+  publisher = {Jay Tilak Pentapati},
+  title = {Real-Time {Orbital} {Tracking} and {Country-Level}
+    {Satellite} {Density} {Analysis}},
+  date = {2024-03-04},
+  url = {https://tilak-pentapati.github.io/projects/python/satellites_overhead/},
+  langid = {en}
+}
+</code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre><div class="quarto-appendix-secondary-label">For attribution, please cite this work as:</div><div id="ref-pentapati2024" class="csl-entry quarto-appendix-citeas" role="listitem">
+<div class="">J.
+T. Pentapati, <span>“Real-Time Orbital Tracking and Country-Level
+Satellite Density Analysis,”</span> Jay Tilak Pentapati: Geographic Data
+Science &amp; Engineering Portfolio. [Online]. Available: <a href="https://tilak-pentapati.github.io/projects/python/satellites_overhead/">https://tilak-pentapati.github.io/projects/python/satellites_overhead/</a></div>
+</div></div></section></div></main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
   window.document.addEventListener("DOMContentLoaded", function (event) {
     // Ensure there is a toggle, if there isn't float one in the top right

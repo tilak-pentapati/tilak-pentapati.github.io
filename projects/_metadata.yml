@@ -1,10 +1,37 @@
 # Shared defaults for every project page (python/ and r/ add their engine).
-# Pages keep only page-specific keys and any overrides.
-author: "Jay Tilak P."
+# Pages keep only page-specific keys and any overrides. Per-project academic
+# metadata (summary card, keywords, date-modified, code-links) lives in each
+# project folder's own _metadata.yml so editing it never invalidates the
+# page's _freeze/ entry (the freeze hash covers only the .qmd file).
+author:
+  - name:
+      given: Jay Tilak
+      family: Pentapati
+    url: https://tilak-pentapati.github.io
+    # orcid: 0000-0000-0000-0000  # TODO: add ORCID iD once registered
 toc: true
 toc-depth: 6
 toc-location: right
 number-sections: true
+
+# "Cite this" appendix (BibTeX + plain citation) and Google Scholar <meta>
+# tags. The URL is filled per page from website.site-url.
+citation:
+  type: webpage
+  container-title: "Jay Tilak Pentapati: Geographic Data Science & Engineering Portfolio"
+  publisher: "Jay Tilak Pentapati"
+google-scholar: true
+# TODO (decision): choose a content licence, then uncomment, e.g.
+# license: "CC BY 4.0"
+# license: "CC BY-NC 4.0"
+
+# Pages that cite with [@key] use this local IEEE style (no network fetch).
+csl: ../assets/csl/ieee.csl
+
+# Engineering summary card at the top of each page (reads `summary:`).
+filters:
+  - ../assets/filters/summary-card.lua
+
 format:
   html:
     highlight-style: github
