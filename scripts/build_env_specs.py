@@ -40,26 +40,23 @@ RSCRIPT = f"{R_ENV}/bin/Rscript"
 PY_TOOLCHAIN = ["ipykernel", "nbclient", "nbformat", "pyyaml"]
 R_TOOLCHAIN = ["knitr", "rmarkdown"]
 
+# Pages left out on purpose (no reproducibility layer): their data is under a
+# restrictive licence or they need an unpublished course package owned by others.
+#   bd_gps (Microsoft Research GeoLife licence), StrokePredictionModel (Kaggle data,
+#   licence unclear), GCH_census and aps_eda (ENVS450 course package and data).
 PY_PROJECTS = {
     "SP500_comp": ["numpy", "pandas", "scikit-learn", "plotly", "ipython"],
-    # PySpark needs a JVM; openjdk is the conda-forge package of the local env.
-    "bd_gps": ["pyspark", "openjdk", "geopy"],
     "retail_site_select": ["geopandas", "pyogrio", "numpy", "pandas", "matplotlib"],
     "stPopLCR": ["geopandas", "pyogrio", "rasterio", "shapely", "numpy", "pandas", "matplotlib"],
 }
 
 R_PROJECTS = {
-    "GCH_census": ["ENVS450", "MASS", "broom", "car", "dplyr", "gridExtra", "leaps",
-                   "scales", "sjPlot", "tidyverse"],
-    "StrokePredictionModel": ["corrplot", "kableExtra", "pROC", "patchwork", "ranger",
-                              "skimr", "themis", "tidymodels", "tidyverse", "vip", "xgboost"],
     # The page library()s its whole packages_required vector, so all are needed to render.
     "airbnb_sf": ["tidycensus", "tigris", "tidyverse", "data.table", "sf", "tmap",
                   "tmaptools", "readr", "geojsonsf", "osmdata", "devtools", "logger",
                   "RColorBrewer", "classInt", "R.utils", "dplyr", "ggplot2", "viridis",
                   "raster", "terra", "exactextractr", "tidyterra", "tibble", "rosm",
                   "spdep", "cluster", "GGally", "tidyr", "gridExtra", "patchwork"],
-    "aps_eda": ["ENVS450", "scales", "tidyverse"],
     "se_m_airbnb": ["RColorBrewer", "arm", "dplyr", "ggplot2", "gridExtra", "gstat", "hexbin",
                     "kableExtra", "sf", "sp", "spatialreg", "spdep", "stringr", "tidyverse",
                     "tmap", "viridis"],

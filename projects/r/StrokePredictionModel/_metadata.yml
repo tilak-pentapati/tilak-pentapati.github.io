@@ -21,16 +21,3 @@ short_title: "Stroke prediction"
 study_area:
   label: "Clinical records (non-spatial)"
   scope: non-spatial
-
-# Reproducibility: "Reproduce" badges in the summary card and the "Data
-# availability" appendix (assets/filters/summary-card.lua), and the aggregated
-# data/README.md (scripts/build_data_readme.py). `env` is relative to this folder.
-reproduce:
-  env: environment.yml
-  data:
-    - name: "Stroke Prediction Dataset (5,110 patients × 12 features)"
-      url: "https://www.kaggle.com/datasets/fedesoriano/stroke-prediction-dataset"
-      licence: "Not clearly stated (listed on Kaggle as 'Data files © Original Authors'); not redistributed"
-      fetch: "Download `healthcare-dataset-stroke-data.csv` from Kaggle (free account)."
-      path: "`data/data_r/stroke_pm/healthcare-dataset-stroke-data.csv`"
-  note: "The page looks for the CSV relative to the project root."

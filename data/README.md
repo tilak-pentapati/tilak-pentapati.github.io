@@ -25,17 +25,6 @@ Page: <https://tilak-pentapati.github.io/projects/python/SP500_comp/> · Source:
 
 The page reads the CSV from an absolute path; edit the `read_csv` line to the expected path before re-running.
 
-## Big Data Trajectory Analysis: Microsoft GeoLife GPS Dataset
-
-Page: <https://tilak-pentapati.github.io/projects/python/bd_gps/> · Source: `projects/python/bd_gps/index.qmd` · Environment: [`projects/python/bd_gps/environment.yml`](../projects/python/bd_gps/environment.yml)
-
-- **[Microsoft GeoLife GPS Trajectories 1.3 (users 130–141, merged to one CSV)](https://www.microsoft.com/en-us/download/details.aspx?id=52367)**
-  - Licence: Microsoft Research licence terms (non-commercial research use); see the download page
-  - How to get it: Download and unzip GeoLife 1.3, then concatenate the `.plt` files of users 130–141 into one CSV with columns `UserID,Latitude,Longitude,AllZero,Altitude,Timestamp,Date,Time` (the module-provided sample).
-  - Expected path: `data/data_python/bd_gps/data.txt`
-
-PySpark needs a JVM (openjdk is in the environment). The page reads the file from an absolute path; edit the `spark.read.csv` line before re-running.
-
 ## Retail Site Selection & Catchment Analysis for a New C-Store with Click & Collect in Liverpool
 
 Page: <https://tilak-pentapati.github.io/projects/python/retail_site_select/> · Source: `projects/python/retail_site_select/index.qmd` · Environment: [`projects/python/retail_site_select/environment.yml`](../projects/python/retail_site_select/environment.yml)
@@ -93,28 +82,6 @@ Page: <https://tilak-pentapati.github.io/projects/python/stPopLCR/> · Source: `
 
 The page looks for the data relative to the project root.
 
-## Ordinary Least Squares Regression for modelling Green Central Heating in Census 2021
-
-Page: <https://tilak-pentapati.github.io/projects/r/GCH_census/> · Source: `projects/r/GCH_census/index.qmd` · Environment: [`projects/r/GCH_census/environment.yml`](../projects/r/GCH_census/environment.yml)
-
-- **[Census 2021 local authority extract (331 LADs × 55 variables) and helper script](https://www.ons.gov.uk/census)**
-  - Licence: Derived from ONS Census 2021 (Open Government Licence v3.0); the prepared `.Rdata` and `Session_10_functions.R` are University of Liverpool ENVS450 course materials and are not redistributed
-  - How to get it: Rebuild from ONS Census 2021 LAD tables, or obtain the course files.
-  - Expected path: `data/data_r/gch_dataNfunc/Census_2021.Rdata` and `Session_10_functions.R`
-
-Also needs the unpublished ENVS450 course helper package. The page loads the data from an absolute path; edit `data_path` before re-running.
-
-## Clinical Stroke Prediction & Risk Stratification: Machine Learning Pipeline in R
-
-Page: <https://tilak-pentapati.github.io/projects/r/StrokePredictionModel/> · Source: `projects/r/StrokePredictionModel/index.qmd` · Environment: [`projects/r/StrokePredictionModel/environment.yml`](../projects/r/StrokePredictionModel/environment.yml)
-
-- **[Stroke Prediction Dataset (5,110 patients × 12 features)](https://www.kaggle.com/datasets/fedesoriano/stroke-prediction-dataset)**
-  - Licence: Not clearly stated (listed on Kaggle as 'Data files © Original Authors'); not redistributed
-  - How to get it: Download `healthcare-dataset-stroke-data.csv` from Kaggle (free account).
-  - Expected path: `data/data_r/stroke_pm/healthcare-dataset-stroke-data.csv`
-
-The page looks for the CSV relative to the project root.
-
 ## Exploring Various Datasets of Bay Area and Finding Useful Insights for Policymakers
 
 Page: <https://tilak-pentapati.github.io/projects/r/airbnb_sf/> · Source: `projects/r/airbnb_sf/index.qmd` · Environment: [`projects/r/airbnb_sf/environment.yml`](../projects/r/airbnb_sf/environment.yml)
@@ -133,17 +100,6 @@ Page: <https://tilak-pentapati.github.io/projects/r/airbnb_sf/> · Source: `proj
   - Expected path: `data/data_r/airbnb_sf/bayarea_zipcodes/` and `tables/` (committed)
 
 The data this page reads is committed, so only the Census API key is needed. The page uses absolute paths; edit the `read.csv`/`read_sf` lines before re-running.
-
-## Relationship between Standard Occupational Classification (SOC) and Address Duration in APS 2021 Survey
-
-Page: <https://tilak-pentapati.github.io/projects/r/aps_eda/> · Source: `projects/r/aps_eda/index.qmd` · Environment: [`projects/r/aps_eda/environment.yml`](../projects/r/aps_eda/environment.yml)
-
-- **[Annual Population Survey 2021 teaching extract and UK mid-year population estimates](https://beta.ukdataservice.ac.uk/datacatalogue/series/series?id=200002)**
-  - Licence: UK Data Service End User Licence (registration required; no redistribution)
-  - How to get it: Request the APS 2021 dataset from the UK Data Service; the bundled workspace is ENVS450 course material.
-  - Expected path: `projects/r/aps_eda/Assignment_1_data.RData` (next to the page, gitignored)
-
-Also needs the unpublished ENVS450 course helper package.
 
 ## Point Pattern Analysis, Predictive Checks, and Spatial Econometrics of Madrid AirBnb Prices
 

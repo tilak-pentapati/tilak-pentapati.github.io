@@ -43,8 +43,11 @@ once this branch is merged.
   libraries), and an renv project changes `.Rprofile` start-up behaviour site-wide. The files
   are still a plain pinned list (`Package=version` plus the R version), so non-conda users
   can install the same versions with `remotes::install_version()`.
-- Two R pages (`GCH_census`, `aps_eda`) also need `ENVS450`, an unpublished University of
-  Liverpool course helper package, so they cannot be fully re-run from public sources.
+- Four pages have no reproducibility layer (no environment file, badges or data notes):
+  `bd_gps` (Microsoft Research GeoLife licence, non-commercial research use) and
+  `StrokePredictionModel` (Kaggle data with no clear licence) because of their data
+  licences, and `GCH_census` and `aps_eda` because they need `ENVS450`, an unpublished
+  University of Liverpool course package, and course data owned by others.
 
 Regenerate the specs after changing a page's imports or upgrading the local envs:
 
