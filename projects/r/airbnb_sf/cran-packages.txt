@@ -1,0 +1,4 @@
+# CRAN packages for projects/r/airbnb_sf/index.qmd that are not on conda-forge.
+# Pinned to the local r_env_gds library (R 4.5.3); installed by
+# scripts/repro/install_cran.R into the env built from environment.yml.
+tidyterra==1.2.0

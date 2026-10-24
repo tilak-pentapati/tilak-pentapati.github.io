@@ -24,3 +24,16 @@ study_area:
   lat: 39.9042
   lon: 116.4074
   radius_km: 30
+
+# Reproducibility: "Reproduce" badges in the summary card and the "Data
+# availability" appendix (assets/filters/summary-card.lua), and the aggregated
+# data/README.md (scripts/build_data_readme.py). `env` is relative to this folder.
+reproduce:
+  env: environment.yml
+  data:
+    - name: "Microsoft GeoLife GPS Trajectories 1.3 (users 130–141, merged to one CSV)"
+      url: "https://www.microsoft.com/en-us/download/details.aspx?id=52367"
+      licence: "Microsoft Research licence terms (non-commercial research use); see the download page"
+      fetch: "Download and unzip GeoLife 1.3, then concatenate the `.plt` files of users 130–141 into one CSV with columns `UserID,Latitude,Longitude,AllZero,Altitude,Timestamp,Date,Time` (the module-provided sample)."
+      path: "`data/data_python/bd_gps/data.txt`"
+  note: "PySpark needs a JVM (openjdk is in the environment). The page reads the file from an absolute path; edit the `spark.read.csv` line before re-running."
