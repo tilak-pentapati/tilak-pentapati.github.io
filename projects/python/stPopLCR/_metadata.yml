@@ -24,3 +24,26 @@ study_area:
   lat: 53.402
   lon: -2.977
   radius_km: 22
+
+# Reproducibility: "Reproduce" badges in the summary card and the "Data
+# availability" appendix (assets/filters/summary-card.lua), and the aggregated
+# data/README.md (scripts/build_data_readme.py). `env` is relative to this folder.
+reproduce:
+  env: environment.yml
+  data:
+    - name: "CDRC 2011 Census GeoData, Workplace and Residential Data Packs (Liverpool City Region)"
+      url: "https://data.cdrc.ac.uk/"
+      licence: "Open Government Licence v3.0 (free CDRC registration)"
+      fetch: "Download the 2011 Census Workplace and Residential Data Packs for the six LCR districts."
+      path: "`data/data_python/stPopLCR/workplace/` and `residential/`"
+    - name: "PopChange 1 km population grids, 1991 and 2011"
+      url: "https://popchange-data.liverpool.ac.uk/"
+      licence: "Census-derived open data; see the PopChange site for terms"
+      fetch: "Download the 1991 (TP91Bs) and 2011 (URPopAll) ASCII grids."
+      path: "`data/data_python/stPopLCR/raster/`"
+    - name: "ONS LAD (May 2020) boundaries and OS VectorMap District functional sites"
+      url: "https://geoportal.statistics.gov.uk/"
+      licence: "Open Government Licence v3.0 (contains OS data © Crown copyright)"
+      fetch: "ONS Open Geography Portal; major employers digitised from OS VectorMap District."
+      path: "`data/data_python/stPopLCR/boundaries/` and `workplace/`"
+  note: "The page looks for the data relative to the project root."

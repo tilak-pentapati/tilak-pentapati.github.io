@@ -1,0 +1,32 @@
+# Citation metadata for this repository (GitHub shows a "Cite this repository"
+# button from it). Zenodo reads .zenodo.json instead when both exist; keep the
+# two in sync. See REPRODUCIBILITY.md for the release/DOI steps.
+cff-version: 1.2.0
+message: "If you use this work, please cite it using the metadata from this file."
+type: software
+title: "Jay Tilak Pentapati: Geographic Data Science & Engineering Portfolio"
+abstract: >-
+  Source of a Quarto website with eleven reproducible geographic data science
+  projects in Python and R (spatial analysis, spatial econometrics,
+  spatio-temporal modelling, machine learning and big-data processing), with
+  pinned per-project environments, data availability notes and frozen
+  computational results.
+authors:
+  - given-names: Jay Tilak
+    family-names: Pentapati
+    website: "https://tilak-pentapati.github.io"
+    # orcid: "https://orcid.org/0000-0000-0000-0000"  # TODO: add ORCID iD once registered
+repository-code: "https://github.com/tilak-pentapati/tilak-pentapati.github.io"
+url: "https://tilak-pentapati.github.io"
+keywords:
+  - geographic data science
+  - spatial analysis
+  - spatial statistics
+  - reproducible research
+  - Quarto
+  - R
+  - Python
+# TODO (decision): add `license:` (SPDX id, e.g. CC-BY-4.0 for content, MIT for code)
+# once a licence is chosen; keep it the same as in .zenodo.json and the site.
+# After the first Zenodo release, add the concept DOI here:
+# doi: 10.5281/zenodo.NNNNNNN

@@ -23,3 +23,16 @@ study_area:
   scope: national
   lat: 54.6
   lon: -2.6
+
+# Reproducibility: "Reproduce" badges in the summary card and the "Data
+# availability" appendix (assets/filters/summary-card.lua), and the aggregated
+# data/README.md (scripts/build_data_readme.py). `env` is relative to this folder.
+reproduce:
+  env: environment.yml
+  data:
+    - name: "Annual Population Survey 2021 teaching extract and UK mid-year population estimates"
+      url: "https://beta.ukdataservice.ac.uk/datacatalogue/series/series?id=200002"
+      licence: "UK Data Service End User Licence (registration required; no redistribution)"
+      fetch: "Request the APS 2021 dataset from the UK Data Service; the bundled workspace is ENVS450 course material."
+      path: "`projects/r/aps_eda/Assignment_1_data.RData` (next to the page, gitignored)"
+  note: "Also needs the unpublished ENVS450 course helper package."

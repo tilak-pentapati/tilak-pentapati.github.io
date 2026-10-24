@@ -137,6 +137,66 @@ code, pre, kbd, samp { font-family: $font-family-monospace, ui-monospace, Menlo,
 }
 
 // ---------------------------------------------------------------------------
+// Reproducibility badges (summary card "Reproduce" row) and the
+// "Data availability" appendix, both from assets/filters/summary-card.lua.
+// Plain HTML pills (no shields.io images), so they follow the light/dark theme.
+// ---------------------------------------------------------------------------
+$repro-dark: lightness($body-bg) < 50%;
+
+.repro-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.repro-badge {
+  --repro-accent: #{$primary};
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  line-height: 1.4;
+  padding: 0.15rem 0.6rem;
+  border-radius: 999px;
+  color: $body-color;
+  text-decoration: none;
+  border: 1px solid rgba($body-color, 0.2);
+  background: rgba($body-color, 0.04);
+  transition: border-color 0.15s, background-color 0.15s;
+
+  i { color: var(--repro-accent); }
+
+  &:hover, &:focus-visible {
+    color: $body-color;
+    border-color: var(--repro-accent);
+    background: rgba($body-color, 0.08);
+  }
+
+  &:focus-visible { outline: 2px solid var(--repro-accent); outline-offset: 2px; }
+
+  &.repro-binder { --repro-accent: #{$brand-amber}; }
+  &.repro-env { --repro-accent: #{if($repro-dark, $brand-teal-light, $brand-teal)}; }
+  &.repro-data { --repro-accent: #{$secondary}; }
+  &.repro-doi { --repro-accent: #{$success}; font-family: $font-family-monospace; font-weight: 500; }
+}
+
+.repro-source {
+  border-left: 3px solid rgba($body-color, 0.15);
+  padding: 0.1rem 0 0.1rem 0.75rem;
+  margin-bottom: 0.75rem;
+
+  // Long data paths wrap instead of widening the page on phones.
+  // Own background: inline code outside a <p> otherwise keeps the light theme's.
+  code {
+    white-space: normal;
+    overflow-wrap: anywhere;
+    color: inherit;
+    background-color: rgba($body-color, 0.08);
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Live data: freshness badge (satellites page) and listing chip (projects.qmd)
 // ---------------------------------------------------------------------------
 .live-badge {

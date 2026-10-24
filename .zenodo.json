@@ -1,0 +1,25 @@
+{
+  "title": "Jay Tilak Pentapati: Geographic Data Science & Engineering Portfolio",
+  "upload_type": "software",
+  "description": "<p>Source of a Quarto website with eleven reproducible geographic data science projects in Python and R (spatial analysis, spatial econometrics, spatio-temporal modelling, machine learning and big-data processing). Each project ships a pinned environment specification and a data availability note; computational results are frozen in <code>_freeze/</code>. Raw datasets are not included (see <code>data/README.md</code>).</p><p>Website: <a href=\"https://tilak-pentapati.github.io\">https://tilak-pentapati.github.io</a></p>",
+  "creators": [
+    {
+      "name": "Pentapati, Jay Tilak"
+    }
+  ],
+  "keywords": [
+    "geographic data science",
+    "spatial analysis",
+    "spatial statistics",
+    "reproducible research",
+    "Quarto",
+    "R",
+    "Python"
+  ],
+  "related_identifiers": [
+    {
+      "identifier": "https://tilak-pentapati.github.io",
+      "relation": "isDocumentedBy"
+    }
+  ]
+}
