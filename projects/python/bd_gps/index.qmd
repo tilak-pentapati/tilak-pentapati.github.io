@@ -4,6 +4,7 @@ description: "Distributed processing and spatiotemporal trajectory analysis of M
 date: "2023-11-21"
 image: bd_gps.svg
 categories: [Python, PySpark, Big Data Analytics, Spatial Analysis]
+bibliography: references.bib
 execute:
   eval: true
   cache: true
@@ -11,13 +12,13 @@ execute:
 
 ## Project Overview
 
-This project analyzes a sample of the **Microsoft GeoLife GPS Trajectory Dataset** (originally completed for the *Big Data Analytics COMP 336/529* module at the University of Liverpool)[cite: 1, 8]. Using **Apache Spark (`PySpark`)**, the pipeline cleans raw trajectory logs, performs timezone standardization, and executes distributed window and aggregation operations to extract user mobility metrics—including activity frequency, spatial extremes, altitude spans, geodesic travel distances, and peak velocities[cite: 2, 3, 4, 5, 6, 7, 9].
+This project analyzes a sample of the **Microsoft GeoLife GPS Trajectory Dataset** [@zheng2008understanding; @zheng2009mining; @zheng2010geolife] (originally completed for the *Big Data Analytics COMP 336/529* module at the University of Liverpool). Using **Apache Spark (`PySpark`)**, the pipeline cleans raw trajectory logs, performs timezone standardization, and executes distributed window and aggregation operations to extract user mobility metrics—including activity frequency, spatial extremes, altitude spans, geodesic travel distances, and peak velocities.
 
 ---
 
 ## Environment Setup & Schema Definition
 
-To optimize ingestion performance and ensure strict type safety across the cluster, an explicit schema (`StructType`) is defined prior to loading the raw CSV logs[cite: 9, 10]. A User-Defined Function (`distance_udf`) leveraging `geopy.distance.geodesic` is also registered to compute point-to-point ellipsoidal distances in kilometers.
+To optimize ingestion performance and ensure strict type safety across the cluster, an explicit schema (`StructType`) is defined prior to loading the raw CSV logs. A User-Defined Function (`distance_udf`) leveraging `geopy.distance.geodesic` is also registered to compute point-to-point ellipsoidal distances in kilometers.
 
 ```{python}
 import os
@@ -120,9 +121,9 @@ data.show(2)
 
 ## Part 1: Data Cleaning & Timezone Conversion (GMT to GMT+8)
 
-1. **Precision Formatting:** `Latitude` and `Longitude` are rounded to 4 decimal places, while `Altitude` and `Timestamp` (`DelphiDate`) are rounded to 9–10 decimal places[cite: 2, 10, 11].
-2. **Delphi Timestamp Conversion:** The raw `Timestamp` represents the number of days passed since `1899-12-30 00:00:00 GMT`[cite: 2]. To shift from GMT to China Standard Time ($\text{GMT}+8$), we add $\frac{8\text{ hours}}{24\text{ hours}} = \frac{1}{3}\text{ day}$ to each record, storing the result as `DelphiDateChina`[cite: 2, 11].
-3. **Calendar Date & Time Conversion:** The `Date` and `Time` columns are concatenated into a unified timestamp (`OgTimeStamp`), converted to Unix epoch seconds, shifted forward by $28,800\text{ seconds}$ ($8\text{ hours}$), and converted back into `ChinaTimestamp` and `ChinaDate`[cite: 2, 11, 12].
+1. **Precision Formatting:** `Latitude` and `Longitude` are rounded to 4 decimal places, while `Altitude` and `Timestamp` (`DelphiDate`) are rounded to 9–10 decimal places.
+2. **Delphi Timestamp Conversion:** The raw `Timestamp` represents the number of days passed since `1899-12-30 00:00:00 GMT` [@geolife2011guide]. To shift from GMT to China Standard Time ($\text{GMT}+8$), we add $\frac{8\text{ hours}}{24\text{ hours}} = \frac{1}{3}\text{ day}$ to each record, storing the result as `DelphiDateChina`.
+3. **Calendar Date & Time Conversion:** The `Date` and `Time` columns are concatenated into a unified timestamp (`OgTimeStamp`), converted to Unix epoch seconds with `unix_timestamp()` [@nelamali2019unix], shifted forward by $28,800\text{ seconds}$ ($8\text{ hours}$), and converted back into `ChinaTimestamp` and `ChinaDate`.
 
 ```{python}
 # Standardize coordinate and metric precision
@@ -147,7 +148,7 @@ data.show(5)
 
 ## Part 2: User Consistency (Days with $\ge 5$ Data Points)
 
-We extract `ChinaDate` from `ChinaTimestamp` and group by `UserID` and `ChinaDate` to count daily records (`DataPointsPerEachDay`)[cite: 3, 12]. After filtering for days with at least 5 records, we count the qualifying days per user and output the Top 5 users, breaking ties by preferring smaller `UserID` values[cite: 3, 12, 13, 14].
+We extract `ChinaDate` from `ChinaTimestamp` and group by `UserID` and `ChinaDate` to count daily records (`DataPointsPerEachDay`). After filtering for days with at least 5 records, we count the qualifying days per user and output the Top 5 users, breaking ties by preferring smaller `UserID` values.
 
 ```{python}
 data = data.withColumn("ChinaDate", to_date(col("ChinaTimestamp")))
@@ -173,7 +174,7 @@ Top_Five_users.show()
 
 ## Part 3: Weekly Tracking Volume ($> 100$ Data Points per Week)
 
-Using `year()` and `weekofyear()` on `ChinaDate`, we group by `UserID`, `Year`, and `WeekNo` so identical week numbers across different calendar years remain distinct[cite: 4, 13]. We filter for high-volume weeks exceeding 100 data points and aggregate the total number of qualifying weeks per user[cite: 4, 13].
+Using `year()` and `weekofyear()` on `ChinaDate`, we group by `UserID`, `Year`, and `WeekNo` so identical week numbers across different calendar years remain distinct. We filter for high-volume weeks exceeding 100 data points and aggregate the total number of qualifying weeks per user.
 
 ```{python}
 data = data.withColumn("Year", year(col("ChinaDate")))
@@ -196,7 +197,7 @@ user_week_counts.show()
 
 ## Part 4: Southernmost Reach (Minimum Latitude per User)
 
-To find the southernmost point reached by each user and the earliest date it occurred, we aggregate `min("Latitude")` per user and join the result back to the main dataset[cite: 5, 14]. A Window specification partitioned by `UserID` and `Latitude` ordered chronologically by `ChinaDate` extracts the first date (`first("ChinaDate")`) in the event of ties[cite: 5, 14].
+To find the southernmost point reached by each user and the earliest date it occurred, we aggregate `min("Latitude")` per user and join the result back to the main dataset. A Window specification partitioned by `UserID` and `Latitude` ordered chronologically by `ChinaDate` extracts the first date (`first("ChinaDate")`) in the event of ties.
 
 ```{python}
 min_latitude = data.groupBy("UserID").agg(_min("Latitude").alias("MinLatitude"))
@@ -224,7 +225,7 @@ output.orderBy("Latitude").show()
 
 For every user and date, we compute the vertical elevation span:
 $$\text{DailyAltitudeSpan} = \max(\text{Altitude}) - \min(\text{Altitude})$$
-We then aggregate by `UserID` to find each user's maximum single-day elevation change and rank the Top 5 users[cite: 6, 15, 16].
+We then aggregate by `UserID` to find each user's maximum single-day elevation change and rank the Top 5 users.
 
 ```{python}
 daily_altitude_span = data.groupBy("UserID", "ChinaDate").agg(
@@ -243,7 +244,7 @@ top_users_altitude.show()
 
 ## Part 6: Geodesic Distance Traveled (Daily Peak & Cumulative Total)
 
-Using a Window partitioned by `UserID` and ordered by `ChinaTimestamp`, we lag `Latitude` and `Longitude` to pair each observation with its preceding coordinate[cite: 6, 16]. Initial `NULL` values per user are coalesced with the current coordinate so the starting point distance evaluates to `0.0 km`[cite: 9, 16]. Segment distances are computed via `distance_udf`, summed by day, and aggregated to identify each user's highest-mileage day alongside the cumulative distance across all users[cite: 7, 17].
+Using a Window partitioned by `UserID` and ordered by `ChinaTimestamp`, we lag `Latitude` and `Longitude` to pair each observation with its preceding coordinate. Initial `NULL` values per user are coalesced with the current coordinate so the starting point distance evaluates to `0.0 km`. Segment distances are computed via `distance_udf`, summed by day, and aggregated to identify each user's highest-mileage day alongside the cumulative distance across all users.
 
 ```{python}
 windowAbstract = Window.partitionBy("UserID").orderBy("ChinaTimestamp")
@@ -290,9 +291,9 @@ total_distance.show()
 
 ## Part 7: Peak Travel Speed ($km/hr$) & Earliest Occurrence
 
-To compute segment velocities, `ChinaTimestamp` is lagged across the user-ordered window (`prevChinaTimestamp`), with initial nulls defaulted to `2001-01-15 00:00:00` to prevent division-by-zero errors[cite: 7, 8, 18]. Elapsed time in seconds (`TimeDiffSecs`) is converted to hours, and speed is calculated as:
+To compute segment velocities, `ChinaTimestamp` is lagged across the user-ordered window (`prevChinaTimestamp`), with initial nulls defaulted to `2001-01-15 00:00:00` to prevent division-by-zero errors. Elapsed time in seconds (`TimeDiffSecs`) is converted to hours, and speed is calculated as:
 $$\text{SpeedKmHour} = \frac{\text{Distance}}{\text{TimeDiffSecs} / 3600}$$
-After joining each user's maximum speed back to the main DataFrame, `row_number()` over a `ChinaDate`-ordered window isolates the earliest date (`rank == 1`) that peak speed was achieved[cite: 8, 19].
+After joining each user's maximum speed back to the main DataFrame, `row_number()` over a `ChinaDate`-ordered window isolates the earliest date (`rank == 1`) that peak speed was achieved.
 
 ```{python}
 null_timestamp = to_timestamp(lit("2001-01-15 00:00:00"))
@@ -335,5 +336,3 @@ max_speed_day.show()
 ---
 
 ## References
-
-* Spark SQL Working with Unix Timestamp - *Spark By {Examples}* (2023). Available at: [https://sparkbyexamples.com/spark/spark-sql-unix-timestamp/](https://sparkbyexamples.com/spark/spark-sql-unix-timestamp/)[cite: 8].
