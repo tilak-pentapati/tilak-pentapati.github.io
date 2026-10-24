@@ -60,18 +60,14 @@ Airbnb Listings Data of San Francisco, Oakland and San Mateo are extracted from 
 
 For additional Datasets, we are going to use No. of Vehicles (light-duty) 2020 per zip code and Average Electricity Utility Rate 2020 (Commerical Rate) per zip code, both investors owned and non-investor owned utilities. 
 
-```{r J_Key, include=FALSE}
-J_API_KEY <- "77a4dfc5c8bcf14004b7c739aa036700d2fd4b2d"   # this is api key, specific to each individual
-# new api key created on 22/09/2026
-```
-
 Note: API Key can be obtained by signing up at <http://api.census.gov/data/key_signup.html> for Census Data. We, then use tidycensus package to get ACS data from US Census Bureau.
 
 ```{r setup_api_a, echo=TRUE, results='hide'}
 #| code-fold: true
 #| code-summary: "Code for setting up API Key"
-census_api_key(J_API_KEY , install = TRUE, overwrite = TRUE) # Please replace 'J_API_KEY' with API Key obtained from census bureau
-# Below message is differently coded output for checking system environment variable(CENSUS_API_KEY), not the output of above line
+# The key is read from the CENSUS_API_KEY environment variable (e.g. set once in ~/.Renviron
+# with tidycensus::census_api_key("<your key>", install = TRUE)); it is never stored in this file.
+stopifnot(nzchar(Sys.getenv("CENSUS_API_KEY")))
 ```
 
 ```{r setup_api_message, echo=FALSE, results='hide'}
