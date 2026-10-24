@@ -266,6 +266,30 @@ zoom_level <- 10
 
 ```
 
+```{r web_helpers, echo=TRUE, results='hide'}
+#| code-fold: true
+#| code-summary: "Code for the interactive (Leaflet) map helpers"
+# Each key map below has an interactive companion built with tmap's "view" (Leaflet) engine.
+# tmap_leaflet() converts a map without switching tmap_mode(), so the static maps are unchanged.
+# To keep the page light, geometry is simplified (~60 m), trimmed to the mapped columns and
+# rounded to 5 decimal degrees (~1 m); values are shown as hover labels rather than popups.
+web_layer <- function(x, ...) {
+  x <- x %>%
+    select(...) %>%
+    st_simplify(preserveTopology = TRUE, dTolerance = 200) %>%  # EPSG:2227 units are US feet
+    st_transform(4326)
+  g <- st_geometry(x)
+  st_geometry(x) <- st_sfc(lapply(g, function(p) {
+    structure(rapply(unclass(p), round, how = "replace", digits = 5), class = class(p))
+  }), crs = st_crs(g))
+  x
+}
+
+# Keyless light basemap, kept out of the layer control so it stays on when layers switch
+web_basemap <- tm_basemap("Esri.WorldGrayCanvas", group.control = "none")
+web_view <- tm_view(set_view = c(center_lon, center_lat, zoom_level), control.collapse = FALSE)
+```
+
 Based on standard statistics for both Count and Mean Price variables of AIRBNB's per zip code, Minimum value of count variable is 1 and first quartile is 71, so first class is divided accordingly. Median of count variable is 172 and standard deviation is 162.5, so, second and third class is divided as defined. Finally to identify outliers, As Third quartile is 257, standard deviation is 162.5 and Maximum Value is 794, last class has 500 as its lower boundary.
 
 Minimum value of Mean Price variable is 71 and first quartile is 154, so first class is divided accordingly. Median of Mean Price is 204 and standard deviation is 297.9, so, second and third class is divided as defined. Finally to identify outliers, As Third quartile is 282.6, standard deviation is 297.9 and Maximum Value is 1818, last two classes have been divided 1000 and 1800 as their lower boundaries respectively.
@@ -277,7 +301,7 @@ Airbnb data is dynamic and reflects real-time changes in market, like social med
 ```{r map_1, echo=TRUE, results='asis'}
 #| code-fold: true
 #| code-summary: "Code for Maps of Count and Price of AIRBNBs per ZIP"
-tmap_mode("plot")   # Interactive mode
+tmap_mode("plot")   # static maps; the interactive version is in the "Interactive" tab
 map1.11 <- tm_shape(listings_bayarea_zip1) +  # listings_bayarea_zip1 is just re-arrangement of listings_bayareaa_zip with first column as count_airbnb
   tm_fill( "count_airbnb",style="fixed", title = "No. of Airbnb's per ZIP", alpha = 1, breaks=c( 1, 72, 172, 359, 500, Inf), palette = "-viridis")+ 
   tm_borders()+
@@ -292,9 +316,47 @@ map1.12 <- tm_shape(listings_bayarea_zip2) +  # listings_bayarea_zip2 is just re
 
 ```
 
+::: {.panel-tabset}
+
+## Interactive
+
+```{r map1_web, echo=TRUE}
+#| code-fold: true
+#| code-summary: "Code for the interactive map of Airbnb count and mean price per ZIP"
+#| out-width: "100%"
+#| out-height: "480px"
+zip_web <- listings_bayarea_zip2 %>%
+  mutate(label = sprintf("ZIP %s: %d listings, mean price $%s", ZIP, count_airbnb,
+                         formatC(round(mean_price), format = "d", big.mark = ","))) %>%
+  web_layer(label, count_airbnb, mean_price)
+
+map1_web <- web_basemap +
+  tm_shape(zip_web) +
+  tm_polygons(fill = "count_airbnb",
+              fill.scale = tm_scale_intervals(breaks = c(1, 72, 172, 359, 500, Inf), values = "-viridis"),
+              fill.legend = tm_legend("No. of Airbnbs per ZIP"), fill_alpha = 0.8, col = "white", lwd = 0.4,
+              id = "label", popup = FALSE,
+              group = "No. of Airbnbs per ZIP", group.control = "radio") +
+  tm_polygons(fill = "mean_price",
+              fill.scale = tm_scale_intervals(breaks = c(74, 155, 287, 501, 1000, 1800, Inf), values = "-viridis"),
+              fill.legend = tm_legend("Mean price per ZIP (USD)"), fill_alpha = 0.8, col = "white", lwd = 0.4,
+              id = "label", popup = FALSE,
+              group = "Mean price per ZIP", group.control = "radio") +
+  web_view
+
+map1_lf <- tmap_leaflet(map1_web, show = FALSE)  # returns invisibly, so print it explicitly
+map1_lf
+```
+
+Use the layer control (top left) to switch between listing count and mean price; hover over (or tap) a ZIP code to see both values.
+
+## Static
+
 ```{r map1_v, echo=FALSE, fig.align='center'}
 tmap_arrange(map1.11, map1.12, ncol = 2)
 ```
+
+:::
 
 ::: {style="margin-bottom: 40px;"}
 :::
@@ -678,9 +740,52 @@ lisa_map_cluster2 <- borders2 +
 ```
 :::
 
+::: {.panel-tabset}
+
+## Interactive
+
+```{r map4_web, echo=TRUE}
+#| code-fold: true
+#| code-summary: "Code for the interactive LISA cluster map"
+#| out-width: "100%"
+#| out-height: "480px"
+lisa_cols <- c("High-High" = "royalblue2", "Low-Low" = "red2", "High-Low" = "darkgreen",
+               "Low-High" = "gold", "Not significant" = "lightgrey")
+lisa1_web <- bayarea_zip_vars1_NoZero %>%
+  mutate(label = sprintf("ZIP %s: %s (median household income $%s)", ZIP, quadrant1,
+                         formatC(estimate_MedianHhI, format = "d", big.mark = ","))) %>%
+  web_layer(label, quadrant1)
+lisa2_web <- bayarea_zip_vars_NoZero %>%
+  mutate(label = sprintf("ZIP %s: %s (%s people with broadband)", ZIP, quadrant2,
+                         formatC(estimate_InternetUse, format = "d", big.mark = ","))) %>%
+  web_layer(label, quadrant2)
+
+map4_web <- web_basemap +
+  tm_shape(lisa1_web) +
+  tm_polygons(fill = "quadrant1", fill.scale = tm_scale_categorical(values = lisa_cols),
+              fill.legend = tm_legend("LISA cluster (Med HH Income)"), fill_alpha = 0.8, col = "black", lwd = 0.3,
+              id = "label", popup = FALSE,
+              group = "LISA: median household income", group.control = "radio") +
+  tm_shape(lisa2_web) +
+  tm_polygons(fill = "quadrant2", fill.scale = tm_scale_categorical(values = lisa_cols),
+              fill.legend = tm_legend("LISA cluster (Internet Use)"), fill_alpha = 0.8, col = "black", lwd = 0.3,
+              id = "label", popup = FALSE,
+              group = "LISA: broadband internet use", group.control = "radio") +
+  web_view
+
+map4_lf <- tmap_leaflet(map4_web, show = FALSE)
+map4_lf
+```
+
+Switch between the two LISA variables with the layer control; hover over (or tap) a ZIP code for its cluster and value.
+
+## Static
+
 ```{r map4_final, echo=TRUE, fig.align='center'}
 tmap_arrange(lisa_map_cluster1, lisa_map_cluster2)
 ```
+
+:::
 
 ### Geo-Demographic Classification in Bay Area
 
@@ -813,9 +918,48 @@ map_electric <- tm_basemap() +
 ```
 :::
 
+::: {.panel-tabset}
+
+## Interactive
+
+```{r geodemo_web, echo=TRUE}
+#| code-fold: true
+#| code-summary: "Code for the interactive geodemographic map"
+#| out-width: "100%"
+#| out-height: "480px"
+geo_web <- overlay_listings_zip %>%
+  mutate(k6cls = factor(k6cls),
+         label = sprintf("ZIP %s: cluster %s, %d listings (mean $%s), %s light-duty vehicles, commercial rate $%.3f/kWh",
+                         ZIP, k6cls, count_airbnb, formatC(round(mean_price), format = "d", big.mark = ","),
+                         formatC(No_of_Light_Duty_Vehicles, format = "d", big.mark = ","), Combined_Avg_Comm_Rate)) %>%
+  web_layer(label, k6cls, No_of_Light_Duty_Vehicles, Combined_Avg_Comm_Rate)
+
+geodemo_web <- web_basemap +
+  tm_shape(geo_web) +
+  tm_polygons(fill = "k6cls", fill.scale = tm_scale_categorical(values = viridis(6)),
+              fill.legend = tm_legend("Type of cluster"), fill_alpha = 0.8, col = "white", lwd = 0.3,
+              id = "label", popup = FALSE, group = "Cluster type", group.control = "radio") +
+  tm_polygons(fill = "No_of_Light_Duty_Vehicles", fill.scale = tm_scale_intervals(style = "fisher", n = 5, values = "brewer.yl_gn"),
+              fill.legend = tm_legend("Vehicles per ZIP"), fill_alpha = 0.8, col = "black", lwd = 0.2,
+              id = "label", popup = FALSE, group = "Light-duty vehicles", group.control = "radio") +
+  tm_polygons(fill = "Combined_Avg_Comm_Rate", fill.scale = tm_scale_intervals(style = "fisher", n = 5, values = "brewer.yl_gn"),
+              fill.legend = tm_legend("Commercial electricity rate"), fill_alpha = 0.8, col = "black", lwd = 0.2,
+              id = "label", popup = FALSE, group = "Commercial electricity rate", group.control = "radio") +
+  web_view
+
+geodemo_lf <- tmap_leaflet(geodemo_web, show = FALSE)
+geodemo_lf
+```
+
+Switch between the cluster typology and its two supplementary variables; hover over (or tap) a ZIP code for all of its values.
+
+## Static
+
 ```{r geodemo_map, echo=TRUE, fig.align='center'}
 tmap_arrange(map_cluster1, map_veh, map_electric, nrow =1, ncol= 3)
 ```
+
+:::
 
 <!-- All code checked. Some syntaxs maybe deprecated.  Fully updated paths to data, acc to this PC. Needed minor text updates, for new portfolio. -->
 

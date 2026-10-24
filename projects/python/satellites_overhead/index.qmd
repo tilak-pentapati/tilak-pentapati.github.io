@@ -14,7 +14,7 @@ import sys
 import importlib
 
 # List of required packages
-required_packages = ["requests", "skyfield", "numpy", "pandas", "geopandas", "shapely", "matplotlib", "pyproj", "contextily", "mapclassify", "folium", "seaborn"]  # Add all required packages here 
+required_packages = ["requests", "skyfield", "numpy", "pandas", "geopandas", "shapely", "matplotlib", "pyproj", "contextily", "mapclassify", "folium", "seaborn", "itables"]  # Add all required packages here 
 
 # defining Function to install packages
 def install_package(package):
@@ -60,6 +60,7 @@ import geopandas as gpd
 from shapely.geometry import Point, shape, Polygon, MultiPolygon
 import json
 from shapely.ops import transform
+import shapely
 import pyproj
 import matplotlib.pyplot as plt
 import contextily as ctx
@@ -525,56 +526,117 @@ plt.show()
 
 ```
 
-# Interactive Map
+# Interactive Exploration
+
+The country × time count matrix is explored three ways below: a choropleth map, a filterable chart and a sortable table. Before mapping, country outlines are simplified to about 5 km (0.05°) on a 0.001° coordinate grid and only the displayed attributes are kept, which keeps the embedded GeoJSON small; the counts themselves come from the full-resolution spatial join above. Density is reported per million km², with areas measured in the equal-area EPSG:6933 projection.
 
 ```{python}
-#| echo: false
-# Provide a Mapbox token for the map (hidden from HTML)
-mapbox_access_token = 'YOUR_MAPBOX_TOKEN'
-```
-
-```{python}
-# Create Time-averaged column for the popup
+# Tidy outputs shared by the map, chart and table
 temporal_satellite_cm['Time-averaged'] = temporal_satellite_cm[times].mean(axis=1).round(2)
+temporal_satellite_cm['area_km2'] = (temporal_satellite_cm.to_crs(epsg=6933).area / 1e6).round(0)
 
-# below map use mapbbox basemap
+# long format (country, time, count) for the Observable JS chart
+sat_long = temporal_satellite_cm[['Countries', 'area_km2'] + times].melt(
+    id_vars=['Countries', 'area_km2'], var_name='time', value_name='count')
+ojs_define(sat_long=sat_long, sat_times=times)
 
-mbox_url = f'https://api.mapbox.com/styles/v1/mapbox/light-v9/tiles/{{z}}/{{x}}/{{y}}?access_token={mapbox_access_token}'
-i_map = folium.Map(location=[35,0], zoom_start=2, tiles = mbox_url, attr='Mapbox')
-
-# below code is for choropleth map to show spatial variations
-satellites_map = folium.Choropleth(geo_data=temporal_satellite_cm, data=temporal_satellite_cm, columns=("Countries", "2024-03-04T00:00:00Z"), key_on="feature.properties.Countries",fill_color="Greens", line_weight=0.6, line_color='black', fill_opacity=0.7,
-                                    legend_name=f"No. of Satellites Overhead per Country, {times[0]}", 
-                                    highlight = True) 
-satellites_map.add_to(i_map)
+# light geometry for the web map: ~5 km outlines on a 0.001° grid, displayed columns only
+map_gdf = temporal_satellite_cm[['Countries', times[0], 'Time-averaged', 'geometry']].copy()
+map_gdf['geometry'] = shapely.set_precision(map_gdf.geometry.simplify(0.05, preserve_topology=True).values, 0.001)
 ```
 
+::: {.panel-tabset}
+
+## Map
+
 ```{python}
-# Created funtions to add popups and highlight values
-def custom_style(feature):
-    return {
-        'fillColor': 'transparent',
-        'fillOpacity': 0,
-        'color': 'black',
-        'weight': 0.5
-    }
+# Keyless Esri light-grey canvas basemap (no API token needed)
+esri_url = 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}'
+i_map = folium.Map(location=[35, 0], zoom_start=2, tiles=esri_url,
+                   attr='Tiles &copy; Esri &mdash; Esri, HERE, Garmin, &copy; OpenStreetMap contributors')
 
-def value_show(feature):
-    return {
-        'fillColor': 'white',
-        'fillOpacity': 0.3,
-        'color': 'black',
-        'weight': 2
-    }
+# choropleth to show spatial variations; tooltip and popup ride on the same GeoJSON layer
+satellites_map = folium.Choropleth(geo_data=map_gdf, data=map_gdf, columns=("Countries", times[0]),
+                                   key_on="feature.properties.Countries", fill_color="Greens",
+                                   line_weight=0.6, line_color='black', fill_opacity=0.7,
+                                   legend_name=f"No. of Satellites Overhead per Country, {times[0]}",
+                                   highlight=True)
+satellites_map.geojson.add_child(folium.features.GeoJsonTooltip(fields=['Countries'], aliases=("Country Name:",)))
+satellites_map.geojson.add_child(folium.features.GeoJsonPopup(
+    fields=['Countries', times[0], 'Time-averaged'],
+    aliases=['Country Name: ', f'No. of Satellites at {times[0]}: ', 'No. of Satellites averaged over 24 hrs: ']))
+satellites_map.add_to(i_map)
 
-folium.GeoJson(temporal_satellite_cm, style_function = custom_style, highlight_function=value_show, tooltip= folium.features.GeoJsonTooltip(fields=['Countries'], aliases=("Country Name:",)), 
-               popup=folium.features.GeoJsonPopup(fields=['Countries','2024-03-04T00:00:00Z', 'Time-averaged'], aliases = ['Country Name: ', 'No. of Satellites at 2024-03-04 T00:00:00 : ', 'No. of Satellites averaged over 24 hrs: '])
-    ).add_to(i_map)
 # interactive map
 i_map
 ```
 
-Please click on the geometry of each country to see - No. of satellites at exactly *2024-03-04T00:00:00Z* and Averaged Count over 24 hrs for every country.
+Click on a country to see the number of satellites overhead at exactly *2024-03-04T00:00:00Z* and the count averaged over 24 hours.
+
+## Chart
+
+```{ojs}
+//| code-summary: "Observable JS: reshape and filter"
+//| output: false
+satRows = transpose(sat_long)
+
+satView = {
+  const byCountry = d3.rollups(
+    satRows.filter(d => satTime === "24-hour mean" || d.time === satTime),
+    v => ({count: d3.mean(v, d => d.count), area: v[0].area_km2}),
+    d => d.Countries);
+  const perArea = satMetric === "Per million km²";
+  const q = satSearch.trim().toLowerCase();
+  return byCountry
+    .map(([country, s]) => ({country, value: perArea ? s.count / (s.area / 1e6) : s.count, area: s.area}))
+    // density is unstable for micro-states, so it is shown for countries >= 100,000 km² only
+    .filter(d => !perArea || d.area >= 1e5)
+    .filter(d => !q || d.country.toLowerCase().includes(q))
+    .sort((a, b) => d3.descending(a.value, b.value))
+    .slice(0, satTopN);
+}
+```
+
+```{ojs}
+//| code-summary: "Observable JS: inputs and chart"
+viewof satTime = Inputs.select(["24-hour mean", ...sat_times],
+  {label: "Snapshot (UTC)", value: "24-hour mean",
+   format: t => t === "24-hour mean" ? t : `${t.slice(0, 10)} ${t.slice(11, 16)} UTC`})
+viewof satMetric = Inputs.radio(["Satellites overhead", "Per million km²"],
+  {label: "Measure", value: "Satellites overhead"})
+viewof satTopN = Inputs.range([5, 40], {label: "Countries shown", step: 1, value: 15})
+viewof satSearch = Inputs.text({label: "Filter countries", placeholder: "e.g. United, Brazil"})
+
+Plot.plot({
+  width: Math.min(width, 820),
+  height: 40 + 22 * Math.max(satView.length, 1),
+  marginLeft: 170,
+  x: {label: satMetric === "Per million km²" ? "Satellites per million km² →" : "Satellites overhead →", grid: true},
+  y: {label: null, domain: satView.map(d => d.country),
+      tickFormat: d => d.length > 24 ? d.slice(0, 23) + "…" : d},
+  marks: [
+    Plot.barX(satView, {x: "value", y: "country", fill: "#2e8b57", tip: true}),
+    Plot.ruleX([0])
+  ]
+})
+```
+
+Pick a 4-hourly snapshot or the 24-hour mean, switch between raw counts and area-normalised density, and type part of a name to compare specific countries. Large countries dominate raw counts simply by area; the density view shows which territories sit under the busiest orbital shells.
+
+## Table
+
+```{python}
+from itables import show
+
+table_df = temporal_satellite_cm[['Countries', 'area_km2'] + times + ['Time-averaged']].copy()
+table_df['area_km2'] = table_df['area_km2'].astype(int)
+table_df['Per million km² (mean)'] = (table_df['Time-averaged'] / (table_df['area_km2'] / 1e6)).round(2)
+table_df.columns = ['Country', 'Area (km²)'] + [t[11:16] + ' UTC' for t in times] + ['24-h mean', 'Per million km² (mean)']
+show(table_df.sort_values('24-h mean', ascending=False), connected=True, showIndex=False, scrollX=True,
+     pageLength=10, classes="display compact", maxBytes=0)
+```
+
+:::
 
 # References
 
