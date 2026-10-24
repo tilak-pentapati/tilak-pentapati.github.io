@@ -122,6 +122,62 @@ code, pre, kbd, samp { font-family: $font-family-monospace, ui-monospace, Menlo,
   }
 
   .es-todo { color: $warning; font-style: italic; }
+
+  .es-live {
+    margin-left: auto;
+    font-family: $font-family-sans-serif;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.1rem 0.55rem;
+    border-radius: 999px;
+    color: $success;
+    border: 1px solid rgba($success, 0.45);
+    background: rgba($success, 0.1);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Live data: freshness badge (satellites page) and listing chip (projects.qmd)
+// ---------------------------------------------------------------------------
+.live-badge {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem 0.9rem;
+  font-size: 0.85rem;
+  padding: 0.45rem 0.8rem;
+  border-radius: $es-radius;
+  border: 1px solid rgba($success, 0.4);
+  background: rgba($success, 0.08);
+
+  &.live-cache {
+    border-color: rgba($warning, 0.5);
+    background: rgba($warning, 0.08);
+    .live-dot { background: $warning; animation: none; }
+  }
+
+  .live-dot {
+    width: 0.6rem;
+    height: 0.6rem;
+    border-radius: 50%;
+    background: $success;
+    animation: live-pulse 2s ease-in-out infinite;
+  }
+}
+
+@keyframes live-pulse {
+  50% { opacity: 0.35; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .live-badge .live-dot { animation: none; }
+}
+
+.quarto-listing .listing-category.live-category {
+  color: $success;
+  border-color: rgba($success, 0.6);
+  background: rgba($success, 0.1);
+  font-weight: 600;
 }
 
 @media (max-width: 575.98px) {
