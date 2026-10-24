@@ -132,17 +132,17 @@ We downloaded the Bay Area listings data (San Francisco, Oakland and San Mateo) 
 
 ```{r essential_data, include=FALSE}
 # Loading airbnb Listings downloaded from AIRBNB website for areas(san francisco, oakland and san mateo)
-listings_oakland <- read.csv("/Users/jay/Desktop/websiteV02/data/data_r/airbnb_sf/tables/Oakland/listings.csv") 
+listings_oakland <- read.csv("../../../data/data_r/airbnb_sf/tables/Oakland/listings.csv") 
 
 
-listings_sanfrancisco <- read.csv("/Users/jay/Desktop/websiteV02/data/data_r/airbnb_sf/tables/SanFrancisco/listings.csv")
-listings_sanmateo <- read.csv("/Users/jay/Desktop/websiteV02/data/data_r/airbnb_sf/tables/SanMateo/listings.csv")
+listings_sanfrancisco <- read.csv("../../../data/data_r/airbnb_sf/tables/SanFrancisco/listings.csv")
+listings_sanmateo <- read.csv("../../../data/data_r/airbnb_sf/tables/SanMateo/listings.csv")
 
 # Row Binding all three datasets to produce specified bay area's Airbnb Listings
 listings_bayarea <- rbind(listings_sanfrancisco, listings_sanmateo, listings_oakland)
 
 # Loading Bay area ZCTA's or ZIPCODE Areas for geometry which are downloaded from Berkeley Library
-bayarea_zipcodes <- read_sf("/Users/jay/Desktop/websiteV02/data/data_r/airbnb_sf/bayarea_zipcodes/bayarea_zipcodes.shp")
+bayarea_zipcodes <- read_sf("../../../data/data_r/airbnb_sf/bayarea_zipcodes/bayarea_zipcodes.shp")
 ```
 
 Two Additional Datasets:
@@ -151,11 +151,11 @@ We will be using Commerical Electricity Rates Dataset for Both investor-owned an
 
 ```{r additional_data, include=FALSE}
 # We are using Commerical Electricity Rate Dataset for Both investor-owned and non-investor owned utilities per ZIP Code
-iou_data <- read.csv("/Users/jay/Desktop/websiteV02/data/data_r/airbnb_sf/tables/iou_zipcodes_2020.csv")
-non_iou_data <- read.csv("/Users/jay/Desktop/websiteV02/data/data_r/airbnb_sf/tables/non_iou_zipcodes_2020.csv")
+iou_data <- read.csv("../../../data/data_r/airbnb_sf/tables/iou_zipcodes_2020.csv")
+non_iou_data <- read.csv("../../../data/data_r/airbnb_sf/tables/non_iou_zipcodes_2020.csv")
 
 # We are using No.of Vehicles per ZIP Code dataset
-vehicle_count_2020 <- read.csv("/Users/jay/Desktop/websiteV02/data/data_r/airbnb_sf/tables/vehicle-count-2020.csv")
+vehicle_count_2020 <- read.csv("../../../data/data_r/airbnb_sf/tables/vehicle-count-2020.csv")
 ```
 
 ```{r add_data_cleaning, echo=TRUE, results='hide'}

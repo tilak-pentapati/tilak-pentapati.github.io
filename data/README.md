@@ -23,7 +23,7 @@ Page: <https://tilak-pentapati.github.io/projects/python/SP500_comp/> · Source:
   - How to get it: Download `all_stocks_5yr.csv` from Kaggle (free account) and save it as `stock_data.csv`.
   - Expected path: `data/data_python/SP500_comp/stock_data.csv`
 
-The page reads the CSV from an absolute path; edit the `read_csv` line to the expected path before re-running.
+The page reads it from the expected path, relative to the project root.
 
 ## Retail Site Selection & Catchment Analysis for a New C-Store with Click & Collect in Liverpool
 
@@ -99,7 +99,7 @@ Page: <https://tilak-pentapati.github.io/projects/r/airbnb_sf/> · Source: `proj
   - How to get it: Already in the repository.
   - Expected path: `data/data_r/airbnb_sf/bayarea_zipcodes/` and `tables/` (committed)
 
-The data this page reads is committed, so only the Census API key is needed. The page uses absolute paths; edit the `read.csv`/`read_sf` lines before re-running.
+The data this page reads is committed, so only the Census API key is needed. Paths are relative to the project root.
 
 ## Point Pattern Analysis, Predictive Checks, and Spatial Econometrics of Madrid AirBnb Prices
 
@@ -110,7 +110,7 @@ Page: <https://tilak-pentapati.github.io/projects/r/se_m_airbnb/> · Source: `pr
   - How to get it: Download Madrid `listings.csv` from Inside Airbnb and run the cleaning notebook kept alongside the data (`clean_data.ipynb`).
   - Expected path: `data/data_r/se_m_airbnb/assignment_1_madrid/madrid_abb.gpkg`
 
-The page loads the GeoPackage from an absolute path; edit `data_path` before re-running.
+The page loads the GeoPackage from the expected path, relative to the project root.
 
 ## Multilevel, Geographically Weighted and Spatio-Temporal Modelling of COVID-19 in England
 
@@ -125,4 +125,4 @@ Page: <https://tilak-pentapati.github.io/projects/r/stm_covid/> · Source: `proj
   - How to get it: Download from the ONS Open Geography Portal.
   - Expected path: `data/data_r/stm_covid/gwr/Regions_December_2019_Boundaries_EN_BGC.shp`
 
-The page loads the GeoPackage from an absolute path; edit `covid_path` before re-running.
+The page loads the data from the expected paths, relative to the project root.

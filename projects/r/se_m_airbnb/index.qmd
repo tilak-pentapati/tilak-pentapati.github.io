@@ -41,6 +41,9 @@ library(viridis)
 library(RColorBrewer)
 library(knitr)
 library(kableExtra)
+# Skip kableExtra's kePrint.js: it needs jQuery, which Quarto pages don't load
+# ("$ is not defined"). The tables only use Bootstrap classes, so nothing is lost.
+options(kableExtra.knit_print.dependency = FALSE)
 
 # Disable spherical geometry (s2) for planar grid/interpolation compatibility
 sf::sf_use_s2(FALSE)
@@ -55,8 +58,7 @@ We load the pre-processed Madrid AirBnb GeoPackage (`madrid_abb.gpkg`) from `dat
 # Robust relative path detection across development environments
 data_candidates <- c(
   file.path("..", "..", "..", "data", "data_r", "se_m_airbnb", "assignment_1_madrid", "madrid_abb.gpkg"),
-  file.path("data", "data_r", "se_m_airbnb", "assignment_1_madrid", "madrid_abb.gpkg"),
-  "/Users/jay/Desktop/websiteV02/data/data_r/se_m_airbnb/assignment_1_madrid/madrid_abb.gpkg"
+  file.path("data", "data_r", "se_m_airbnb", "assignment_1_madrid", "madrid_abb.gpkg")
 )
 
 data_path <- data_candidates[file.exists(data_candidates)][1]

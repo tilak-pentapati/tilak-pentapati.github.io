@@ -33,4 +33,4 @@ reproduce:
       licence: "CC0 1.0 (public domain), as listed on Kaggle"
       fetch: "Download `all_stocks_5yr.csv` from Kaggle (free account) and save it as `stock_data.csv`."
       path: "`data/data_python/SP500_comp/stock_data.csv`"
-  note: "The page reads the CSV from an absolute path; edit the `read_csv` line to the expected path before re-running."
+  note: "The page reads it from the expected path, relative to the project root."
