@@ -119,4 +119,284 @@ SolidWorks, MATLAB, Octave
 
 ## Where my work is {#where-my-work-is}
 
-<!-- Next phase: Leaflet map of project locations + skills network go here. -->
+<!-- Map + skills network read assets/data/projects.json, built from each
+project's front matter and _metadata.yml (study_area, short_title, summary.stack)
+plus projects/external.yml. Regenerate and commit after metadata changes:
+/Users/jay/anaconda3/envs/envs563/bin/python scripts/build_projects_json.py -->
+
+Study areas of the projects on this site. Click a marker or a chip for a
+one-line summary and a link to the project.
+
+```{ojs}
+//| echo: false
+// Data for the map and the skills network, generated from project metadata
+// by scripts/build_projects_json.py.
+projects = (await FileAttachment("assets/data/projects.json").json()).projects
+```
+
+```{ojs}
+//| echo: false
+// Leaflet is fetched only when the map scrolls near the viewport.
+workMap = {
+  const mapped = projects.filter(p => p.study_area.lat != null);
+  const offMap = projects.filter(p => p.study_area.lat == null);
+  const mapEl = html`<div class="work-map" role="region" aria-label="Map of project study areas"></div>`;
+  const chip = (p, icon) => html`<button type="button" class="wm-chip" title="${p.study_area.label}">
+      <i class="bi bi-${icon}" aria-hidden="true"></i> ${p.short_title}</button>`;
+  const offIcon = {global: "globe2", offworld: "moon-stars", "non-spatial": "bar-chart-line"};
+  const mapChips = mapped.map(p => Object.assign(chip(p, "geo-alt"), {_p: p}));
+  const offChips = offMap.map(p => {
+    const a = html`<a class="wm-chip wm-chip-off" href="${p.href}" title="${p.study_area.label}">
+        <i class="bi bi-${offIcon[p.study_area.scope] ?? "dot"}" aria-hidden="true"></i> ${p.short_title}</a>`;
+    if (p.external) Object.assign(a, {target: "_blank", rel: "noopener"});
+    return a;
+  });
+  const wrap = html`<div class="work-map-wrap">${mapEl}
+    <div class="wm-chips" aria-label="Mapped projects">${mapChips}</div>
+    <div class="wm-chips wm-chips-off"><span class="wm-chips-label">Not on the map:</span>${offChips}</div>
+  </div>`;
+  yield wrap;
+
+  await new Promise(resolve => {
+    const io = new IntersectionObserver(es => {
+      if (es.some(e => e.isIntersecting)) { io.disconnect(); resolve(); }
+    }, {rootMargin: "300px"});
+    io.observe(mapEl);
+  });
+  if (!document.querySelector("link[data-leaflet]")) {
+    document.head.append(html`<link rel="stylesheet" data-leaflet
+      href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">`);
+  }
+  const L = await require("leaflet@1.9.4/dist/leaflet.js");
+
+  const map = L.map(mapEl, {scrollWheelZoom: false, worldCopyJump: true, zoomSnap: 0.5, maxZoom: 16});
+  // Esri Canvas basemaps: keyless, with matching light and dark variants.
+  const esri = (dark, kind) => `https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_${dark ? "Dark" : "Light"}_Gray_${kind}/MapServer/tile/{z}/{y}/{x}`;
+  const isDark = () => document.body.classList.contains("quarto-dark");
+  const base = L.tileLayer(esri(isDark(), "Base"), {
+    maxZoom: 16,
+    attribution: 'Tiles &copy; <a href="https://www.esri.com/">Esri</a> &mdash; Esri, HERE, Garmin, &copy; OpenStreetMap contributors'
+  }).addTo(map);
+  const labels = L.tileLayer(esri(isDark(), "Reference"), {maxZoom: 16}).addTo(map);
+  const themeObs = new MutationObserver(() => {
+    base.setUrl(esri(isDark(), "Base"));
+    labels.setUrl(esri(isDark(), "Reference"));
+  });
+  themeObs.observe(document.body, {attributes: true, attributeFilter: ["class"]});
+
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[c]));
+  const popup = p => `<div class="wm-pop">
+      <div class="wm-pop-area">${esc(p.study_area.label)}</div>
+      <a class="wm-pop-title" href="${p.href}">${esc(p.title)}</a>
+      <p>${esc(p.blurb)}</p>
+      <a class="wm-pop-link" href="${p.href}">Open project →</a></div>`;
+  const markers = new Map();
+  for (const p of mapped) {
+    const ll = [p.study_area.lat, p.study_area.lon];
+    if (p.study_area.radius_km) {
+      L.circle(ll, {radius: p.study_area.radius_km * 1000, className: "wm-area", interactive: false}).addTo(map);
+    }
+    const m = L.circleMarker(ll, {radius: 7, className: "wm-pt"})
+      .bindPopup(popup(p), {maxWidth: 280})
+      .bindTooltip(p.short_title, {direction: "top", offset: [0, -6]})
+      .addTo(map);
+    markers.set(p.id, m);
+  }
+  const fitAll = () => map.fitBounds(L.latLngBounds(mapped.map(p => [p.study_area.lat, p.study_area.lon])), {padding: [30, 30]});
+  fitAll();
+  for (const c of mapChips) {
+    c.onclick = () => {
+      const p = c._p, m = markers.get(p.id);
+      map.flyTo(m.getLatLng(), p.study_area.scope === "national" ? 5.5 : 9, {duration: 0.8});
+      map.once("moveend", () => m.openPopup());
+      mapEl.scrollIntoView({block: "nearest", behavior: "smooth"});
+    };
+  }
+  const reset = L.control({position: "topleft"});
+  reset.onAdd = () => {
+    const b = L.DomUtil.create("button", "wm-reset leaflet-bar");
+    b.type = "button"; b.title = "Show all study areas"; b.setAttribute("aria-label", b.title);
+    b.innerHTML = '<i class="bi bi-globe2" aria-hidden="true"></i>';
+    L.DomEvent.on(b, "click", e => { L.DomEvent.stop(e); map.closePopup(); fitAll(); });
+    return b;
+  };
+  reset.addTo(map);
+  invalidation.then(() => { themeObs.disconnect(); map.remove(); });
+}
+```
+
+### Skills and projects
+
+How the methods and tools connect across projects. Hover or tap a skill to
+highlight the projects that use it; click a project to open it (on a touch
+screen, tap once to select and again to open). Drag nodes to rearrange.
+
+::: {.network-controls}
+```{ojs}
+//| echo: false
+categories = Array.from(new Set(projects.flatMap(p => p.categories))).sort((a, b) => a.localeCompare(b))
+viewof netCategory = Inputs.select(["All projects", ...categories], {label: "Category"})
+viewof netAllTools = Inputs.toggle({label: "Single-project tools", value: false})
+```
+:::
+
+```{ojs}
+//| echo: false
+skillGraph = {
+  // Skills = project categories + summary-card stack, de-duplicated case-insensitively.
+  const skills = new Map();
+  for (const p of projects) {
+    const seen = new Set();
+    for (const [name, kind] of [...p.stack.map(s => [s, "tool"]), ...p.categories.map(s => [s, "method"])]) {
+      const key = name.toLowerCase();
+      if (seen.has(key)) continue;
+      seen.add(key);
+      if (!skills.has(key)) skills.set(key, {id: "s:" + key, name, kind, all: []});
+      skills.get(key).all.push(p.id);
+    }
+  }
+  const ps = projects.filter(p => netCategory === "All projects" || p.categories.includes(netCategory));
+  const keep = new Set(ps.map(p => p.id));
+  const nodes = ps.map(p => ({id: "p:" + p.id, type: "project", name: p.short_title, p}));
+  const links = [];
+  for (const s of skills.values()) {
+    if (s.all.length < 2 && !netAllTools) continue;
+    const here = s.all.filter(id => keep.has(id));
+    if (!here.length) continue;
+    nodes.push({id: s.id, type: s.kind, name: s.name, count: s.all.length});
+    for (const id of here) links.push({source: "p:" + id, target: s.id});
+  }
+  return {nodes, links};
+}
+```
+
+```{ojs}
+//| echo: false
+skillNetwork = {
+  const {nodes, links} = structuredClone(skillGraph);
+  for (const n of nodes) if (n.type === "project") n.p = skillGraph.nodes.find(m => m.id === n.id).p;
+  const small = width < 576;
+  const w = width, h = small ? 600 : Math.round(Math.max(400, Math.min(520, w * 0.65)));
+  const rad = n => n.type === "project" ? (small ? 8 : 10) : 4 + Math.sqrt(n.count) * 2;
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  for (const d of nodes) d.half = Math.max(rad(d), d.name.length * (d.type === "project" ? 3.3 : 2.9));
+  nodes.forEach((d, i) => {
+    const a = i * 2.4, r = 10 * Math.sqrt(i + 1);
+    d.x = w / 2 + r * Math.cos(a); d.y = h / 2 + r * Math.sin(a);
+  });
+  const side = (d, len) => d.type !== "project" ? len / 2 : d.p.stack.includes("R") ? len * 0.74 : len * 0.26;
+  const sim = d3.forceSimulation(nodes)
+    .force("link", d3.forceLink(links).id(d => d.id).distance(small ? 45 : 70).strength(0.4))
+    .force("charge", d3.forceManyBody().strength(small ? -170 : -320))
+    .force("collide", d3.forceCollide(d => rad(d) + (d.type === "project" ? 22 : Math.min(18, 4 + d.name.length * 1.2))))
+    // Python projects drift left (top on phones), R projects right (bottom);
+    // shared skills settle between.
+    .force("x", small ? d3.forceX(w / 2).strength(0.06)
+      : d3.forceX(d => side(d, w)).strength(d => d.type === "project" ? 0.12 : 0.01))
+    .force("y", small ? d3.forceY(d => side(d, h)).strength(d => d.type === "project" ? 0.12 : 0.01)
+      : d3.forceY(h / 2).strength(0.05));
+
+  const svg = d3.create("svg").attr("viewBox", [0, 0, w, h]).attr("width", w).attr("height", h)
+    .attr("class", "skill-net").attr("role", "img")
+    .attr("aria-label", `Network of ${nodes.filter(n => n.type === "project").length} projects and the skills they use`);
+  const link = svg.append("g").attr("class", "sn-links").selectAll("line").data(links).join("line");
+  const node = svg.append("g").selectAll("g").data(nodes).join("g")
+    // On phones only projects and skills shared by 3+ projects keep a label until highlighted.
+    .attr("class", d => `sn-node sn-${d.type}${small && d.type !== "project" && d.count < 3 ? " sn-minor" : ""}`)
+    .attr("tabindex", 0)
+    .attr("role", d => d.type === "project" ? "link" : "button")
+    .attr("aria-label", d => d.type === "project" ? `${d.p.title}, open project` : `${d.name}, used in ${d.count} project${d.count > 1 ? "s" : ""}`);
+  node.append("circle").attr("r", rad);
+  node.append("text").attr("class", "sn-label")
+    .attr("dy", d => d.type === "project" ? -rad(d) - 5 : rad(d) + 11)
+    .text(d => d.name);
+
+  const info = html`<div class="sn-info" aria-live="polite"></div>`;
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[c]));
+  const neighbours = new Map(nodes.map(n => [n.id, new Set([n.id])]));
+  for (const l of links) { neighbours.get(l.source.id).add(l.target.id); neighbours.get(l.target.id).add(l.source.id); }
+  let pinned = null, armed = null;
+  const defaultInfo = () => { info.innerHTML = `<span class="sn-hint">Hover or tap a node.</span>`; };
+  const highlight = d => {
+    if (!d) {
+      node.classed("is-dim", false).classed("is-on", false);
+      link.classed("is-dim", false).classed("is-on", false);
+      return defaultInfo();
+    }
+    const nb = neighbours.get(d.id);
+    node.classed("is-dim", n => !nb.has(n.id)).classed("is-on", n => nb.has(n.id));
+    link.classed("is-on", l => l.source.id === d.id || l.target.id === d.id)
+      .classed("is-dim", l => l.source.id !== d.id && l.target.id !== d.id);
+    if (d.type === "project") {
+      const ext = d.p.external ? ' target="_blank" rel="noopener"' : "";
+      info.innerHTML = `<a href="${d.p.href}"${ext}><strong>${esc(d.p.title)}</strong></a><br>
+        <span>${esc(d.p.blurb)}</span>`;
+    } else {
+      const ps = nodes.filter(n => n.type === "project" && nb.has(n.id));
+      info.innerHTML = `<strong>${esc(d.name)}</strong> · ${d.type === "tool" ? "tool" : "method / topic"} ·
+        used in ${ps.map(n => `<a href="${n.p.href}"${n.p.external ? ' target="_blank" rel="noopener"' : ""}>${esc(n.name)}</a>`).join(", ")}`;
+    }
+  };
+  const open = d => d.p.external ? window.open(d.p.href, "_blank", "noopener") : (window.location.href = d.p.href);
+  defaultInfo();
+
+  node
+    .on("pointerenter", (e, d) => { if (e.pointerType === "mouse" && !pinned) highlight(d); })
+    .on("pointerleave", e => { if (e.pointerType === "mouse" && !pinned) highlight(null); })
+    .on("focus", (e, d) => { if (!pinned) highlight(d); })
+    .on("blur", () => { if (!pinned) highlight(null); })
+    .on("click", (e, d) => {
+      e.stopPropagation();
+      if (d.type === "project") {
+        const touch = e.pointerType && e.pointerType !== "mouse";
+        if (!touch || armed === d) return open(d);
+        armed = d; pinned = d; highlight(d);
+        info.insertAdjacentHTML("beforeend", ` <span class="sn-hint">Tap again to open.</span>`);
+      } else {
+        armed = null;
+        pinned = pinned === d ? null : d;
+        highlight(pinned ?? d);
+      }
+    })
+    .on("keydown", (e, d) => {
+      if (e.key !== "Enter" && e.key !== " ") return;
+      e.preventDefault();
+      if (d.type === "project") open(d);
+      else { pinned = pinned === d ? null : d; highlight(pinned ?? d); }
+    });
+  svg.on("click", () => { pinned = armed = null; highlight(null); });
+
+  node.call(d3.drag()
+    .on("start", (e, d) => { if (!e.active) sim.alphaTarget(0.2).restart(); d.fx = d.x; d.fy = d.y; })
+    .on("drag", (e, d) => { d.fx = e.x; d.fy = e.y; })
+    .on("end", (e, d) => { if (!e.active) sim.alphaTarget(0); d.fx = d.fy = null; }));
+
+  // Keep each node, label included, inside the frame.
+  const pad = 8;
+  const draw = () => {
+    for (const d of nodes) {
+      d.x = Math.max(pad + d.half, Math.min(w - pad - d.half, d.x));
+      d.y = Math.max(pad + 14, Math.min(h - pad - 12, d.y));
+    }
+    link.attr("x1", d => d.source.x).attr("y1", d => d.source.y).attr("x2", d => d.target.x).attr("y2", d => d.target.y);
+    node.attr("transform", d => `translate(${d.x},${d.y})`);
+  };
+  // Settle most of the layout before the first paint; animate only the tail.
+  sim.stop().tick(reduce ? 300 : 200);
+  draw();
+  sim.on("tick", draw);
+  if (!reduce) sim.alpha(0.05).restart();
+  invalidation.then(() => sim.stop());
+
+  return html`<figure class="skill-net-wrap">
+    ${svg.node()}
+    <figcaption class="sn-legend">
+      <span><i class="sn-key sn-key-project"></i>Project</span>
+      <span><i class="sn-key sn-key-method"></i>Method / topic</span>
+      <span><i class="sn-key sn-key-tool"></i>Tool / library</span>
+    </figcaption>
+    ${info}
+  </figure>`;
+}
+```

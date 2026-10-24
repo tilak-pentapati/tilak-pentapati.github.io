@@ -12,3 +12,14 @@ summary:
   methods: "Multilevel varying-intercept and varying-slope models, fixed and adaptive GWR, Fixed Rank Kriging basis functions in Poisson and negative binomial space-time GLMs."
   result: "Overcrowding, ethnic diversity and long-term illness raise risk; the negative binomial cuts deviance from 171,098 to 9,261; a significant latitude × time term shows south-to-north spread."
   stack: ["R", "lme4", "spgwr", "FRK", "spacetime", "sf", "tmap"]
+# Short label for the home-page skills network.
+short_title: "COVID-19 England"
+
+# Study area for the home-page map (scripts/build_projects_json.py).
+# scope: local | regional | city | national | global | non-spatial | offworld;
+# lat/lon (WGS84) only for mapped scopes, radius_km draws an extent circle.
+study_area:
+  label: "England (149 upper-tier local authorities)"
+  scope: national
+  lat: 52.6
+  lon: -1.2

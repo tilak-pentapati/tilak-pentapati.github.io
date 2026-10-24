@@ -12,3 +12,14 @@ summary:
   methods: "Recoding SOC 2020 into 4 ONS skill levels, median and SRDI summaries, two-way cross-tabulation, chi-square test, age-based post-stratification reweighting."
   result: "A significant association (χ² = 637.8, df = 9, p < 2.2 × 10⁻¹⁶); age reweighting lowers the \"10 years or longer\" share from 47.9% to 44.5%."
   stack: ["R", "tidyverse", "knitr"]
+# Short label for the home-page skills network.
+short_title: "APS occupations"
+
+# Study area for the home-page map (scripts/build_projects_json.py).
+# scope: local | regional | city | national | global | non-spatial | offworld;
+# lat/lon (WGS84) only for mapped scopes, radius_km draws an extent circle.
+study_area:
+  label: "United Kingdom (APS 2021)"
+  scope: national
+  lat: 54.6
+  lon: -2.6

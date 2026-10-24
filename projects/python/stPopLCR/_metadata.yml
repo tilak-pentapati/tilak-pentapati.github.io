@@ -12,3 +12,15 @@ summary:
   methods: "Density choropleths with Jenks and quantile classes, high-density cluster thresholds, raster change classification, district summary tables."
   result: "Daytime workplace population of 987,210 against 1,506,940 night-time residents; mean LCR density fell from 2,087 to 2,065 persons/km² while the national mean rose."
   stack: ["Python", "GeoPandas", "Rasterio", "Matplotlib", "QGIS"]
+# Short label for the home-page skills network.
+short_title: "LCR population"
+
+# Study area for the home-page map (scripts/build_projects_json.py).
+# scope: local | regional | city | national | global | non-spatial | offworld;
+# lat/lon (WGS84) only for mapped scopes, radius_km draws an extent circle.
+study_area:
+  label: "Liverpool City Region"
+  scope: regional
+  lat: 53.402
+  lon: -2.977
+  radius_km: 22

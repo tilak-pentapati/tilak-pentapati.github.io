@@ -12,3 +12,12 @@ summary:
   methods: "Daily-return matrix → unnormalised and standardised PCA → scree-elbow and cumulative-variance analysis → eigenportfolio interpretation."
   result: "PC1 (the \"market mode\") explains 28.8–31.8% of variance; the scree elbow is at PC4; 226–253 PCs are needed to reach 95%."
   stack: ["Python", "pandas", "NumPy", "scikit-learn", "Matplotlib"]
+# Short label for the home-page skills network.
+short_title: "S&P 500 PCA"
+
+# Study area for the home-page map (scripts/build_projects_json.py).
+# scope: local | regional | city | national | global | non-spatial | offworld;
+# lat/lon (WGS84) only for mapped scopes, radius_km draws an extent circle.
+study_area:
+  label: "S&P 500 equities (non-spatial)"
+  scope: non-spatial

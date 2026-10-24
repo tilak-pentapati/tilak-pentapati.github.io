@@ -4,16 +4,7 @@ listing:
   contents: 
     - "projects/python/*/index.qmd"
     - "projects/r/*/index.qmd"
-    - path: "https://tilak-pentapati.github.io/Low-Gravity_Rotary-Percussive_Bite-Drilling_System/"
-      image: "data/drill_mbse.svg"
-      title: "Design Showcase: a Rotary-Percussive Bite Drill for the Moon and Mars"
-      author: "Jay Tilak P."
-      date: "2022-09-07"
-      categories:
-        - "Space Systems"
-        - "Robotics"
-        - "Mechanical Design"
-      description: "How a 45 kg lander takes 1 m ice-bearing samples with no drilling fluid. Physics-based design, digital twin, and trade studies."
+    - "projects/external.yml"
   type: grid
   fields: [image, date, title, reading-time, categories, description]
   categories: true

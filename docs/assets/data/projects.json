@@ -1,0 +1,334 @@
+{
+ "projects": [
+  {
+   "id": "SP500_comp",
+   "title": "S&P 500 Market Mode & Factor Analysis: Dimensionality Reduction with PCA",
+   "short_title": "S&P 500 PCA",
+   "href": "projects/python/SP500_comp/index.html",
+   "external": false,
+   "date": "2023-12-30",
+   "blurb": "How much of S&P 500 return variance is market-wide systemic risk, and how much is sector factors or stock-specific noise?",
+   "categories": [
+    "Python",
+    "Big Data Analytics",
+    "Machine Learning",
+    "PCA"
+   ],
+   "stack": [
+    "Python",
+    "pandas",
+    "NumPy",
+    "scikit-learn",
+    "Matplotlib"
+   ],
+   "study_area": {
+    "label": "S&P 500 equities (non-spatial)",
+    "scope": "non-spatial"
+   }
+  },
+  {
+   "id": "bd_gps",
+   "title": "Big Data Trajectory Analysis: Microsoft GeoLife GPS Dataset",
+   "short_title": "GeoLife GPS (Spark)",
+   "href": "projects/python/bd_gps/index.html",
+   "external": false,
+   "date": "2023-11-21",
+   "blurb": "Extract per-user mobility metrics (activity, extremes, distance, speed) from raw GPS trajectory logs with distributed processing.",
+   "categories": [
+    "Python",
+    "PySpark",
+    "Big Data Analytics",
+    "Spatial Analysis"
+   ],
+   "stack": [
+    "Python",
+    "PySpark",
+    "Spark SQL",
+    "geopy"
+   ],
+   "study_area": {
+    "label": "Beijing (GeoLife trajectories)",
+    "scope": "city",
+    "lat": 39.9042,
+    "lon": 116.4074,
+    "radius_km": 30
+   }
+  },
+  {
+   "id": "retail_site_select",
+   "title": "Retail Site Selection & Catchment Analysis for a New C-Store with Click & Collect in Liverpool",
+   "short_title": "Retail site selection",
+   "href": "projects/python/retail_site_select/index.html",
+   "external": false,
+   "date": "2023-12-15",
+   "blurb": "Where should Marks & Spencer open a new convenience store with Click & Collect in Liverpool?",
+   "categories": [
+    "Python",
+    "Spatial Analysis",
+    "Retail Analytics",
+    "Network Analysis"
+   ],
+   "stack": [
+    "Python",
+    "GeoPandas",
+    "pandas",
+    "Matplotlib",
+    "QGIS",
+    "ArcGIS Pro"
+   ],
+   "study_area": {
+    "label": "Liverpool (298 LSOAs)",
+    "scope": "local",
+    "lat": 53.408,
+    "lon": -2.92,
+    "radius_km": 7
+   }
+  },
+  {
+   "id": "satellites_overhead",
+   "title": "Real-Time Orbital Tracking and Country-Level Satellite Density Analysis",
+   "short_title": "Satellites overhead",
+   "href": "projects/python/satellites_overhead/index.html",
+   "external": false,
+   "date": "2024-03-04",
+   "blurb": "How many active satellites are above each country at a given moment, and how does that change over a day?",
+   "categories": [
+    "Python",
+    "Spatial Analysis"
+   ],
+   "stack": [
+    "Python",
+    "requests",
+    "Skyfield",
+    "GeoPandas",
+    "Shapely",
+    "mapclassify",
+    "Folium"
+   ],
+   "study_area": {
+    "label": "Global (256 countries)",
+    "scope": "global"
+   }
+  },
+  {
+   "id": "stPopLCR",
+   "title": "Spatial and Temporal Population Trends in the Liverpool City Region",
+   "short_title": "LCR population",
+   "href": "projects/python/stPopLCR/index.html",
+   "external": false,
+   "date": "2023-10-26",
+   "blurb": "How do daytime (workplace) and night-time (residential) populations differ across the Liverpool City Region, and how did population shift between 1991 and 2011?",
+   "categories": [
+    "Python",
+    "Spatial Analysis"
+   ],
+   "stack": [
+    "Python",
+    "GeoPandas",
+    "Rasterio",
+    "Matplotlib",
+    "QGIS"
+   ],
+   "study_area": {
+    "label": "Liverpool City Region",
+    "scope": "regional",
+    "lat": 53.402,
+    "lon": -2.977,
+    "radius_km": 22
+   }
+  },
+  {
+   "id": "GCH_census",
+   "title": "Ordinary Least Squares Regression for modelling Green Central Heating in Census 2021",
+   "short_title": "Green heating",
+   "href": "projects/r/GCH_census/index.html",
+   "external": false,
+   "date": "2024-01-08",
+   "blurb": "What determines the uptake of green central heating across local authority districts in England and Wales?",
+   "categories": [
+    "R",
+    "Spatial Econometrics",
+    "OLS Regression"
+   ],
+   "stack": [
+    "R",
+    "tidyverse",
+    "car",
+    "MASS",
+    "broom",
+    "sjPlot"
+   ],
+   "study_area": {
+    "label": "England & Wales (331 local authorities)",
+    "scope": "national",
+    "lat": 52.35,
+    "lon": -3.1
+   }
+  },
+  {
+   "id": "StrokePredictionModel",
+   "title": "Clinical Stroke Prediction & Risk Stratification: Machine Learning Pipeline in R",
+   "short_title": "Stroke prediction",
+   "href": "projects/r/StrokePredictionModel/index.html",
+   "external": false,
+   "date": "2023-12-30",
+   "blurb": "Can routine clinical and lifestyle variables flag patients at high risk of stroke?",
+   "categories": [
+    "R",
+    "Machine Learning",
+    "Healthcare Analytics",
+    "Data Preprocessing"
+   ],
+   "stack": [
+    "R",
+    "tidymodels",
+    "themis",
+    "ranger",
+    "xgboost",
+    "pROC",
+    "ggplot2"
+   ],
+   "study_area": {
+    "label": "Clinical records (non-spatial)",
+    "scope": "non-spatial"
+   }
+  },
+  {
+   "id": "airbnb_sf",
+   "title": "Exploring Various Datasets of Bay Area and Finding Useful Insights for Policymakers",
+   "short_title": "Bay Area Airbnb",
+   "href": "projects/r/airbnb_sf/index.html",
+   "external": false,
+   "date": "2024-01-10",
+   "blurb": "Which neighbourhood characteristics shape Airbnb activity across Bay Area ZIP codes, and how can policymakers target areas?",
+   "categories": [
+    "R",
+    "Spatial Analysis",
+    "Airbnb"
+   ],
+   "stack": [
+    "R",
+    "sf",
+    "tidycensus",
+    "spdep",
+    "tmap",
+    "cluster"
+   ],
+   "study_area": {
+    "label": "San Francisco Bay Area (SF, Oakland, San Mateo)",
+    "scope": "city",
+    "lat": 37.7,
+    "lon": -122.33,
+    "radius_km": 22
+   }
+  },
+  {
+   "id": "aps_eda",
+   "title": "Relationship between Standard Occupational Classification (SOC) and Address Duration in APS 2021 Survey",
+   "short_title": "APS occupations",
+   "href": "projects/r/aps_eda/index.html",
+   "external": false,
+   "date": "2023-11-28",
+   "blurb": "Is occupational skill level related to how long people have lived at their current address?",
+   "categories": [
+    "R",
+    "Social Survey Analysis"
+   ],
+   "stack": [
+    "R",
+    "tidyverse",
+    "knitr"
+   ],
+   "study_area": {
+    "label": "United Kingdom (APS 2021)",
+    "scope": "national",
+    "lat": 54.6,
+    "lon": -2.6
+   }
+  },
+  {
+   "id": "se_m_airbnb",
+   "title": "Point Pattern Analysis, Predictive Checks, and Spatial Econometrics of Madrid AirBnb Prices",
+   "short_title": "Madrid Airbnb",
+   "href": "projects/r/se_m_airbnb/index.html",
+   "external": false,
+   "date": "2024-03-21",
+   "blurb": "How are Madrid Airbnb prices distributed in space, and what drives them?",
+   "categories": [
+    "R",
+    "Spatial Econometrics",
+    "Spatial Analysis",
+    "Airbnb"
+   ],
+   "stack": [
+    "R",
+    "sf",
+    "gstat",
+    "spdep",
+    "spatialreg",
+    "arm",
+    "tmap"
+   ],
+   "study_area": {
+    "label": "Madrid",
+    "scope": "city",
+    "lat": 40.4168,
+    "lon": -3.7038,
+    "radius_km": 10
+   }
+  },
+  {
+   "id": "stm_covid",
+   "title": "Multilevel, Geographically Weighted and Spatio-Temporal Modelling of COVID-19 in England",
+   "short_title": "COVID-19 England",
+   "href": "projects/r/stm_covid/index.html",
+   "external": false,
+   "date": "2024-05-16",
+   "blurb": "What drove local COVID-19 infection risk in England's third (Alpha) wave, and how did it spread?",
+   "categories": [
+    "R",
+    "Spatial Modelling",
+    "Multilevel Modelling",
+    "GWR",
+    "Spatio-Temporal Analysis"
+   ],
+   "stack": [
+    "R",
+    "lme4",
+    "spgwr",
+    "FRK",
+    "spacetime",
+    "sf",
+    "tmap"
+   ],
+   "study_area": {
+    "label": "England (149 upper-tier local authorities)",
+    "scope": "national",
+    "lat": 52.6,
+    "lon": -1.2
+   }
+  },
+  {
+   "id": "Low-Gravity_Rotary-Percussive_Bite-Drilling_System",
+   "title": "Design Showcase: a Rotary-Percussive Bite Drill for the Moon and Mars",
+   "short_title": "Lunar bite drill",
+   "href": "https://tilak-pentapati.github.io/Low-Gravity_Rotary-Percussive_Bite-Drilling_System/",
+   "external": true,
+   "date": "2022-09-07",
+   "blurb": "How a 45 kg lander takes 1 m ice-bearing samples with no drilling fluid. Physics-based design, digital twin, and trade studies.",
+   "categories": [
+    "Space Systems",
+    "Robotics",
+    "Mechanical Design"
+   ],
+   "stack": [
+    "Python",
+    "build123d"
+   ],
+   "study_area": {
+    "label": "Lunar south pole & Mars 68° N",
+    "scope": "offworld"
+   }
+  }
+ ]
+}

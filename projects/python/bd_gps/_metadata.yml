@@ -12,3 +12,15 @@ summary:
   methods: "Explicit Spark schema → GMT to GMT+8 timestamp conversion → window functions with `lag` → geodesic-distance UDF → grouped aggregation and ranking."
   result: "73,712 km of cumulative geodesic distance across all users, plus top-5 rankings for active days, weekly volume, altitude span and peak speed."
   stack: ["Python", "PySpark", "Spark SQL", "geopy"]
+# Short label for the home-page skills network.
+short_title: "GeoLife GPS (Spark)"
+
+# Study area for the home-page map (scripts/build_projects_json.py).
+# scope: local | regional | city | national | global | non-spatial | offworld;
+# lat/lon (WGS84) only for mapped scopes, radius_km draws an extent circle.
+study_area:
+  label: "Beijing (GeoLife trajectories)"
+  scope: city
+  lat: 39.9042
+  lon: 116.4074
+  radius_km: 30

@@ -12,3 +12,12 @@ summary:
   methods: "Stratified BMI imputation, clinical feature engineering, SMOTE inside tidymodels recipes, 5-fold stratified CV, logistic regression vs random forest vs XGBoost, Youden's J threshold."
   result: "SMOTE-balanced logistic regression reaches AUC = 0.83, matching random forest and XGBoost (≈ 0.81–0.82) while keeping interpretable odds ratios."
   stack: ["R", "tidymodels", "themis", "ranger", "xgboost", "pROC", "ggplot2"]
+# Short label for the home-page skills network.
+short_title: "Stroke prediction"
+
+# Study area for the home-page map (scripts/build_projects_json.py).
+# scope: local | regional | city | national | global | non-spatial | offworld;
+# lat/lon (WGS84) only for mapped scopes, radius_km draws an extent circle.
+study_area:
+  label: "Clinical records (non-spatial)"
+  scope: non-spatial

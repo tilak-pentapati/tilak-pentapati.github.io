@@ -12,3 +12,15 @@ summary:
   methods: "Queen-contiguity weights, global Moran's I (Monte Carlo) and LISA, multivariate K-means geodemographic clustering, in EPSG:2227."
   result: "Airbnb listings cluster in San Francisco and Oakland ZIP codes with high internet use and medium-to-high household income."
   stack: ["R", "sf", "tidycensus", "spdep", "tmap", "cluster"]
+# Short label for the home-page skills network.
+short_title: "Bay Area Airbnb"
+
+# Study area for the home-page map (scripts/build_projects_json.py).
+# scope: local | regional | city | national | global | non-spatial | offworld;
+# lat/lon (WGS84) only for mapped scopes, radius_km draws an extent circle.
+study_area:
+  label: "San Francisco Bay Area (SF, Oakland, San Mateo)"
+  scope: city
+  lat: 37.7
+  lon: -122.33
+  radius_km: 22
