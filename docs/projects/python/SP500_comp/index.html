@@ -6,8 +6,9 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="author" content="Jay Tilak P.">
+<meta name="author" content="Jay Tilak Pentapati">
 <meta name="dcterms.date" content="2023-12-30">
+<meta name="keywords" content="principal component analysis, eigenportfolio, systematic risk, S&amp;P 500, dimensionality reduction, financial time series">
 <meta name="description" content="High-dimensional time-series analysis and eigen-portfolio construction using PCA to isolate market-wide systemic risk, sector factors and idiosyncratic noise.">
 
 <title>S&amp;P 500 Market Mode &amp; Factor Analysis: Dimensionality Reduction with PCA – Jay Tilak Pentapati</title>
@@ -81,14 +82,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../../../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting-bb62276ab45c84d9efd712f51ff97b5a.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting-dark-5a1953863e1f72ef3b996ef827f01ca7.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting-bb62276ab45c84d9efd712f51ff97b5a.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting-886401abd66b684bd75f2f6e9275b3c8.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting-dark-168a0324ff7a238321a97431c880757d.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting-886401abd66b684bd75f2f6e9275b3c8.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../../site_libs/bootstrap/bootstrap-101545cf1cd2d34117649106470ec2fa.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../../site_libs/bootstrap/bootstrap-dark-a286df8d3673e19799a98780244438ae.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../../site_libs/bootstrap/bootstrap-101545cf1cd2d34117649106470ec2fa.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../../site_libs/bootstrap/bootstrap-a3b3a79561dd8c69a9cbcf3cc3a760f7.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../../site_libs/bootstrap/bootstrap-dark-147d61ffea3aed791dc110db6c193046.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../../site_libs/bootstrap/bootstrap-a3b3a79561dd8c69a9cbcf3cc3a760f7.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -161,7 +162,6 @@ window.Quarto = {
 };
 </script>
 
-<link rel="stylesheet" href="../../../styles.css">
 <meta property="og:title" content="S&amp;P 500 Market Mode &amp; Factor Analysis: Dimensionality Reduction with PCA – Jay Tilak Pentapati">
 <meta property="og:description" content="High-dimensional time-series analysis and eigen-portfolio construction using PCA to isolate market-wide systemic risk, sector factors and idiosyncratic noise.">
 <meta property="og:image" content="https://tilak-pentapati.github.io/projects/python/SP500_comp/pca_Mmode.svg">
@@ -170,6 +170,17 @@ window.Quarto = {
 <meta name="twitter:description" content="High-dimensional time-series analysis and eigen-portfolio construction using PCA to isolate market-wide systemic risk, sector factors and idiosyncratic noise.">
 <meta name="twitter:image" content="https://tilak-pentapati.github.io/projects/python/SP500_comp/pca_Mmode.svg">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="citation_title" content="S&amp;amp;P 500 Market Mode &amp; Factor Analysis: Dimensionality Reduction with PCA">
+<meta name="citation_keywords" content="principal component analysis,eigenportfolio,systematic risk,S&amp;P 500,dimensionality reduction,financial time series">
+<meta name="citation_author" content="Jay Tilak Pentapati">
+<meta name="citation_publication_date" content="2023-12-30">
+<meta name="citation_cover_date" content="2023-12-30">
+<meta name="citation_year" content="2023">
+<meta name="citation_online_date" content="2023-12-30">
+<meta name="citation_fulltext_html_url" content="https://tilak-pentapati.github.io/projects/python/SP500_comp/">
+<meta name="citation_language" content="en">
+<meta name="citation_journal_title" content="Jay Tilak Pentapati: Geographic Data Science &amp;amp; Engineering Portfolio">
+<meta name="citation_publisher" content="Jay Tilak Pentapati">
 </head>
 
 <body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
@@ -341,6 +352,10 @@ window.Quarto = {
     <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
+    <a href="../../../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../../../assets/logo/jtp-mark-light.svg" alt="JTP monogram" class="navbar-logo light-content">
+    <img src="../../../assets/logo/jtp-mark-dark.svg" alt="JTP monogram" class="navbar-logo dark-content">
+    </a>
     <a class="navbar-brand" href="../../../index.html">
     <span class="navbar-title">Jay Tilak Pentapati</span>
     </a>
@@ -427,7 +442,7 @@ window.Quarto = {
   <li><a href="#key-financial-big-data-takeaways" id="toc-key-financial-big-data-takeaways" class="nav-link" data-scroll-target="#key-financial-big-data-takeaways"><span class="header-section-number">5.2</span> Key Financial &amp; Big Data Takeaways</a></li>
   </ul></li>
   </ul>
-<div class="toc-actions"><ul><li><a href="https://github.com/tilak-pentapati/tilak-pentapati.github.io/blob/main/projects/python/SP500_comp/index.qmd" class="toc-action"><i class="bi bi-github"></i>View source</a></li><li><a href="https://github.com/tilak-pentapati/tilak-pentapati.github.io/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+<div class="toc-actions"><ul><li><a href="https://github.com/tilak-pentapati/tilak-pentapati.github.io/blob/main/projects/python/SP500_comp/index.qmd" class="toc-action"><i class="bi bi-github"></i>View source</a></li><li><a href="https://github.com/tilak-pentapati/tilak-pentapati.github.io/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div><div class="quarto-code-links"><h2>Code Links</h2><ul><li><a href="https://github.com/tilak-pentapati/tilak-pentapati.github.io/blob/main/projects/python/SP500_comp/index.qmd"><i class="bi bi-github"></i>Page source (.qmd)</a></li></ul></div></nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
@@ -456,7 +471,7 @@ window.Quarto = {
     <div>
     <div class="quarto-title-meta-heading">Author</div>
     <div class="quarto-title-meta-contents">
-             <p>Jay Tilak P. </p>
+             <p><a href="https://tilak-pentapati.github.io">Jay Tilak Pentapati</a> </p>
           </div>
   </div>
     
@@ -467,14 +482,79 @@ window.Quarto = {
     </div>
   </div>
   
+    <div>
+    <div class="quarto-title-meta-heading">Modified</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date-modified">October 24, 2026</p>
+    </div>
+  </div>
     
   </div>
   
 
+<div>
+  <div class="keywords">
+    <div class="block-title">Keywords</div>
+    <p>principal component analysis, eigenportfolio, systematic risk, S&amp;P 500, dimensionality reduction, financial time series</p>
+  </div>
+</div>
 
 </header>
 
 
+<div id="project-summary" class="eng-summary" role="note" aria-label="Project summary">
+<div class="es-title">
+<i class="bi bi-clipboard-data" aria-hidden="true"></i>At a glance
+</div>
+<div class="es-row">
+<div class="es-label">
+Problem
+</div>
+<div class="es-value">
+How much of S&amp;P 500 return variance is market-wide systemic risk, and how much is sector factors or stock-specific noise?
+</div>
+</div>
+<div class="es-row">
+<div class="es-label">
+Data
+</div>
+<div class="es-value">
+Daily prices for 486 continuously listed S&amp;P 500 constituents, July 2014 to June 2017 (about 750 trading days).
+</div>
+</div>
+<div class="es-row">
+<div class="es-label">
+Methods
+</div>
+<div class="es-value">
+Daily-return matrix → unnormalised and standardised PCA → scree-elbow and cumulative-variance analysis → eigenportfolio interpretation.
+</div>
+</div>
+<div class="es-row es-result">
+<div class="es-label">
+Key result
+</div>
+<div class="es-value">
+PC1 (the “market mode”) explains 28.8–31.8% of variance; the scree elbow is at PC4; 226–253 PCs are needed to reach 95%.
+</div>
+</div>
+<div class="es-row">
+<div class="es-label">
+Stack
+</div>
+<div class="es-value">
+<span class="es-chip">Python</span> <span class="es-chip">pandas</span> <span class="es-chip">NumPy</span> <span class="es-chip">scikit-learn</span> <span class="es-chip">Matplotlib</span>
+</div>
+</div>
+<div class="es-row">
+<div class="es-label">
+Code
+</div>
+<div class="es-value">
+<a href="https://github.com/tilak-pentapati/tilak-pentapati.github.io/blob/main/projects/python/SP500_comp/index.qmd">Page source (.qmd)</a>
+</div>
+</div>
+</div>
 <section id="introduction-theoretical-background" class="level2" data-number="1">
 <h2 data-number="1" class="anchored" data-anchor-id="introduction-theoretical-background"><span class="header-section-number">1</span> Introduction &amp; Theoretical Background</h2>
 <p>Modern financial markets generate massive, high-dimensional time-series datasets. Analyzing the joint behavior of hundreds of equities—such as the constituents of the <strong>S&amp;P 500 Index</strong>—poses a classic high-dimensional statistical challenge: estimating and interpreting an <span class="math inline">N \times N</span> covariance matrix where the number of assets (<span class="math inline">N \approx 500</span>) is of the same order of magnitude as the number of historical trading days (<span class="math inline">T \approx 750</span>).</p>
@@ -1165,7 +1245,22 @@ Because each of the 486 standardized stocks has a sample variance of <span class
 </section>
 </section>
 
-<a onclick="window.scrollTo(0, 0); return false;" role="button" id="quarto-back-to-top"><i class="bi bi-arrow-up"></i> Back to top</a></main> <!-- /main -->
+<a onclick="window.scrollTo(0, 0); return false;" role="button" id="quarto-back-to-top"><i class="bi bi-arrow-up"></i> Back to top</a><div id="quarto-appendix" class="default"><section class="quarto-appendix-contents" id="quarto-citation"><h2 class="anchored quarto-appendix-heading">Citation</h2><div><div class="quarto-appendix-secondary-label">BibTeX citation:</div><pre class="sourceCode code-with-copy quarto-appendix-bibtex"><code class="sourceCode bibtex">@online{pentapati2023,
+  author = {Pentapati, Jay Tilak},
+  publisher = {Jay Tilak Pentapati},
+  title = {S\&amp;P 500 {Market} {Mode} \&amp; {Factor} {Analysis:}
+    {Dimensionality} {Reduction} with {PCA}},
+  date = {2023-12-30},
+  url = {https://tilak-pentapati.github.io/projects/python/SP500_comp/},
+  langid = {en}
+}
+</code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre><div class="quarto-appendix-secondary-label">For attribution, please cite this work as:</div><div id="ref-pentapati2023" class="csl-entry quarto-appendix-citeas" role="listitem">
+<div class="">J.
+T. Pentapati, <span>“S&amp;P 500 Market Mode &amp; Factor Analysis:
+Dimensionality Reduction with PCA,”</span> Jay Tilak Pentapati:
+Geographic Data Science &amp; Engineering Portfolio. [Online].
+Available: <a href="https://tilak-pentapati.github.io/projects/python/SP500_comp/">https://tilak-pentapati.github.io/projects/python/SP500_comp/</a></div>
+</div></div></section></div></main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
   window.document.addEventListener("DOMContentLoaded", function (event) {
     // Ensure there is a toggle, if there isn't float one in the top right

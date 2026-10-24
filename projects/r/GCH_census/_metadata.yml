@@ -1,0 +1,14 @@
+# Per-page metadata for this project (kept out of index.qmd so its
+# _freeze/ hash is unaffected). Read by assets/filters/summary-card.lua.
+date-modified: 2026-10-24
+keywords: ["green central heating", "heat pumps", "residential decarbonisation", "Census 2021", "OLS regression", "interaction effects"]
+code-links:
+  - text: Page source (.qmd)
+    icon: github
+    href: https://github.com/tilak-pentapati/tilak-pentapati.github.io/blob/main/projects/r/GCH_census/index.qmd
+summary:
+  problem: "What determines the uptake of green central heating across local authority districts in England and Wales?"
+  data: "Census 2021: 331 local authority districts × 55 variables."
+  methods: "Rank-based correlation screening, nested OLS models, two-way interactions with backward elimination, a polynomial term, diagnostics (Breusch–Pagan, VIF, Durbin–Watson)."
+  result: "Housing type, off-grid heating and tenure lift R² from 22.5% to 53.1% (AIC 1,255 → 1,095); detached, off-grid and owner-occupied effects interact significantly."
+  stack: ["R", "tidyverse", "car", "MASS", "broom", "sjPlot"]

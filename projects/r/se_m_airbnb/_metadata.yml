@@ -1,0 +1,14 @@
+# Per-page metadata for this project (kept out of index.qmd so its
+# _freeze/ hash is unaffected). Read by assets/filters/summary-card.lua.
+date-modified: 2026-10-24
+keywords: ["Airbnb", "Madrid", "point pattern analysis", "IDW interpolation", "predictive checks", "spatial econometrics", "spatial lag"]
+code-links:
+  - text: Page source (.qmd)
+    icon: github
+    href: https://github.com/tilak-pentapati/tilak-pentapati.github.io/blob/main/projects/r/se_m_airbnb/index.qmd
+summary:
+  problem: "How are Madrid Airbnb prices distributed in space, and what drives them?"
+  data: "Madrid Airbnb listings GeoPackage: nightly price, capacity, rooms, amenities, neighbourhood and distance to El Retiro Park."
+  methods: "KDE and hex binning, IDW interpolation, OLS with simulation-based predictive checks, neighbourhood fixed effects and spatial regimes, k = 50 nearest-neighbour spatial lags, Moran's I."
+  result: "The log-price model raises R² from 0.023 to 0.244 and passes predictive checks; adding spatial lags and distance to El Retiro reaches R² = 0.251."
+  stack: ["R", "sf", "gstat", "spdep", "spatialreg", "arm", "tmap"]

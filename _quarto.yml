@@ -8,6 +8,7 @@ project:
     - "!data/"
   resources:
     - .nojekyll
+    - assets/logo/
 
 execute:
   freeze: auto
@@ -55,8 +56,8 @@ website:
 
 format:
   html:
+    # Bootswatch base + _brand.yml (palette, fonts, logo) + site rules.
     theme:
-      light: cosmo
-      dark: darkly
-    css: styles.css
+      light: [cosmo, assets/styles/site-navbar-colours.scss, brand, assets/styles/custom.scss]
+      dark: [darkly, assets/styles/site-navbar-colours.scss, brand, assets/styles/custom.scss]
     embed-resources: false

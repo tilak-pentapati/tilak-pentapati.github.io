@@ -6,8 +6,9 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="author" content="Jay Tilak P.">
+<meta name="author" content="Jay Tilak Pentapati">
 <meta name="dcterms.date" content="2023-11-28">
+<meta name="keywords" content="Annual Population Survey, occupational skill level, SOC 2020, residential mobility, cross-tabulation, chi-square test, post-stratification">
 <meta name="description" content="Exploratory survey analysis of the UK Annual Population Survey (APS 2021) examining the relationship between ONS occupational skill levels and residential address duration using cross-tabulation, hypothesis testing, and demographic post-stratification reweighting.">
 
 <title>Relationship between Standard Occupational Classification (SOC) and Address Duration in APS 2021 Survey – Jay Tilak Pentapati</title>
@@ -81,14 +82,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../../../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting-bb62276ab45c84d9efd712f51ff97b5a.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting-dark-5a1953863e1f72ef3b996ef827f01ca7.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting-bb62276ab45c84d9efd712f51ff97b5a.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting-886401abd66b684bd75f2f6e9275b3c8.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting-dark-168a0324ff7a238321a97431c880757d.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting-886401abd66b684bd75f2f6e9275b3c8.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../../site_libs/bootstrap/bootstrap-101545cf1cd2d34117649106470ec2fa.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../../site_libs/bootstrap/bootstrap-dark-a286df8d3673e19799a98780244438ae.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../../site_libs/bootstrap/bootstrap-101545cf1cd2d34117649106470ec2fa.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../../site_libs/bootstrap/bootstrap-a3b3a79561dd8c69a9cbcf3cc3a760f7.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../../site_libs/bootstrap/bootstrap-dark-147d61ffea3aed791dc110db6c193046.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../../site_libs/bootstrap/bootstrap-a3b3a79561dd8c69a9cbcf3cc3a760f7.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -163,7 +164,6 @@ window.Quarto = {
 };
 </script>
 
-<link rel="stylesheet" href="../../../styles.css">
 <meta property="og:title" content="Relationship between Standard Occupational Classification (SOC) and Address Duration in APS 2021 Survey – Jay Tilak Pentapati">
 <meta property="og:description" content="Exploratory survey analysis of the UK Annual Population Survey (APS 2021) examining the relationship between ONS occupational skill levels and residential address duration using cross-tabulation, hypothesis testing, and demographic post-stratification reweighting.">
 <meta property="og:image" content="https://tilak-pentapati.github.io/projects/r/aps_eda/aps_eda_im.svg">
@@ -172,6 +172,17 @@ window.Quarto = {
 <meta name="twitter:description" content="Exploratory survey analysis of the UK Annual Population Survey (APS 2021) examining the relationship between ONS occupational skill levels and residential address duration using cross-tabulation, hypothesis testing, and demographic post-stratification reweighting.">
 <meta name="twitter:image" content="https://tilak-pentapati.github.io/projects/r/aps_eda/aps_eda_im.svg">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="citation_title" content="Relationship between Standard Occupational Classification (SOC) and Address Duration in APS 2021 Survey">
+<meta name="citation_keywords" content="Annual Population Survey,occupational skill level,SOC 2020,residential mobility,cross-tabulation,chi-square test,post-stratification">
+<meta name="citation_author" content="Jay Tilak Pentapati">
+<meta name="citation_publication_date" content="2023-11-28">
+<meta name="citation_cover_date" content="2023-11-28">
+<meta name="citation_year" content="2023">
+<meta name="citation_online_date" content="2023-11-28">
+<meta name="citation_fulltext_html_url" content="https://tilak-pentapati.github.io/projects/r/aps_eda/">
+<meta name="citation_language" content="en">
+<meta name="citation_journal_title" content="Jay Tilak Pentapati: Geographic Data Science &amp;amp; Engineering Portfolio">
+<meta name="citation_publisher" content="Jay Tilak Pentapati">
 </head>
 
 <body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
@@ -343,6 +354,10 @@ window.Quarto = {
     <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
+    <a href="../../../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../../../assets/logo/jtp-mark-light.svg" alt="JTP monogram" class="navbar-logo light-content">
+    <img src="../../../assets/logo/jtp-mark-dark.svg" alt="JTP monogram" class="navbar-logo dark-content">
+    </a>
     <a class="navbar-brand" href="../../../index.html">
     <span class="navbar-title">Jay Tilak Pentapati</span>
     </a>
@@ -455,7 +470,7 @@ window.Quarto = {
   <li><a href="#references" id="toc-references" class="nav-link" data-scroll-target="#references"><span class="header-section-number">9</span> References</a></li>
   <li><a href="#appendix-dataset-script-map" id="toc-appendix-dataset-script-map" class="nav-link" data-scroll-target="#appendix-dataset-script-map"><span class="header-section-number">10</span> Appendix: Dataset &amp; Script Map</a></li>
   </ul>
-<div class="toc-actions"><ul><li><a href="https://github.com/tilak-pentapati/tilak-pentapati.github.io/blob/main/projects/r/aps_eda/index.qmd" class="toc-action"><i class="bi bi-github"></i>View source</a></li><li><a href="https://github.com/tilak-pentapati/tilak-pentapati.github.io/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+<div class="toc-actions"><ul><li><a href="https://github.com/tilak-pentapati/tilak-pentapati.github.io/blob/main/projects/r/aps_eda/index.qmd" class="toc-action"><i class="bi bi-github"></i>View source</a></li><li><a href="https://github.com/tilak-pentapati/tilak-pentapati.github.io/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div><div class="quarto-code-links"><h2>Code Links</h2><ul><li><a href="https://github.com/tilak-pentapati/tilak-pentapati.github.io/blob/main/projects/r/aps_eda/index.qmd"><i class="bi bi-github"></i>Page source (.qmd)</a></li></ul></div></nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
@@ -482,7 +497,7 @@ window.Quarto = {
     <div>
     <div class="quarto-title-meta-heading">Author</div>
     <div class="quarto-title-meta-contents">
-             <p>Jay Tilak P. </p>
+             <p><a href="https://tilak-pentapati.github.io">Jay Tilak Pentapati</a> </p>
           </div>
   </div>
     
@@ -493,14 +508,79 @@ window.Quarto = {
     </div>
   </div>
   
+    <div>
+    <div class="quarto-title-meta-heading">Modified</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date-modified">October 24, 2026</p>
+    </div>
+  </div>
     
   </div>
   
 
+<div>
+  <div class="keywords">
+    <div class="block-title">Keywords</div>
+    <p>Annual Population Survey, occupational skill level, SOC 2020, residential mobility, cross-tabulation, chi-square test, post-stratification</p>
+  </div>
+</div>
 
 </header>
 
 
+<div id="project-summary" class="eng-summary" role="note" aria-label="Project summary">
+<div class="es-title">
+<i class="bi bi-clipboard-data" aria-hidden="true"></i>At a glance
+</div>
+<div class="es-row">
+<div class="es-label">
+Problem
+</div>
+<div class="es-value">
+Is occupational skill level related to how long people have lived at their current address?
+</div>
+</div>
+<div class="es-row">
+<div class="es-label">
+Data
+</div>
+<div class="es-value">
+APS 2021 teaching extract: 249,997 respondents × 60 variables (108,964 complete cases), plus UK mid-year population estimates.
+</div>
+</div>
+<div class="es-row">
+<div class="es-label">
+Methods
+</div>
+<div class="es-value">
+Recoding SOC 2020 into 4 ONS skill levels, median and SRDI summaries, two-way cross-tabulation, chi-square test, age-based post-stratification reweighting.
+</div>
+</div>
+<div class="es-row es-result">
+<div class="es-label">
+Key result
+</div>
+<div class="es-value">
+A significant association (χ² = 637.8, df = 9, p &lt; 2.2 × 10⁻¹⁶); age reweighting lowers the “10 years or longer” share from 47.9% to 44.5%.
+</div>
+</div>
+<div class="es-row">
+<div class="es-label">
+Stack
+</div>
+<div class="es-value">
+<span class="es-chip">R</span> <span class="es-chip">tidyverse</span> <span class="es-chip">knitr</span>
+</div>
+</div>
+<div class="es-row">
+<div class="es-label">
+Code
+</div>
+<div class="es-value">
+<a href="https://github.com/tilak-pentapati/tilak-pentapati.github.io/blob/main/projects/r/aps_eda/index.qmd">Page source (.qmd)</a>
+</div>
+</div>
+</div>
 <section id="introduction-overview" class="level1 unnumbered">
 <h1 class="unnumbered">Introduction &amp; Overview</h1>
 <p>Residential mobility—how frequently individuals and households relocate—is closely intertwined with labour market structure, socioeconomic status, and life-course dynamics. Higher-skilled professionals often participate in national or regional labour markets that reward geographic flexibility and career-driven relocation, whereas lower-skilled and routine occupations are more frequently anchored to local labour markets and longer-term residential stability.</p>
@@ -2681,7 +2761,23 @@ Figure&nbsp;7: Figure 6 (Corrected with include.lowest = TRUE) — Retaining Sin
 
 </section>
 
-<a onclick="window.scrollTo(0, 0); return false;" role="button" id="quarto-back-to-top"><i class="bi bi-arrow-up"></i> Back to top</a></main> <!-- /main -->
+<a onclick="window.scrollTo(0, 0); return false;" role="button" id="quarto-back-to-top"><i class="bi bi-arrow-up"></i> Back to top</a><div id="quarto-appendix" class="default"><section class="quarto-appendix-contents" id="quarto-citation"><h2 class="anchored quarto-appendix-heading">Citation</h2><div><div class="quarto-appendix-secondary-label">BibTeX citation:</div><pre class="sourceCode code-with-copy quarto-appendix-bibtex"><code class="sourceCode bibtex">@online{pentapati2023,
+  author = {Pentapati, Jay Tilak},
+  publisher = {Jay Tilak Pentapati},
+  title = {Relationship Between {Standard} {Occupational}
+    {Classification} {(SOC)} and {Address} {Duration} in {APS} 2021
+    {Survey}},
+  date = {2023-11-28},
+  url = {https://tilak-pentapati.github.io/projects/r/aps_eda/},
+  langid = {en}
+}
+</code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre><div class="quarto-appendix-secondary-label">For attribution, please cite this work as:</div><div id="ref-pentapati2023" class="csl-entry quarto-appendix-citeas" role="listitem">
+<div class="">J.
+T. Pentapati, <span>“Relationship between Standard Occupational
+Classification (SOC) and Address Duration in APS 2021 Survey,”</span>
+Jay Tilak Pentapati: Geographic Data Science &amp; Engineering
+Portfolio. [Online]. Available: <a href="https://tilak-pentapati.github.io/projects/r/aps_eda/">https://tilak-pentapati.github.io/projects/r/aps_eda/</a></div>
+</div></div></section></div></main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
   window.document.addEventListener("DOMContentLoaded", function (event) {
     // Ensure there is a toggle, if there isn't float one in the top right

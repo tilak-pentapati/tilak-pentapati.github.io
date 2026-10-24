@@ -1,0 +1,14 @@
+# Per-page metadata for this project (kept out of index.qmd so its
+# _freeze/ hash is unaffected). Read by assets/filters/summary-card.lua.
+date-modified: 2026-10-24
+keywords: ["satellite tracking", "two-line element sets", "Skyfield", "REST API", "spatial join", "choropleth", "Folium"]
+code-links:
+  - text: Page source (.qmd)
+    icon: github
+    href: https://github.com/tilak-pentapati/tilak-pentapati.github.io/blob/main/projects/python/satellites_overhead/index.qmd
+summary:
+  problem: "How many active satellites are above each country at a given moment, and how does that change over a day?"
+  data: "CelesTrak two-line element sets for all active satellites (REST API); Opendatasoft World Administrative Boundaries (256 countries, GeoJSON)."
+  methods: "Skyfield orbit propagation at 4-hour steps on 2024-03-04 → sub-satellite points → antimeridian fix → point-in-polygon spatial join → Natural Breaks classification."
+  result: "TODO: headline figure (e.g. the country with the most satellites overhead). The page builds a country × time satellite-count matrix and an interactive choropleth; counts depend on the live TLE feed."
+  stack: ["Python", "requests", "Skyfield", "GeoPandas", "Shapely", "mapclassify", "Folium"]

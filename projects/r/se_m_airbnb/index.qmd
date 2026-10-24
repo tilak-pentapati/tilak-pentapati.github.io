@@ -5,7 +5,6 @@ date: "2024-03-21"
 image: sem_air.svg
 categories: [R, Spatial Econometrics, Spatial Analysis, Airbnb]
 bibliography: references.bib
-csl: https://raw.githubusercontent.com/citation-style-language/styles/master/ieee.csl
 ---
 
 ## Introduction & Setup

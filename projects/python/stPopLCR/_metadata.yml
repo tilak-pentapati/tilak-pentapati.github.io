@@ -1,0 +1,14 @@
+# Per-page metadata for this project (kept out of index.qmd so its
+# _freeze/ hash is unaffected). Read by assets/filters/summary-card.lua.
+date-modified: 2026-10-24
+keywords: ["workplace population", "residential population", "population change", "Liverpool City Region", "census 2011", "raster analysis"]
+code-links:
+  - text: Page source (.qmd)
+    icon: github
+    href: https://github.com/tilak-pentapati/tilak-pentapati.github.io/blob/main/projects/python/stPopLCR/index.qmd
+summary:
+  problem: "How do daytime (workplace) and night-time (residential) populations differ across the Liverpool City Region, and how did population shift between 1991 and 2011?"
+  data: "2011 Census workplace zones and LSOAs, workplace social grade (WP613EW), UK Data Service PopChange 1 km grids (1991, 2011), major-employer locations."
+  methods: "Density choropleths with Jenks and quantile classes, high-density cluster thresholds, raster change classification, district summary tables."
+  result: "Daytime workplace population of 987,210 against 1,506,940 night-time residents; mean LCR density fell from 2,087 to 2,065 persons/km² while the national mean rose."
+  stack: ["Python", "GeoPandas", "Rasterio", "Matplotlib", "QGIS"]

@@ -1,0 +1,81 @@
+# Site-wide brand (Quarto brand.yml). Layered on top of cosmo (light) and
+# darkly (dark) in _quarto.yml; assets/styles/custom.scss builds on these.
+meta:
+  name: Jay Tilak Pentapati
+  link:
+    github: https://github.com/tilak-pentapati
+    linkedin: https://linkedin.com/in/jay-tilak-pentapati
+
+color:
+  palette:
+    ink: "#1d2733"
+    slate: "#5b6b7a"
+    paper: "#ffffff"
+    night: "#1b1e23"
+    mist: "#e4e7eb"
+    blue: "#1f5a96"
+    blue-light: "#7fb0e8"
+    teal: "#1b7f79"
+    teal-light: "#5fc7bf"
+    # Warm Mermaid palette (same in light and dark).
+    amber: "#f59f00"
+    amber-line: "#fab005"
+    amber-soft: "#fff3bf"
+    amber-pale: "#fffdf0"
+    graphite: "#495057"
+  background:
+    light: paper
+    dark: night
+  foreground:
+    light: ink
+    dark: mist
+  primary:
+    light: blue
+    dark: blue-light
+  secondary:
+    light: slate
+    dark: "#9aa7b4"
+  tertiary:
+    light: teal
+    dark: teal-light
+  warning: amber
+  link:
+    light: blue
+    dark: blue-light
+
+typography:
+  fonts:
+    - family: IBM Plex Sans
+      source: google
+      weight: [400, 600, 700]
+      style: [normal, italic]
+    - family: IBM Plex Serif
+      source: google
+      weight: [600, 700]
+    - family: IBM Plex Mono
+      source: google
+      weight: [400, 600]
+  base:
+    family: IBM Plex Sans
+    line-height: 1.6
+  headings:
+    family: IBM Plex Serif
+    weight: 600
+  monospace:
+    family: IBM Plex Mono
+    size: 0.9em
+
+logo:
+  images:
+    mark-light:
+      path: assets/logo/jtp-mark-light.svg
+      alt: "JTP monogram"
+    mark-dark:
+      path: assets/logo/jtp-mark-dark.svg
+      alt: "JTP monogram"
+  small:
+    light: mark-light
+    dark: mark-dark
+  medium:
+    light: mark-light
+    dark: mark-dark

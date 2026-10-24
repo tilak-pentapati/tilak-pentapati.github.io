@@ -1,0 +1,14 @@
+# Per-page metadata for this project (kept out of index.qmd so its
+# _freeze/ hash is unaffected). Read by assets/filters/summary-card.lua.
+date-modified: 2026-10-24
+keywords: ["Airbnb", "spatial autocorrelation", "Moran's I", "LISA", "K-means", "geodemographic classification", "San Francisco Bay Area"]
+code-links:
+  - text: Page source (.qmd)
+    icon: github
+    href: https://github.com/tilak-pentapati/tilak-pentapati.github.io/blob/main/projects/r/airbnb_sf/index.qmd
+summary:
+  problem: "Which neighbourhood characteristics shape Airbnb activity across Bay Area ZIP codes, and how can policymakers target areas?"
+  data: "Inside Airbnb listings (San Francisco, Oakland, San Mateo), ACS 2016–2020 income and broadband (tidycensus), ZCTA boundaries, vehicles and commercial electricity rates per ZIP (2020)."
+  methods: "Queen-contiguity weights, global Moran's I (Monte Carlo) and LISA, multivariate K-means geodemographic clustering, in EPSG:2227."
+  result: "Airbnb listings cluster in San Francisco and Oakland ZIP codes with high internet use and medium-to-high household income."
+  stack: ["R", "sf", "tidycensus", "spdep", "tmap", "cluster"]

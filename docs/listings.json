@@ -1,5 +1,13 @@
 [
   {
+    "listing": "/index.html",
+    "items": [
+      "/projects/r/stm_covid/index.html",
+      "/projects/r/StrokePredictionModel/index.html",
+      "/projects/python/satellites_overhead/index.html"
+    ]
+  },
+  {
     "listing": "/projects.html",
     "items": [
       "/projects/r/stm_covid/index.html",

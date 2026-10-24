@@ -1,0 +1,7 @@
+/*-- scss:defaults --*/
+// Listed before brand in _quarto.yml so these defaults are evaluated after
+// brand.yml has set the page colours: the navbar takes the page background
+// and Quarto derives the navbar text and icon colours from it.
+// Don't rename this file to navbar.scss: this folder is on the Sass load
+// path, so it would shadow Bootstrap's own navbar partial.
+$navbar-bg: $body-bg !default;
