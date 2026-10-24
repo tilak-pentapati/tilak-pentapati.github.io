@@ -218,3 +218,126 @@ code, pre, kbd, samp { font-family: $font-family-monospace, ui-monospace, Menlo,
 
   p:last-child { margin-bottom: 0; }
 }
+
+// ---------------------------------------------------------------------------
+// Home page: "Where my work is" map and skills network (index.qmd OJS cells)
+// ---------------------------------------------------------------------------
+$viz-dark: lightness($body-bg) < 50%;
+:root {
+  --viz-project: #{$primary};
+  --viz-tool: #{if($viz-dark, $brand-teal-light, $brand-teal)};
+  --viz-method: #{$brand-amber};
+  --viz-text: #{$body-color};
+  --viz-bg: #{$body-bg};
+  --viz-line: #{rgba($body-color, 0.22)};
+}
+
+.work-map {
+  height: clamp(320px, 55vh, 480px);
+  border: 1px solid rgba($body-color, 0.14);
+  border-radius: $es-radius;
+  background: rgba($body-color, 0.04);
+  z-index: 0;
+
+  // Beat leaflet.css (loaded later from the CDN) on font.
+  &.leaflet-container { font-family: $font-family-sans-serif, system-ui, sans-serif; }
+
+  .wm-area { fill: var(--viz-project); fill-opacity: 0.12; stroke: var(--viz-project); stroke-opacity: 0.5; stroke-width: 1; }
+  .wm-pt { fill: var(--viz-project); fill-opacity: 0.9; stroke: var(--viz-bg); stroke-width: 2; }
+  .wm-pt:hover { fill: var(--viz-method); }
+
+  .leaflet-popup-content-wrapper, .leaflet-popup-tip, .wm-reset {
+    background: $body-bg;
+    color: $body-color;
+  }
+  .leaflet-popup-content { margin: 0.7rem 0.9rem; font-size: 0.88rem; line-height: 1.4; }
+  .leaflet-popup-content p { margin: 0.35rem 0; }
+  .leaflet-container a.leaflet-popup-close-button { color: $secondary; }
+  .wm-pop-area { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: $secondary; }
+  .wm-pop-title { font-weight: 700; color: $link-color; text-decoration: none; }
+  .wm-pop-link { font-size: 0.82rem; }
+  .wm-reset { width: 34px; height: 34px; border: 2px solid rgba(0, 0, 0, 0.2); cursor: pointer; font-size: 1rem; }
+}
+
+.wm-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.6rem;
+  align-items: center;
+}
+.wm-chips-label { font-size: 0.82rem; color: $secondary; margin-right: 0.2rem; }
+.wm-chip {
+  font-size: 0.8rem;
+  line-height: 1.2;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  border: 1px solid rgba($primary, 0.45);
+  background: rgba($primary, 0.06);
+  color: $body-color;
+  text-decoration: none;
+  cursor: pointer;
+  &:hover, &:focus-visible { background: rgba($primary, 0.16); color: $body-color; }
+  .bi { color: $primary; }
+}
+.wm-chip-off { border-style: dashed; }
+
+.network-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1.5rem;
+  align-items: center;
+  > div { flex: 0 1 auto; }
+  form { width: auto; max-width: 100%; }
+  select { max-width: 13rem; }
+}
+
+.skill-net-wrap { margin: 0.4rem 0 1rem; }
+.skill-net {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  touch-action: manipulation;
+  border: 1px solid rgba($body-color, 0.1);
+  border-radius: $es-radius;
+
+  .sn-links line { stroke: var(--viz-line); stroke-width: 1; transition: stroke-opacity 0.15s; }
+  .sn-links line.is-on { stroke: var(--viz-project); stroke-width: 1.6; }
+  .sn-links line.is-dim { stroke-opacity: 0.2; }
+  .sn-node { cursor: pointer; transition: opacity 0.15s; outline: none; }
+  .sn-node circle { stroke: var(--viz-bg); stroke-width: 1.5; }
+  .sn-project circle { fill: var(--viz-project); }
+  .sn-method circle { fill: var(--viz-method); }
+  .sn-tool circle { fill: var(--viz-tool); }
+  .sn-node.is-dim { opacity: 0.18; }
+  .sn-node:focus-visible circle, .sn-node.is-on circle { stroke: var(--viz-text); }
+  .sn-label {
+    font-size: 10.5px;
+    fill: var(--viz-text);
+    text-anchor: middle;
+    pointer-events: none;
+    paint-order: stroke;
+    stroke: var(--viz-bg);
+    stroke-width: 3px;
+    stroke-linejoin: round;
+  }
+  .sn-project .sn-label { font-weight: 700; font-size: 11.5px; }
+  .sn-minor .sn-label { display: none; }
+  .sn-minor.is-on .sn-label { display: inline; }
+}
+.sn-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem 1rem;
+  font-size: 0.8rem;
+  color: $secondary;
+  margin-top: 0.4rem;
+}
+.sn-key { display: inline-block; width: 0.7rem; height: 0.7rem; border-radius: 50%; margin-right: 0.3rem; vertical-align: -0.05rem; }
+.sn-key-project { background: var(--viz-project); }
+.sn-key-method { background: var(--viz-method); }
+.sn-key-tool { background: var(--viz-tool); }
+.sn-info { min-height: 3.2rem; font-size: 0.9rem; margin-top: 0.4rem; }
+.sn-hint { color: $secondary; }
+.network-controls form { --label-width: auto; }
+.network-controls form > label { margin-right: 0.5rem; }

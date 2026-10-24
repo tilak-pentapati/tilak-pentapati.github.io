@@ -12,3 +12,12 @@ summary:
   methods: "Skyfield orbit propagation at 4-hour steps on 2024-03-04 → sub-satellite points → antimeridian fix → point-in-polygon spatial join → Natural Breaks classification."
   result: "TODO: headline figure (e.g. the country with the most satellites overhead). The page builds a country × time satellite-count matrix and an interactive choropleth; counts depend on the live TLE feed."
   stack: ["Python", "requests", "Skyfield", "GeoPandas", "Shapely", "mapclassify", "Folium"]
+# Short label for the home-page skills network.
+short_title: "Satellites overhead"
+
+# Study area for the home-page map (scripts/build_projects_json.py).
+# scope: local | regional | city | national | global | non-spatial | offworld;
+# lat/lon (WGS84) only for mapped scopes, radius_km draws an extent circle.
+study_area:
+  label: "Global (256 countries)"
+  scope: global

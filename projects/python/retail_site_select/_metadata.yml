@@ -12,3 +12,15 @@ summary:
   methods: "Three-stage multi-criteria screening (demand → competition → site), fixed vs network drive-distance catchments, store-to-LSOA distance matrix."
   result: "Optimal site on the Wavertree / Childwall / Allerton border, outside competitors' 1,500 m drive catchments; a 500 m network catchment covers 27.9% less area than a Euclidean buffer."
   stack: ["Python", "GeoPandas", "pandas", "Matplotlib", "QGIS", "ArcGIS Pro"]
+# Short label for the home-page skills network.
+short_title: "Retail site selection"
+
+# Study area for the home-page map (scripts/build_projects_json.py).
+# scope: local | regional | city | national | global | non-spatial | offworld;
+# lat/lon (WGS84) only for mapped scopes, radius_km draws an extent circle.
+study_area:
+  label: "Liverpool (298 LSOAs)"
+  scope: local
+  lat: 53.408
+  lon: -2.92
+  radius_km: 7

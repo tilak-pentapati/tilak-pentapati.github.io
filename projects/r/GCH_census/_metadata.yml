@@ -12,3 +12,14 @@ summary:
   methods: "Rank-based correlation screening, nested OLS models, two-way interactions with backward elimination, a polynomial term, diagnostics (Breusch–Pagan, VIF, Durbin–Watson)."
   result: "Housing type, off-grid heating and tenure lift R² from 22.5% to 53.1% (AIC 1,255 → 1,095); detached, off-grid and owner-occupied effects interact significantly."
   stack: ["R", "tidyverse", "car", "MASS", "broom", "sjPlot"]
+# Short label for the home-page skills network.
+short_title: "Green heating"
+
+# Study area for the home-page map (scripts/build_projects_json.py).
+# scope: local | regional | city | national | global | non-spatial | offworld;
+# lat/lon (WGS84) only for mapped scopes, radius_km draws an extent circle.
+study_area:
+  label: "England & Wales (331 local authorities)"
+  scope: national
+  lat: 52.35
+  lon: -3.1

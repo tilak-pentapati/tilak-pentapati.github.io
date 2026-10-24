@@ -12,3 +12,15 @@ summary:
   methods: "KDE and hex binning, IDW interpolation, OLS with simulation-based predictive checks, neighbourhood fixed effects and spatial regimes, k = 50 nearest-neighbour spatial lags, Moran's I."
   result: "The log-price model raises R² from 0.023 to 0.244 and passes predictive checks; adding spatial lags and distance to El Retiro reaches R² = 0.251."
   stack: ["R", "sf", "gstat", "spdep", "spatialreg", "arm", "tmap"]
+# Short label for the home-page skills network.
+short_title: "Madrid Airbnb"
+
+# Study area for the home-page map (scripts/build_projects_json.py).
+# scope: local | regional | city | national | global | non-spatial | offworld;
+# lat/lon (WGS84) only for mapped scopes, radius_km draws an extent circle.
+study_area:
+  label: "Madrid"
+  scope: city
+  lat: 40.4168
+  lon: -3.7038
+  radius_km: 10
