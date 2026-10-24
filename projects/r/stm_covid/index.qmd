@@ -1,38 +1,11 @@
 ---
 title: "Multilevel, Geographically Weighted and Spatio-Temporal Modelling of COVID-19 in England"
 description: "Empirical investigation of England's Alpha variant wave revealing how household overcrowding, ethnic diversity and health vulnerability drove local infection risk and south-to-north space-time viral diffusion."
-categories:
-  - R
-  - Spatial Modelling
-  - Multilevel Modelling
-  - GWR
-  - ST Analysis
-
-author: "Jay Tilak P."
 date: "2024-05-16"
 image: stm_map.svg
+categories: [R, Spatial Modelling, Multilevel Modelling, GWR, Spatio-Temporal Analysis]
 bibliography: references.bib
 csl: https://raw.githubusercontent.com/citation-style-language/styles/master/ieee.csl
-toc: true
-toc-depth: 6
-toc-location: right
-number-sections: true
-format:
-  html:
-    highlight-style: github
-    code-tools: true
-    code-fold: true
-    self-contained: true
-    embed-resources: true
-    html-math-method: katex
-    fig-align: center
-    fig-width: 10
-    fig-height: 6
-    df-print: paged
-execute:
-  echo: true
-  warning: false
-  message: false
 ---
 
 

@@ -1,35 +1,10 @@
 ---
 title: "Real-Time Orbital Tracking and Country-Level Satellite Density Analysis"
-
-author: "Jay Tilak P."
+description: "An automated geoinformatics workflow and interactive Folium web map evaluating global satellite distributions overhead through RESTful API ingestion, Skyfield astrodynamics and spatial polygon intersections."
 date: "2024-03-04"
 image: satellite.jpg
-
-description: "An automated geoinformatics workflow and interactive Folium web map evaluating global satellite distributions overhead through RESTful API ingestion, Skyfield astrodynamics and spatial polygon intersections."
-categories:
-  - Python
-  - Spatial Analysis
-number-sections: true
-toc: true
-toc-depth: 6
-toc-location: right
+categories: [Python, Spatial Analysis]
 toc-expand: 1
-
-format:
-  html:
-    highlight-style: github
-    code-tools: true
-    code-fold: true
-    html-math-method: katex
-    fig-align: center
-    fig-width: 10
-    fig-height: 6
-    df-print: paged
-
-
-execute: 
-  warning: false
-engine: jupyter
 ---
 
 ```{python}

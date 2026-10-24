@@ -2,13 +2,13 @@
   {
     "listing": "/projects.html",
     "items": [
-      "/projects/r/StorkePredictionModel/index.html",
       "/projects/r/stm_covid/index.html",
       "/projects/r/se_m_airbnb/index.html",
       "/projects/python/satellites_overhead/index.html",
       "/projects/r/airbnb_sf/index.html",
       "/projects/r/GCH_census/index.html",
       "/projects/python/SP500_comp/index.html",
+      "/projects/r/StrokePredictionModel/index.html",
       "/projects/python/retail_site_select/index.html",
       "/projects/r/aps_eda/index.html",
       "/projects/python/bd_gps/index.html",

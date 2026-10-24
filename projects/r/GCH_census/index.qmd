@@ -1,34 +1,9 @@
 ---
 title: "Ordinary Least Squares Regression for modelling Green Central Heating in Census 2021"
 description: "Multivariate regression analysis of Census 2021 data revealing how dwelling morphology, off-gas-grid infrastructure and housing tenure affect residential green heating uptake across England and Wales."
-categories:
-  - R
-  - Spatial Econometrics
-  - OLS Regression
-
-author: "Jay Tilak P."
 date: "2024-01-08"
 image: greenCH.svg
-toc: true
-toc-depth: 6
-toc-location: right
-number-sections: true
-format:
-  html:
-    highlight-style: github
-    code-tools: true
-    code-fold: true
-    self-contained: true
-    embed-resources: true
-    html-math-method: katex
-    fig-align: center
-    fig-width: 10
-    fig-height: 6
-    df-print: paged
-execute:
-  echo: true
-  warning: false
-  message: false
+categories: [R, Spatial Econometrics, OLS Regression]
 ---
 
 ## Introduction

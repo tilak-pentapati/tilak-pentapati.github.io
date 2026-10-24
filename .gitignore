@@ -16,3 +16,8 @@ data/data_r/gch_dataNfunc/
 data/data_r/se_m_airbnb/
 data/data_r/stm_covid/
 data/data_r/stroke_pm/
+
+# Scratch / clutter (kept on disk, not tracked)
+_extra/
+projects/*/_extra/
+**/.r_session_state.RData

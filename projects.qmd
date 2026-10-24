@@ -15,38 +15,22 @@ listing:
         - "Mechanical Design"
       description: "How a 45 kg lander takes 1 m ice-bearing samples with no drilling fluid. Physics-based design, digital twin, and trade studies."
   type: grid
+  fields: [image, date, title, reading-time, categories, description]
   categories: true
+  filter-ui: true
+  sort-ui: [date, title]
   sort: "date desc"
 ---
 
 ```{=html}
 <script>
-document.addEventListener("DOMContentLoaded", function() {
-  function setAllTargetsBlank() {
-    document.querySelectorAll('a.quarto-grid-link').forEach(function(link) {
-      link.setAttribute('target', '_blank');
-      link.setAttribute('rel', 'noopener noreferrer');
-    });
+// Only the external drill-project card leaves the site, so open it in a new tab.
+document.addEventListener("click", function (e) {
+  const link = e.target.closest("a[href]");
+  if (link && link.closest(".quarto-listing") && link.host !== window.location.host) {
+    link.setAttribute("target", "_blank");
+    link.setAttribute("rel", "noopener noreferrer");
   }
-  setAllTargetsBlank();
-
-  // Handle dynamic re-renders when filtering categories or sorting
-  const observer = new MutationObserver(function() {
-    setAllTargetsBlank();
-  });
-  const listingEl = document.getElementById('listing-listing');
-  if (listingEl) {
-    observer.observe(listingEl, { childList: true, subtree: true });
-  }
-
-  // Delegated click handler to guarantee target="_blank"
-  document.addEventListener("click", function(e) {
-    const link = e.target.closest('a.quarto-grid-link');
-    if (link) {
-      link.setAttribute('target', '_blank');
-      link.setAttribute('rel', 'noopener noreferrer');
-    }
-  });
 });
 </script>
 ```

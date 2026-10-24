@@ -1,34 +1,9 @@
 ---
 title: "Relationship between Standard Occupational Classification (SOC) and Address Duration in APS 2021 Survey"
 description: "Exploratory survey analysis of the UK Annual Population Survey (APS 2021) examining the relationship between ONS occupational skill levels and residential address duration using cross-tabulation, hypothesis testing, and demographic post-stratification reweighting."
-categories:
-  - R
-  - Social Survey Analysis
-
-
-author: "Jay Tilak P."
 date: "2023-11-28"
 image: aps_eda_im.svg
-toc: true
-toc-depth: 6
-toc-location: right
-number-sections: true
-format:
-  html:
-    highlight-style: github
-    code-tools: true
-    code-fold: true
-    self-contained: true
-    embed-resources: true
-    html-math-method: katex
-    fig-align: center
-    fig-width: 10
-    fig-height: 6
-    df-print: paged
-execute:
-  echo: true
-  warning: false
-  message: false
+categories: [R, Social Survey Analysis]
 ---
 
 

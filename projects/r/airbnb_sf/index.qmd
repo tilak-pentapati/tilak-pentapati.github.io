@@ -1,28 +1,11 @@
 ---
 title: "Exploring Various Datasets of Bay Area and Finding Useful Insights for Policymakers"
-
-author: "Jay Tilak P."
+description: "Spatial autocorrelation (Moran's I & LISA) and multivariate K-means geodemographic clustering of Airbnb listings and census indicators across San Francisco Bay Area ZIP codes."
 date: "2024-01-10"
 image: Bay_Airbnb.jpg
-
-description: "Spatial autocorrelation (Moran's I & LISA) and multivariate K-means geodemographic clustering of Airbnb listings and census indicators across San Francisco Bay Area ZIP codes."
-categories:
-  - R
-  - Spatial Analysis
-  - AIRBNB
-
-toc: true
-format: 
-  html:
-    code-tools: true
-    html-math-method: katex
-    self-contained: false
-    embed-resources: false
-    number-sections: true
-    number-depth: 6
+categories: [R, Spatial Analysis, Airbnb]
+number-depth: 6
 editor: visual
-execute: 
-  warning: false
 ---
 
 ## Installing Packages

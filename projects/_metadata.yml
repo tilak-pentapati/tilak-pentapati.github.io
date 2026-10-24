@@ -1,0 +1,22 @@
+# Shared defaults for every project page (python/ and r/ add their engine).
+# Pages keep only page-specific keys and any overrides.
+author: "Jay Tilak P."
+toc: true
+toc-depth: 6
+toc-location: right
+number-sections: true
+format:
+  html:
+    highlight-style: github
+    code-tools: true
+    code-fold: true
+    embed-resources: false
+    html-math-method: katex
+    fig-align: center
+    fig-width: 10
+    fig-height: 6
+    df-print: paged
+execute:
+  echo: true
+  warning: false
+  message: false
