@@ -569,165 +569,208 @@ By calibrating the decision threshold to **$p^* \approx 0.44$** on the SMOTE Log
 
 ## Part 7: Live Interactive Decision Tool
 
-To translate the statistical predictive model into clinical decision support, the interactive risk calculator below applies the parametric logistic regression coefficients derived from our SMOTE-balanced model. Clinicians and researchers can adjust patient clinical parameters and comorbidities in real time to calculate estimated stroke probability and review stratified clinical action protocols:
+To translate the statistical model into decision support, the calculator below runs the **fitted M2 model itself** (SMOTE-balanced logistic regression) in the browser. Nothing is typed in by hand: the chunk below exports the trained recipe's dummy coding and normalisation statistics, the GLM coefficients and the Youden threshold from Part 6 with `ojs_define()`, and the Observable JS cells rebuild the model matrix row exactly as `bake()` would. Every re-render of this page therefore refreshes the calculator together with the model.
 
-```{=html}
-<div class="card shadow-sm p-4 mb-4 border-0" style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border-radius: 14px; border-left: 6px solid #e74c3c !important;">
-  <div class="row g-4">
-    <!-- Left Column: Patient Clinical Inputs -->
-    <div class="col-md-6 border-end">
-      <h5 class="text-danger fw-bold mb-3"><i class="bi bi-sliders"></i> Patient Clinical Parameters</h5>
-      
-      <div class="mb-3">
-        <label for="calc-age" class="form-label fw-bold small text-secondary">Patient Age (Years): <span id="calc-age-val" class="text-primary fw-bold">65</span></label>
-        <input type="range" class="form-range" id="calc-age" min="18" max="95" value="65" oninput="calculateLiveRisk()">
-      </div>
-      
-      <div class="row g-2 mb-3">
-        <div class="col-6">
-          <label for="calc-glucose" class="form-label fw-bold small text-secondary">Glucose (mg/dL):</label>
-          <input type="number" class="form-control form-control-sm" id="calc-glucose" value="120" min="50" max="300" oninput="calculateLiveRisk()">
-        </div>
-        <div class="col-6">
-          <label for="calc-bmi" class="form-label fw-bold small text-secondary">BMI (kg/m²):</label>
-          <input type="number" class="form-control form-control-sm" id="calc-bmi" value="28.5" min="12" max="60" step="0.1" oninput="calculateLiveRisk()">
-        </div>
-      </div>
-      
-      <div class="row g-2 mb-3">
-        <div class="col-6">
-          <label for="calc-hyp" class="form-label fw-bold small text-secondary">Hypertension:</label>
-          <select class="form-select form-select-sm" id="calc-hyp" onchange="calculateLiveRisk()">
-            <option value="0">No (Normotensive)</option>
-            <option value="1" selected>Yes (Diagnosed)</option>
-          </select>
-        </div>
-        <div class="col-6">
-          <label for="calc-hd" class="form-label fw-bold small text-secondary">Heart Disease:</label>
-          <select class="form-select form-select-sm" id="calc-hd" onchange="calculateLiveRisk()">
-            <option value="0" selected>No</option>
-            <option value="1">Yes (Diagnosed)</option>
-          </select>
-        </div>
-      </div>
-      
-      <div class="mb-2">
-        <label for="calc-smok" class="form-label fw-bold small text-secondary">Smoking Status:</label>
-        <select class="form-select form-select-sm" id="calc-smok" onchange="calculateLiveRisk()">
-          <option value="never">Never Smoked</option>
-          <option value="formerly" selected>Formerly Smoked</option>
-          <option value="smokes">Currently Smokes</option>
-          <option value="unknown">Unknown History</option>
-        </select>
-      </div>
-    </div>
-    
-    <!-- Right Column: Live Calculated Risk & Clinical Protocol -->
-    <div class="col-md-6 d-flex flex-column justify-content-between">
-      <div>
-        <h5 class="text-secondary fw-bold mb-3"><i class="bi bi-activity"></i> Risk Stratification Output</h5>
-        
-        <div class="card p-3 mb-3 text-center border-0" style="background: #ffffff; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.06);">
-          <div class="text-muted small text-uppercase fw-bold">Estimated 10-Year Stroke Probability</div>
-          <div id="calc-prob-display" style="font-size: 2.8rem; font-weight: 800; color: #e74c3c; line-height: 1.1; margin: 6px 0;">38.4%</div>
-          <div class="progress mb-2" style="height: 10px; border-radius: 5px;">
-            <div id="calc-progress" class="progress-bar bg-warning" role="progressbar" style="width: 38%;" aria-valuenow="38" aria-valuemin="0" aria-valuemax="100"></div>
-          </div>
-          <span id="calc-tier-badge" class="badge bg-warning text-dark fs-6 py-2 px-3">Tier 2: Moderate Risk</span>
-        </div>
-      </div>
-      
-      <div id="calc-protocol-box" class="alert alert-warning mb-0 small" style="border-radius: 8px;">
-        <strong>Clinical Action Protocol:</strong>
-        <ul class="mb-0 mt-1 ps-3" id="calc-protocol-list">
-          <li>Order 24-hour ambulatory blood pressure monitoring (ABPM).</li>
-          <li>Evaluate fasting lipid profile and HbA1c testing.</li>
-          <li>Initiate structured smoking cessation counseling if applicable.</li>
-          <li>Discuss moderate-intensity statin therapy based on ASCVD risk.</li>
-        </ul>
-      </div>
-    </div>
-  </div>
-</div>
+::: {.callout-warning}
+## Not medical advice
 
-<script>
-function calculateLiveRisk() {
-  const age = parseFloat(document.getElementById('calc-age').value) || 65;
-  document.getElementById('calc-age-val').innerText = age;
-  
-  const glucose = parseFloat(document.getElementById('calc-glucose').value) || 120;
-  const bmi = parseFloat(document.getElementById('calc-bmi').value) || 28.5;
-  const hyp = parseInt(document.getElementById('calc-hyp').value) || 0;
-  const hd = parseInt(document.getElementById('calc-hd').value) || 0;
-  const smok = document.getElementById('calc-smok').value;
-  
-  // Calibrated parametric log-odds coefficients from SMOTE Model
-  let logit = -3.85;
-  logit += (age - 43.2) * 0.075;
-  logit += (glucose - 106.0) * 0.0065;
-  logit += (bmi - 28.9) * 0.015;
-  if (hyp === 1) logit += 0.55;
-  if (hd === 1) logit += 0.62;
-  
-  if (smok === 'formerly') logit += 0.25;
-  else if (smok === 'smokes') logit += 0.35;
-  else if (smok === 'unknown') logit -= 0.30;
-  
-  // Compound cardiovascular triad bonus
-  if (hyp === 1 && hd === 1 && age >= 60) logit += 0.70;
-  
-  // Logistic sigmoid transformation
-  let prob = 1 / (1 + Math.exp(-logit));
-  prob = Math.max(0.01, Math.min(0.99, prob));
-  const pct = (prob * 100).toFixed(1);
-  
-  // Update UI elements
-  document.getElementById('calc-prob-display').innerText = pct + '%';
-  const pBar = document.getElementById('calc-progress');
-  pBar.style.width = pct + '%';
-  pBar.setAttribute('aria-valuenow', pct);
-  
-  const badge = document.getElementById('calc-tier-badge');
-  const protoBox = document.getElementById('calc-protocol-box');
-  const protoList = document.getElementById('calc-protocol-list');
-  
-  if (prob < 0.20) {
-    pBar.className = 'progress-bar bg-success';
-    badge.className = 'badge bg-success text-white fs-6 py-2 px-3';
-    badge.innerText = 'Tier 1: Low Clinical Risk';
-    protoBox.className = 'alert alert-success mb-0 small';
-    protoList.innerHTML = '<li>Routine annual wellness and blood pressure assessment.</li>' +
-                          '<li>Encourage Mediterranean dietary pattern and regular aerobic exercise.</li>' +
-                          '<li>Re-evaluate metabolic profile every 2 years.</li>';
-  } else if (prob < 0.44) {
-    pBar.className = 'progress-bar bg-warning text-dark';
-    badge.className = 'badge bg-warning text-dark fs-6 py-2 px-3';
-    badge.innerText = 'Tier 2: Moderate Risk (Action Indicated)';
-    protoBox.className = 'alert alert-warning mb-0 small';
-    protoList.innerHTML = '<li>Order 24-hour ambulatory blood pressure monitoring (ABPM).</li>' +
-                          '<li>Evaluate fasting lipid profile and HbA1c testing.</li>' +
-                          '<li>Initiate structured smoking cessation counseling if applicable.</li>' +
-                          '<li>Discuss moderate-intensity statin therapy based on ASCVD risk.</li>';
-  } else {
-    pBar.className = 'progress-bar bg-danger';
-    badge.className = 'badge bg-danger text-white fs-6 py-2 px-3';
-    badge.innerText = 'Tier 3: HIGH CLINICAL RISK (Urgent)';
-    protoBox.className = 'alert alert-danger mb-0 small';
-    protoList.innerHTML = '<li>Immediate referral for Carotid Duplex Ultrasound to screen for stenosis.</li>' +
-                          '<li>12-Lead Electrocardiogram (ECG) to rule out subclinical Atrial Fibrillation.</li>' +
-                          '<li>Aggressive antihypertensive therapy targeting SBP < 130 mmHg.</li>' +
-                          '<li>Initiate antiplatelet therapy (e.g., Aspirin 81 mg daily) per AHA/ASA guidance.</li>';
-  }
-}
-// Run once on initial load
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', calculateLiveRisk);
-} else {
-  calculateLiveRisk();
-}
-</script>
+This is a teaching demonstration of a model trained on a public, de-identified Kaggle dataset ($N = 5{,}109$). It has not been externally validated or calibrated, and it must not be used to diagnose, triage or treat anyone. The suggested actions illustrate how a risk band could map to a care pathway; they are not clinical guidance. Anyone worried about stroke risk should speak to a qualified clinician.
+:::
+
+```{r export-decision-tool}
+#| code-summary: "Export the fitted M2 model (recipe + coefficients) to the browser"
+prepped_m2 <- extract_recipe(fit_m2_smote_glm)
+step_types <- map_chr(prepped_m2$steps, ~ class(.x)[1])
+
+# step_dummy: which factor level each dummy column encodes (reference = first level)
+dummy_map <- tidy(prepped_m2, number = which(step_types == "step_dummy")) %>%
+  transmute(variable = terms, level = columns, term = dummy_names(terms, columns))
+
+# step_normalize: training mean and sd of every model-matrix column
+norm_stats <- tidy(prepped_m2, number = which(step_types == "step_normalize")) %>%
+  select(term = terms, statistic, value) %>%
+  pivot_wider(names_from = statistic, values_from = value)
+
+glm_coefs <- tidy(extract_fit_parsnip(fit_m2_smote_glm)) %>% select(term, coef = estimate)
+
+# One row per model-matrix column: how to build it from the raw inputs, then scale and weight it
+model_terms <- glm_coefs %>%
+  filter(term != "(Intercept)") %>%
+  left_join(norm_stats, by = "term") %>%
+  left_join(dummy_map, by = "term") %>%
+  mutate(
+    kind     = if_else(is.na(variable), "numeric", "dummy"),
+    variable = coalesce(variable, term),
+    level    = coalesce(level, "")
+  )
+stopifnot(!anyNA(model_terms$coef), !anyNA(model_terms$mean), !anyNA(model_terms$sd))
+
+# Held-out patients with R's own predictions, so the browser can prove it reproduces them
+check_cases <- test_data %>%
+  select(age, hypertension, heart_disease, avg_glucose_level, bmi, smoking_status,
+         work_type, Residence_type) %>%
+  mutate(across(where(is.factor), as.character)) %>%
+  mutate(pred_r = predict(fit_m2_smote_glm, new_data = test_data, type = "prob")$.pred_Yes) %>%
+  slice_head(n = 150)
+
+ojs_define(
+  stroke_terms  = model_terms,
+  stroke_checks = check_cases,
+  stroke_meta   = list(
+    intercept      = glm_coefs$coef[glm_coefs$term == "(Intercept)"],
+    threshold      = best_coords$threshold[1],
+    sensitivity    = best_coords$sensitivity[1],
+    specificity    = best_coords$specificity[1],
+    levels         = map(select(train_data, smoking_status, work_type, Residence_type), levels),
+    range          = map(select(train_data, age, avg_glucose_level, bmi), range)
+  )
+)
+
+model_terms %>%
+  select(Term = term, Kind = kind, `Train mean` = mean, `Train SD` = sd, `Coefficient (standardised)` = coef) %>%
+  kable(digits = 4, caption = "Table 5: Model-matrix columns exported to the decision tool") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE)
 ```
 
+The tool scores a patient with the same three steps the `tidymodels` workflow applies: treatment-coded dummies with the first factor level as reference, $z = (x - \bar{x}_{\text{train}}) / s_{\text{train}}$ for every model-matrix column (dummies included, as `step_normalize(all_numeric_predictors())` runs after `step_dummy()`), and the logistic link $p = 1 / (1 + e^{-(\beta_0 + \sum_j \beta_j z_j)})$. The engineered features `glucose_tier` and `cv_triad` are re-derived from the raw inputs with the Part 3 rules.
+
+```{ojs}
+//| code-summary: "Observable JS: model scoring"
+//| output: false
+terms  = transpose(stroke_terms)
+checks = transpose(stroke_checks)
+meta   = stroke_meta
+
+prettyLevel = ({
+  "Unknown": "Unknown / not recorded", "formerly smoked": "Formerly smoked",
+  "never smoked": "Never smoked", "smokes": "Currently smokes",
+  "Govt_job": "Government job", "Never_worked": "Never worked", "Private": "Private sector",
+  "Self-employed": "Self-employed", "children": "Child (under working age)"
+})
+
+// slider bounds: training range, rounded outward to the slider step
+bounds = (r, step) => [Math.floor(r[0] / step) * step, Math.ceil(r[1] / step) * step].map(v => +v.toFixed(6))
+
+// Part 3 feature engineering, applied to raw inputs
+function derive(x) {
+  return {
+    ...x,
+    glucose_tier: x.avg_glucose_level < 100 ? "Normal"
+                : x.avg_glucose_level < 126 ? "Prediabetes" : "Diabetes",
+    cv_triad: x.hypertension === "Yes" && x.heart_disease === "Yes" && x.age >= 60
+                ? "High_Risk" : "Standard"
+  };
+}
+
+// bake() + predict(): dummy-code, normalise with training stats, apply the GLM
+function score(x) {
+  const parts = terms.map(t => {
+    const raw = t.kind === "numeric" ? x[t.variable] : (x[t.variable] === t.level ? 1 : 0);
+    return {term: t.term, contribution: t.coef * (raw - t.mean) / t.sd};
+  });
+  const eta = meta.intercept + d3.sum(parts, d => d.contribution);
+  return {eta, p: 1 / (1 + Math.exp(-eta)), parts};
+}
+
+result = score(derive(patient))
+
+verification = {
+  const err = checks.map(r => Math.abs(score(derive(r)).p - r.pred_r));
+  return {n: checks.length, max: d3.max(err)};
+}
+
+bands = {
+  const hi = meta.threshold, lo = Math.min(0.20, hi);
+  return [
+    {max: lo, name: "Band 1: lower model score", tone: "success",
+     actions: ["Routine annual wellness and blood pressure assessment.",
+               "Encourage a Mediterranean-style diet and regular aerobic exercise.",
+               "Re-evaluate the metabolic profile every 2 years."]},
+    {max: hi, name: "Band 2: intermediate score (review indicated)", tone: "warning",
+     actions: ["Consider 24-hour ambulatory blood pressure monitoring (ABPM).",
+               "Check fasting lipid profile and HbA1c.",
+               "Offer structured smoking cessation support if applicable.",
+               "Discuss statin therapy in line with ASCVD risk assessment."]},
+    {max: Infinity, name: "Band 3: above the Youden threshold (prioritise review)", tone: "danger",
+     actions: ["Consider carotid duplex ultrasound to screen for stenosis.",
+               "12-lead ECG to look for subclinical atrial fibrillation.",
+               "Review antihypertensive treatment against an SBP target below 130 mmHg.",
+               "Assess antiplatelet therapy per AHA/ASA guidance."]}
+  ];
+}
+
+band = bands.find(b => result.p < b.max)
+pct  = d3.format(".1%")
+```
+
+```{ojs}
+//| code-summary: "Observable JS: patient inputs"
+viewof patient = Inputs.form({
+  age: Inputs.range([Math.ceil(meta.range.age[0]), meta.range.age[1]],
+    {label: "Age (years)", step: 1, value: 65}),
+  avg_glucose_level: Inputs.range(bounds(meta.range.avg_glucose_level, 0.1),
+    {label: "Average glucose (mg/dL)", step: 0.1, value: 120}),
+  bmi: Inputs.range(bounds(meta.range.bmi, 0.1), {label: "BMI (kg/m²)", step: 0.1, value: 28.5}),
+  hypertension: Inputs.radio(["No", "Yes"], {label: "Hypertension", value: "Yes"}),
+  heart_disease: Inputs.radio(["No", "Yes"], {label: "Heart disease", value: "No"}),
+  smoking_status: Inputs.select(meta.levels.smoking_status,
+    {label: "Smoking status", value: "formerly smoked", format: d => prettyLevel[d] ?? d}),
+  work_type: Inputs.select(meta.levels.work_type,
+    {label: "Work type", value: "Private", format: d => prettyLevel[d] ?? d}),
+  Residence_type: Inputs.radio(meta.levels.Residence_type, {label: "Residence", value: "Urban"})
+})
+```
+
+```{ojs}
+//| echo: false
+html`<div class="stroke-tool-output card p-3 mb-3" aria-live="polite">
+  <div class="text-uppercase small fw-bold text-body-secondary">Model score P(stroke = Yes | inputs)</div>
+  <div class="display-6 fw-bold my-1">${pct(result.p)}</div>
+  <div class="progress mb-2" style="height: 10px;" role="progressbar"
+       aria-label="Model score" aria-valuemin="0" aria-valuemax="100"
+       aria-valuenow="${(result.p * 100).toFixed(1)}">
+    <div class="progress-bar bg-${band.tone}" style="width: ${(result.p * 100).toFixed(1)}%;"></div>
+  </div>
+  <div><span class="badge text-bg-${band.tone} fs-6 text-wrap text-start lh-base">${band.name}</span></div>
+  <div class="small text-body-secondary mt-2">Band cut-offs: ${pct(Math.min(0.20, meta.threshold))} and the
+    Youden threshold p* = ${pct(meta.threshold)} (test-set sensitivity ${pct(meta.sensitivity)},
+    specificity ${pct(meta.specificity)}).</div>
+</div>
+<div class="alert alert-${band.tone} small" role="note">
+  <strong>Illustrative action pathway:</strong>
+  <ul class="mb-0 mt-1 ps-3">${band.actions.map(a => html`<li>${a}</li>`)}</ul>
+</div>`
+```
+
+```{ojs}
+//| echo: false
+Plot.plot({
+  width: Math.min(width, 760),
+  height: 40 + 22 * result.parts.length,
+  marginLeft: 210,
+  x: {label: "Contribution to log-odds →", grid: true},
+  y: {label: null, domain: d3.sort(result.parts, d => -Math.abs(d.contribution)).map(d => d.term)},
+  marks: [
+    Plot.ruleX([0]),
+    Plot.barX(result.parts, {
+      x: "contribution", y: "term",
+      fill: d => d.contribution > 0 ? "#c0392b" : "#2980b9",
+      tip: true
+    })
+  ]
+})
+```
+
+*Contribution of each model-matrix column to this patient's log-odds, relative to the average (SMOTE-balanced) training patient; bars to the right raise the score.*
+
+```{ojs}
+//| echo: false
+md`**Faithfulness check:** the browser re-scored ${verification.n} held-out patients and matches R's \`predict()\` to within ${verification.max.toExponential(1)} (absolute difference in probability).`
+```
+
+**Reading the score.** Because SMOTE trained the model on a 2:1 rather than 19.5:1 class ratio, its intercept is shifted and the score is *not* a calibrated absolute probability of stroke: it ranks patients, and the bands are defined on that ranking (the Youden threshold was chosen on the held-out test set). Inputs are limited to the ranges seen in training to avoid extrapolation.
+
+Why Observable JS rather than Shinylive? A logistic regression is a dot product plus a sigmoid, so the browser can reproduce the fitted model to floating-point precision (checked above) with a few kilobytes of exported numbers. Shinylive would download a WebAssembly R runtime and the `tidymodels` stack (tens of megabytes) to compute the same number; it becomes the right tool only for models that cannot be reduced to exported parameters, such as the random forest or XGBoost fits.
 
 ---
 

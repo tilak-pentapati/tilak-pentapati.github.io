@@ -341,3 +341,25 @@ $viz-dark: lightness($body-bg) < 50%;
 .sn-hint { color: $secondary; }
 .network-controls form { --label-width: auto; }
 .network-controls form > label { margin-right: 0.5rem; }
+
+/* ---- Interactive tables (itables / DataTables) -----------------------
+   DataTables ships a white container; follow the site theme instead.
+   See projects/INTERACTIVITY.md. */
+.dt-container {
+  background-color: transparent !important;
+  color: inherit;
+}
+body.quarto-dark .dt-container {
+  color-scheme: dark;
+  input, select { background-color: transparent; color: inherit; }
+}
+
+/* Long bare URLs (e.g. in reference lists) must wrap on phones. */
+a.uri { overflow-wrap: anywhere; }
+
+/* Numbered display equations scroll inside themselves rather than widening the page. */
+.katex-display { overflow-x: auto; overflow-y: hidden; }
+
+/* Inline code in code-annotation lists (<dd>) gets the same chip as p/li/td code. */
+dd code:not(.sourceCode) { background-color: rgba(233, 236, 239, 0.65); padding: 0.2em; }
+body.quarto-dark dd code:not(.sourceCode) { background-color: rgba(57, 60, 65, 0.65); }

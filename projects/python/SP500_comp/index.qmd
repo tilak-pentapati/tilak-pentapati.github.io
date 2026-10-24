@@ -4,6 +4,7 @@ description: "High-dimensional time-series analysis and eigen-portfolio construc
 date: "2023-12-30"
 image: pca_Mmode.svg
 categories: [Python, Big Data Analytics, Machine Learning, PCA]
+code-annotations: below
 ---
 
 ## Introduction & Theoretical Background
@@ -18,14 +19,15 @@ Modern financial markets generate massive, high-dimensional time-series datasets
 ## Core Mathematical & Statistical Concepts in PCA
 
 - **Variance ($\sigma^2$)**: In statistics, variance measures how far a set of observations is spread out from their average value:
-  $$\sigma^2 = \frac{1}{T-1} \sum_{t=1}^{T} (r_t - \bar{r})^2$$
+  $$\sigma^2 = \frac{1}{T-1} \sum_{t=1}^{T} (r_t - \bar{r})^2$$ {#eq-variance}
   In quantitative finance, the variance of daily asset returns directly measures **total return volatility (risk)**. Directions of maximum variance in a multi-asset return space correspond to the most significant sources of collective price movement.
 - **Covariance ($\Sigma$)**: While variance measures the dispersion of a single asset, **covariance** measures the degree to which two assets move together over time. A positive covariance indicates that two stocks tend to rise and fall simultaneously.
 - **Principal Components (Eigenvectors, $v_k$)**: Principal components are orthogonal axes constructed as linear combinations of the original asset returns:
-  $$\text{PC}_k = \sum_{i=1}^{N} w_{ki} r_i$$
+  $$\text{PC}_k = \sum_{i=1}^{N} w_{ki} r_i$$ {#eq-pc}
   Geometrically, the first principal component ($\text{PC}_1$) points in the direction of maximum variance across the entire dataset. Each subsequent component ($\text{PC}_2, \text{PC}_3, \dots$) maximizes the remaining variance subject to being strictly orthogonal (uncorrelated) to all preceding components. In finance, the weight vector $v_k = [w_{k1}, w_{k2}, \dots, w_{kN}]^\top$ is often interpreted as an **eigenportfolio**.
-- **Eigenvalues ($\lambda_k$) & Explained Variance Ratio**: Performing eigendecomposition on the return covariance matrix $\Sigma$ yields $\Sigma v_k = \lambda_k v_k$. Each **eigenvalue** $\lambda_k$ equals the exact variance of the data projected onto the $k$-th principal component. The **Explained Variance Ratio** measures the proportion of total market variance captured by component $k$:
-  $$\text{Explained Variance Ratio}_k = \frac{\lambda_k}{\sum_{i=1}^{N} \lambda_i}$$
+- **Eigenvalues ($\lambda_k$) & Explained Variance Ratio**: Performing eigendecomposition on the return covariance matrix $\Sigma$ yields
+  $$\Sigma v_k = \lambda_k v_k$$ {#eq-eigen} Each **eigenvalue** $\lambda_k$ in @eq-eigen equals the exact variance of the data projected onto the $k$-th principal component. The **Explained Variance Ratio** measures the proportion of total market variance captured by component $k$:
+  $$\text{Explained Variance Ratio}_k = \frac{\lambda_k}{\sum_{i=1}^{N} \lambda_i}$$ {#eq-evr}
 :::
 
 ### Financial Interpretation: Market Mode, Sector Factors, and Noise
@@ -42,7 +44,7 @@ A critical modeling decision in financial PCA is whether to decompose the **samp
 
 - **Covariance-Based PCA (Unnormalized)**: Operates directly on mean-centered daily percentage returns. Because variance scales quadratically with return magnitude, highly volatile stocks (such as Biotech, Semiconductor, or Energy firms) exert a disproportionate influence on the leading eigenvectors.
 - **Correlation-Based PCA (Normalized via `StandardScaler`)**: Standardizes each stock's return series to zero mean ($\mu = 0$) and unit variance ($\sigma = 1$) prior to fitting PCA:
-  $$z_{i,t} = \frac{r_{i,t} - \mu_i}{\sigma_i}$$
+  $$z_{i,t} = \frac{r_{i,t} - \mu_i}{\sigma_i}$$ {#eq-zscore}
   Decomposing the covariance matrix of $Z$-scores is mathematically equivalent to decomposing the **correlation matrix** of raw returns. Every stock contributes exactly $1.0$ unit of variance to the total system ($\sum \lambda_i = N$), placing low-beta defensive stocks and high-beta growth stocks on an equal footing.
 
 ---
@@ -57,9 +59,40 @@ To perform a valid spectral decomposition on a panel of asset returns, the input
 import pandas as pan
 from datetime import date
 from sklearn.decomposition import PCA
-import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.preprocessing import StandardScaler
+import plotly.graph_objects as go
+from plotly.offline import get_plotlyjs_version
+from IPython.display import HTML, display
+
+def style_fig(fig, height=420):
+    """Theme-neutral Plotly styling: transparent background and mid-grey text/grid,
+    readable in both the light and dark site themes."""
+    fig.update_layout(
+        template="none", height=height, margin=dict(l=60, r=20, t=30, b=50),
+        paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+        font=dict(color="#8a8f98"), hovermode="x unified",
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, x=0),
+    )
+    fig.update_xaxes(gridcolor="rgba(128,128,128,0.25)", zeroline=False)
+    fig.update_yaxes(gridcolor="rgba(128,128,128,0.25)", zeroline=False)
+    return fig
+
+_plotly_loaded = False
+
+def show_fig(fig):
+    """Emit a figure as plain HTML. plotly.js is loaded once from its CDN (hidden from
+    require.js so it defines window.Plotly) and MathJax is not loaded at all, unlike
+    the notebook renderers, which add both to every figure."""
+    global _plotly_loaded
+    html = fig.to_html(full_html=False, include_plotlyjs=False, include_mathjax=False,
+                       config={"responsive": True, "displaylogo": False})
+    if not _plotly_loaded:
+        html = ('<script>window.__define = window.define; window.define = undefined;</script>'
+                f'<script src="https://cdn.plot.ly/plotly-{get_plotlyjs_version()}.min.js"></script>'
+                '<script>window.define = window.__define;</script>') + html
+        _plotly_loaded = True
+    display(HTML(html))
 ```
 
 ### Part 1: Data Ingestion & Schema Exploration
@@ -176,9 +209,9 @@ The resulting `close_table` is a completely populated **$745 \times 486$ matrix*
 
 ### Part 6: Daily Percentage Return Calculation
 
-Raw stock prices are non-stationary ($I(1)$ processes) and depend on arbitrary share nominal values (e.g., a \$15 stock vs. a \$500 stock). To achieve stationarity and scale comparability across assets, we compute daily simple percentage returns:
-$$r_{i,t} = \frac{P_{i,t} - P_{i,t-1}}{P_{i,t-1}}$$
-Using `.pct_change()` introduces a row of `NaN` values on the initial date (`2014-07-01`), as there is no prior day in the window to compute a return from. We explicitly drop this first row using `.iloc[1:]`.
+Raw stock prices are non-stationary ($I(1)$ processes) and depend on arbitrary share nominal values (e.g., a \$15 stock vs. a \$500 stock). To achieve stationarity and scale comparability across assets, we compute daily simple percentage returns (@eq-returns):
+$$r_{i,t} = \frac{P_{i,t} - P_{i,t-1}}{P_{i,t-1}}$$ {#eq-returns}
+Using `.pct_change()` to evaluate @eq-returns introduces a row of `NaN` values on the initial date (`2014-07-01`), as there is no prior day in the window to compute a return from. We explicitly drop this first row using `.iloc[1:]`.
 
 ```{python}
 # Calculate daily percentage returns and drop the initial NaN row (2014-07-01)
@@ -198,19 +231,23 @@ After removing the initial `NaN` boundary row, `returns_table` has dimensions **
 
 ### Part 7: Fitting PCA on Raw Returns
 
-We first apply `PCA()` directly to the unnormalized `returns_table`. Internally, `scikit-learn` mean-centers each column and computes theSingular Value Decomposition (SVD) of the $744 \times 486$ return matrix, which is equivalent to eigendecomposition of the **sample covariance matrix**.
+We first apply `PCA()` directly to the unnormalized `returns_table`. Internally, `scikit-learn` mean-centers each column and computes the Singular Value Decomposition (SVD) of the $744 \times 486$ return matrix, which is equivalent to the eigendecomposition in @eq-eigen of the **sample covariance matrix**.
 
 ```{python}
 # Fit unnormalized PCA on the raw daily returns matrix
-pca = PCA()
-pca.fit(returns_table)
+pca = PCA()                                  # <1>
+pca.fit(returns_table)                       # <2>
 
 # Display the top 5 principal components with their eigenvalues and sample loadings
 for i in range(5):
-    print(f"Principal Component {i+1} with Eigenvalue: {pca.explained_variance_[i]:.6f}")
-    print("First 10 Stock Loadings:", np.round(pca.components_[i][:10], 6))
+    print(f"Principal Component {i+1} with Eigenvalue: {pca.explained_variance_[i]:.6f}")  # <3>
+    print("First 10 Stock Loadings:", np.round(pca.components_[i][:10], 6))                # <4>
     print()
 ```
+1. No `n_components`, so all $\min(T, N) = 486$ components are kept and the full eigenvalue spectrum is available for the scree and cumulative-variance analysis.
+2. `fit()` mean-centres each of the 486 return columns and takes the SVD of the $744 \times 486$ matrix; the squared singular values divided by $T - 1$ are the covariance eigenvalues $\lambda_k$ of @eq-eigen.
+3. `explained_variance_[k]` is $\lambda_k$, the variance of the returns projected on component $k$; dividing by $\sum_i \lambda_i$ gives the ratio in @eq-evr.
+4. `components_[k]` is the unit-length eigenvector $v_k$, i.e. the eigenportfolio weights $w_{ki}$ of @eq-pc (sign is arbitrary).
 
 **Eigenvalue & Eigenvector Analysis:**
 
@@ -219,29 +256,21 @@ for i in range(5):
 
 ### Part 8: Scree Plot Analysis & The Systematic Market Factor
 
-A **Scree Plot** graphs the **Explained Variance Ratio** against the component index $k$, allowing us to visually separate high-signal systematic factors from low-variance idiosyncratic noise. The **Elbow Point** is the inflection point where the steep initial drop flattens into a gradual tail.
+A **Scree Plot** (@fig-scree) graphs the **Explained Variance Ratio** (@eq-evr) against the component index $k$, allowing us to visually separate high-signal systematic factors from low-variance idiosyncratic noise. The **Elbow Point** is the inflection point where the steep initial drop flattens into a gradual tail.
 
 ```{python}
-plt.figure(figsize=(10, 6))
-plt.plot(range(1, 21), pca.explained_variance_ratio_[:20], marker='o', label='Explained Variance Ratio')
+#| label: fig-scree
+#| fig-cap: "Scree plot: explained variance ratio of the first 20 principal components of raw (unnormalised) daily returns. The elbow at PC 4 separates the market and sector factors from the idiosyncratic tail. Hover for exact values."
+k = np.arange(1, 21)
+elbow_point = 3  # PC 4 (zero-based index 3)
 
-# Identify and mark the Elbow Point at PC 4 (index 3)
-elbow_point = 3
-plt.plot(elbow_point + 1, pca.explained_variance_ratio_[elbow_point], 'ro', markersize=8, label='Elbow Point')
-plt.annotate(
-    'Elbow Point (PC 4)',
-    (elbow_point + 1, pca.explained_variance_ratio_[elbow_point]),
-    textcoords="offset points", xytext=(-10, 10), ha='left', fontsize=12, color='red'
-)
-
-plt.title('Explained Variance Ratios of the First 20 Principal Components')
-plt.xlabel('Principal Component')
-plt.ylabel('Explained Variance Ratio')
-plt.text(0.5, -0.15, 'Source: Calculations are based on given Stocks Dataset', ha='center', va='center', transform=plt.gca().transAxes)
-plt.grid(True)
-plt.legend()
-plt.tight_layout()
-plt.show()
+fig = go.Figure(go.Scatter(x=k, y=pca.explained_variance_ratio_[:20], mode="lines+markers",
+                           name="Explained variance ratio", hovertemplate="PC %{x}: %{y:.2%}<extra></extra>"))
+fig.add_trace(go.Scatter(x=[elbow_point + 1], y=[pca.explained_variance_ratio_[elbow_point]], mode="markers",
+                         marker=dict(color="#d62728", size=12), name="Elbow point (PC 4)", hoverinfo="skip"))
+fig.update_xaxes(title="Principal component", dtick=1)
+fig.update_yaxes(title="Explained variance ratio", tickformat=".0%")
+show_fig(style_fig(fig))
 
 pov = pca.explained_variance_ratio_[0] * 100
 print(f"Percentage of variance explained by the First Principal Component is: {pov:.2f} %")
@@ -256,11 +285,13 @@ print(f"Percentage of variance explained by the First Principal Component is: {p
 
 ### Part 9: Cumulative Variance & The 95% Reconstruction Threshold
 
-To evaluate how effectively PCA compresses the 486-dimensional stock universe while preserving almost all information, we compute the **Cumulative Explained Variance Ratio**:
-$$C_K = \sum_{k=1}^{K} \frac{\lambda_k}{\sum_{i=1}^{N} \lambda_i}$$
+To evaluate how effectively PCA compresses the 486-dimensional stock universe while preserving almost all information, we compute the **Cumulative Explained Variance Ratio** (@eq-cumvar, plotted in @fig-cumvar):
+$$C_K = \sum_{k=1}^{K} \frac{\lambda_k}{\sum_{i=1}^{N} \lambda_i}$$ {#eq-cumvar}
 We then identify the minimum number of components $K_{0.95}$ required to surpass $95\%$ of total variance.
 
 ```{python}
+#| label: fig-cumvar
+#| fig-cap: "Cumulative explained variance (@eq-cumvar) of the raw-return PCA. The dashed line marks the 95% reconstruction threshold."
 # Compute cumulative variance ratios across all principal components
 cumulative_variance_ratios = np.cumsum(pca.explained_variance_ratio_)
 
@@ -268,29 +299,18 @@ cumulative_variance_ratios = np.cumsum(pca.explained_variance_ratio_)
 num_of_req_pc_95 = np.where(cumulative_variance_ratios >= 0.95)[0][0] + 1
 print(f"No. of principal components required to explain 95% of the variance: {num_of_req_pc_95}")
 
-plt.figure(figsize=(10, 6))
-plt.plot(cumulative_variance_ratios, marker='o', markersize=3, label='Cumulative Variance Ratio')
-plt.title('Cumulative Variance Ratios of Principal Components')
-plt.xlabel('No. of Principal Components')
-plt.ylabel('Cumulative Variance Ratio')
-plt.text(0.5, -0.15, 'Source: Calculations are based on given Stocks Dataset', ha='center', va='center', transform=plt.gca().transAxes)
-plt.grid(True)
+def cumvar_trace(ratios, name):
+    return go.Scatter(x=np.arange(1, len(ratios) + 1), y=ratios, mode="lines", name=name,
+                      hovertemplate="%{x} PCs: %{y:.1%}<extra></extra>")
 
-# Draw horizontal threshold line at 95%
-plt.axhline(y=0.95, color='r', linestyle='--', label='95% Variance Line')
-
-# Annotate the exact component count where cumulative variance reaches 95%
-plt.annotate(
-    f'Principal component {num_of_req_pc_95}',
-    xy=(num_of_req_pc_95 - 1, 0.95),
-    xytext=(num_of_req_pc_95 - 1, 0.82),
-    arrowprops=dict(facecolor='black', arrowstyle='->'),
-    ha='center'
-)
-
-plt.legend()
-plt.tight_layout()
-plt.show()
+fig = go.Figure(cumvar_trace(cumulative_variance_ratios, "Cumulative variance ratio"))
+fig.add_hline(y=0.95, line=dict(color="#d62728", dash="dash"), annotation_text="95% of variance",
+              annotation_position="bottom right")
+fig.add_vline(x=num_of_req_pc_95, line=dict(color="#8a8f98", dash="dot"),
+              annotation_text=f"PC {num_of_req_pc_95}", annotation_position="top left")
+fig.update_xaxes(title="No. of principal components")
+fig.update_yaxes(title="Cumulative variance ratio", tickformat=".0%", range=[0, 1.02])
+show_fig(style_fig(fig))
 ```
 
 **Why 226 Components Are Required for 95% Variance:**  
@@ -304,7 +324,7 @@ While the first 4 components capture roughly $40.8\%$ of total market variance, 
 
 In Parts 7–9, PCA was fitted on raw returns. However, individual S&P 500 stocks exhibit vastly different baseline volatilities: high-beta stocks (e.g., airlines, energy exploration, semiconductors) experience much larger daily percentage swings than low-beta defensive utilities or consumer staples.
 
-By applying `StandardScaler`, we normalize each stock $i$ to have zero mean and unit variance ($\sigma_i^2 = 1$). This transforms our analysis from **Covariance-based PCA** to **Correlation-based PCA**, ensuring that every constituent has an equal voice in determining the principal components.
+By applying `StandardScaler`, we normalize each stock $i$ to have zero mean and unit variance ($\sigma_i^2 = 1$) using @eq-zscore. This transforms our analysis from **Covariance-based PCA** to **Correlation-based PCA**, ensuring that every constituent has an equal voice in determining the principal components.
 
 ```{python}
 # Initialize StandardScaler and normalize the returns matrix (mean=0, std=1 per stock)
@@ -333,27 +353,19 @@ Because each of the 486 standardized stocks has a sample variance of $\frac{744}
 
 ### Normalized Scree Plot Analysis
 
+@fig-scree-norm overlays both spectra: standardisation lifts PC 1 and leaves the elbow at PC 4.
+
 ```{python}
-plt.figure(figsize=(10, 6))
-plt.plot(range(1, 21), pca_normalized.explained_variance_ratio_[:20], marker='o', label='Variance Ratio')
-
-# Identify and mark the Elbow Point at PC 4 (index 3)
-elbow_point = 3
-plt.plot(elbow_point + 1, pca_normalized.explained_variance_ratio_[elbow_point], 'ro', markersize=8, label='Elbow Point')
-plt.annotate(
-    'Elbow Point (PC 4)',
-    (elbow_point + 1, pca_normalized.explained_variance_ratio_[elbow_point]),
-    textcoords="offset points", xytext=(-10, 10), ha='left', fontsize=12, color='red'
-)
-
-plt.title('Explained Variance Ratios of the First 20 Principal Components (Normalized)')
-plt.xlabel('Principal Component')
-plt.ylabel('Explained Variance Ratio (Normalized)')
-plt.text(0.5, -0.15, 'Source: Calculations are based on given Stocks Dataset', ha='center', va='center', transform=plt.gca().transAxes)
-plt.grid(True)
-plt.legend()
-plt.tight_layout()
-plt.show()
+#| label: fig-scree-norm
+#| fig-cap: "Scree plots of correlation-based (standardised) and covariance-based (raw) PCA for the first 20 components. Click a legend entry to hide or show a series."
+fig = go.Figure()
+fig.add_trace(go.Scatter(x=k, y=pca_normalized.explained_variance_ratio_[:20], mode="lines+markers",
+                         name="Standardised returns (correlation PCA)", hovertemplate="%{y:.2%}"))
+fig.add_trace(go.Scatter(x=k, y=pca.explained_variance_ratio_[:20], mode="lines+markers",
+                         name="Raw returns (covariance PCA)", line=dict(dash="dot"), hovertemplate="%{y:.2%}"))
+fig.update_xaxes(title="Principal component", dtick=1)
+fig.update_yaxes(title="Explained variance ratio", tickformat=".0%")
+show_fig(style_fig(fig))
 
 pov_normalized = pca_normalized.explained_variance_ratio_[0] * 100
 print(f"Percentage of variance explained by the First Principal Component for Normalized dataset is: {pov_normalized:.2f} %")
@@ -361,36 +373,55 @@ print(f"Percentage of variance explained by the First Principal Component for No
 
 ### Normalized Cumulative Variance Analysis
 
+@fig-cumvar-norm compares the two cumulative curves against the 95% threshold.
+
 ```{python}
+#| label: fig-cumvar-norm
+#| fig-cap: "Cumulative explained variance for standardised versus raw returns. Standardising spreads the idiosyncratic tail, so more components are needed to reach 95%."
 cumulative_variance_ratios_normalized = np.cumsum(pca_normalized.explained_variance_ratio_)
 
 # Find the number of components required to explain 95% of variance in normalized dataset
 num_of_req_pc_95_normalized = np.where(cumulative_variance_ratios_normalized >= 0.95)[0][0] + 1
 print(f"No. of principal components required to explain 95% of the variance: {num_of_req_pc_95_normalized}")
 
-plt.figure(figsize=(10, 6))
-plt.plot(cumulative_variance_ratios_normalized, marker='o', markersize=3, label='Cumulative Variance Ratio (Normalized)')
-plt.title('Cumulative Variance Ratios (Normalized) of Principal Components')
-plt.xlabel('No. of Principal Components')
-plt.ylabel('Cumulative Variance Ratio (Normalized)')
-plt.text(0.5, -0.15, 'Source: Calculations are based on given Stocks Dataset', ha='center', va='center', transform=plt.gca().transAxes)
-plt.grid(True)
+fig = go.Figure([
+    cumvar_trace(cumulative_variance_ratios_normalized, "Standardised returns"),
+    cumvar_trace(cumulative_variance_ratios, "Raw returns"),
+])
+fig.data[1].line.dash = "dot"
+fig.add_hline(y=0.95, line=dict(color="#d62728", dash="dash"), annotation_text="95% of variance",
+              annotation_position="bottom right")
+for n95 in (num_of_req_pc_95, num_of_req_pc_95_normalized):
+    fig.add_vline(x=n95, line=dict(color="#8a8f98", dash="dot"), annotation_text=f"PC {n95}",
+                  annotation_position="top left")
+fig.update_xaxes(title="No. of principal components")
+fig.update_yaxes(title="Cumulative variance ratio", tickformat=".0%", range=[0, 1.02])
+show_fig(style_fig(fig))
+```
 
-# Horizontal line at 0.95 to indicate the 95% threshold
-plt.axhline(y=0.95, color='r', linestyle='--', label='95% Variance Line')
+### Eigenportfolio Loadings
 
-# Annotate the exact threshold component
-plt.annotate(
-    f'Principal component {num_of_req_pc_95_normalized}',
-    xy=(num_of_req_pc_95_normalized - 1, 0.95),
-    xytext=(num_of_req_pc_95_normalized - 1, 0.82),
-    arrowprops=dict(facecolor='black', arrowstyle='->'),
-    ha='center'
-)
+Each point in @fig-loadings is one of the 486 stocks, placed by its weight $w_{ki}$ (@eq-pc) on two standardised principal components. Hover to identify a ticker and use the menu to swap the vertical component.
 
-plt.legend()
-plt.tight_layout()
-plt.show()
+```{python}
+#| label: fig-loadings
+#| fig-cap: "Loadings of the 486 stocks on the first principal components of standardised returns. PC 1 loadings all share one sign (the market mode); spread along the second axis separates groups of stocks that co-move beyond the market."
+tickers = normalized_returns_table.columns
+comp = pca_normalized.components_
+evr = pca_normalized.explained_variance_ratio_
+
+fig = go.Figure(go.Scatter(
+    x=comp[0], y=comp[1], mode="markers", text=tickers,
+    marker=dict(size=7, opacity=0.75, color=comp[0], colorscale="Viridis", showscale=False),
+    hovertemplate="<b>%{text}</b><br>PC 1: %{x:.3f}<br>PC k: %{y:.3f}<extra></extra>"))
+fig.update_layout(updatemenus=[dict(
+    type="dropdown", x=1, xanchor="right", y=1.12, yanchor="top",
+    buttons=[dict(label=f"PC 1 vs PC {j + 1}", method="update",
+                  args=[{"y": [comp[j]]}, {"yaxis.title.text": f"PC {j + 1} loading ({evr[j]:.1%} of variance)"}])
+             for j in (1, 2, 3)])])
+fig.update_xaxes(title=f"PC 1 loading ({evr[0]:.1%} of variance)")
+fig.update_yaxes(title=f"PC 2 loading ({evr[1]:.1%} of variance)")
+show_fig(style_fig(fig, height=480).update_layout(hovermode="closest"))
 ```
 
 ::: {.callout-note}
@@ -408,6 +439,8 @@ Comparing the normalized results against the unnormalized baseline reveals an in
 
 ### Comparative Overview: Unnormalized vs. Normalized PCA
 
+::: {.table-responsive}
+
 | Metric / Characteristic | Unnormalized PCA (Covariance Matrix) | Normalized PCA (Correlation Matrix) | Analytical Interpretation |
 | :--- | :---: | :---: | :--- |
 | **Input Matrix Dimension** | $744 \times 486$ | $744 \times 486$ | 744 trading days across 486 continuously active S&P 500 stocks |
@@ -416,6 +449,8 @@ Comparing the normalized results against the unnormalized baseline reveals an in
 | **$\text{PC}_1$ Variance Explained** | **28.81%** | **31.82%** | Standardization reveals stronger market-wide correlation ($+3.01\%$) |
 | **Scree Plot Elbow Point** | **PC 4** | **PC 4** | Robust structural boundary between macro/sector factors and noise |
 | **Components for 95% Variance** | **226 PCs** ($46.5\%$ of features) | **253 PCs** ($52.1\%$ of features) | Equal weighting spreads idiosyncratic tail risk across more dimensions |
+
+:::
 
 ### Key Financial & Big Data Takeaways
 
