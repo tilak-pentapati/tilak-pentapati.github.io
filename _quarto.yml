@@ -3,10 +3,17 @@ project:
   output-dir: docs
 
 website:
-  title: "Spatial Data Science Portfolio"
+  search: false
   navbar:
     left:
       - href: index.qmd
         text: Home
       - href: projects.qmd
         text: Projects
+
+format:
+  html:
+    theme:
+      light: cosmo
+      dark: darkly
+    css: styles.css

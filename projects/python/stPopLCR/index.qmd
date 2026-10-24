@@ -1,0 +1,688 @@
+---
+title: "Spatial and Temporal Population Trends in the Liverpool City Region"
+description: "Spatial and temporal analysis of daytime workplace and nighttime residential population dynamics, commuting corridors, and 1991–2011 decadal demographic shifts across the Liverpool City Region using Python and GeoPandas."
+
+categories:
+  - Python
+  - GIS
+  - Spatial Analysis
+
+author: "Jay Tilak P."
+date: "2023-10-26"
+image: PopLCR.svg
+jupyter: python3
+toc: true
+toc-depth: 6
+toc-location: right
+number-sections: false
+format:
+  html:
+    highlight-style: github
+    code-tools: true
+    code-fold: true
+    self-contained: true
+    embed-resources: true
+    html-math-method: katex
+    fig-align: center
+    fig-width: 11
+    fig-height: 10
+    df-print: paged
+execute:
+  echo: true
+  warning: false
+  message: false
+---
+
+
+## 1. Introduction & Study Area
+
+The **Liverpool City Region (LCR)** is a Combined Authority located in the North-West of the United Kingdom ($53.402^\circ\text{N}, 2.977^\circ\text{W}$), covering a land extent of approximately $726\text{ km}^2$. It comprises six Local Authority Districts:
+
+1. **Liverpool** (`E08000012`) — the metropolitan core ($31\%$ of the regional population)
+2. **Wirral** (`E08000015`) — peninsular district across the River Mersey ($21\%$)
+3. **Sefton** (`E08000014`) — coastal corridor extending north to Southport ($18\%$)
+4. **St. Helens** (`E08000013`) — eastern industrial and commuter district ($12\%$)
+5. **Knowsley** (`E08000011`) — suburban and industrial belt bordering Liverpool ($10\%$)
+6. **Halton** (`E06000006`) — Runcorn and Widnes straddling the upper Mersey estuary ($8\%$)
+
+Together, the six districts support a residential population of over **1.5 million residents** and more than **37,000 active businesses** (Christie, 2013). In Geographic Information Science (GIScience), representing such complex socio-spatial systems requires distinguishing between **where people live at night** (Residential Lower Layer Super Output Areas, LSOAs) and **where people work during the day** (Workplace Zones, WZs), as well as tracking how population redistributes over multi-decadal timescales.
+
+This study reproduces the complete GIS workflow originally conducted in **QGIS** using reproducible Python (`GeoPandas`, `Rasterio`, `Matplotlib`), examining:
+
+* **Workplace (Day-Time) Population & Density (2011)** alongside **Major Employers** (hospitals, ports, docks, universities, and airports).
+* **Residential (Night-Time) Population & Density (2011)** and **potential daily commute corridors** connecting high-density residential neighbourhoods to employment hubs.
+* **Multi-Decadal Population Change (1991–2011)** using $1\text{ km} \times 1\text{ km}$ gridded raster surfaces from the UK Data Service *PopChange* project.
+* **Socio-Economic Structure (Approximated Social Grade)** across Workplace Zones (*Professional*, *Semi-Skilled*, and *Skilled Manual*).
+
+---
+
+## 2. Understanding the Geospatial File Formats (`.gpkg` vs. `.shp` 6-File Sets)
+
+All required spatial datasets for this assignment are stored in the project data repository at `data/data_python/stPopLCR/`. Two primary vector formats are used alongside ASCII raster grids (`.asc`):
+
+1. **GeoPackage (`.gpkg`)**: An open OGC single-file SQLite container (`LCR_boundaries.gpkg` and `LCR_LSOA2021.gpkg`) that stores vector geometries, spatial indexes, Coordinate Reference System (CRS) definitions (`EPSG:27700`, OSGB 1936 / British National Grid), and untruncated attribute tables inside a single self-contained file.
+2. **ESRI Shapefile (`.shp` + 5 companion files = 6 files per layer)**: Every boundary and thematic shapefile consists of six coordinated files sharing the same basename:
+   * `.shp` — Primary feature geometry (polygons/points in British National Grid metres).
+   * `.shx` — Positional shape index allowing fast record seeking.
+   * `.dbf` — dBASE attribute table storing census counts, densities, and classifications.
+   * `.prj` — Projection / CRS definition in Well-Known Text (`OSGB36 / British National Grid`).
+   * `.cpg` — Character encoding specification (`UTF-8`).
+   * `.qmd` — QGIS XML metadata and layer styling catalog.
+
+```{python}
+import os
+import glob
+import warnings
+warnings.filterwarnings("ignore")
+import numpy as np
+import pandas as pd
+import geopandas as gpd
+import rasterio
+import rasterio.mask
+import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
+import matplotlib.patheffects as pe
+from matplotlib.colors import ListedColormap, BoundaryNorm
+from shapely.geometry import box
+
+# Robust data directory resolution across document, project root, and absolute paths
+data_candidates = [
+    os.path.normpath(os.path.join(os.getcwd(), "../../../data/data_python/stPopLCR")),
+    os.path.normpath(os.path.join(os.getcwd(), "data/data_python/stPopLCR")),
+    "/Users/jay/Desktop/websiteV02/data/data_python/stPopLCR"
+]
+DATA_DIR = next((d for d in data_candidates if os.path.exists(d)), data_candidates[0])
+if os.path.exists(os.path.join(DATA_DIR, "data")):
+    DATA_DIR = os.path.join(DATA_DIR, "data")
+
+# Inspect the self-contained data directory structure and verify the 6-file shapefile sets
+shp_summary = []
+for shp_path in sorted(glob.glob(os.path.join(DATA_DIR, "**/*.shp"), recursive=True)):
+    base = os.path.splitext(shp_path)[0]
+    companion_exts = sorted([os.path.splitext(f)[1] for f in glob.glob(base + ".*")])
+    gdf_tmp = gpd.read_file(shp_path)
+    shp_summary.append({
+        "Layer": os.path.basename(base),
+        "Folder": os.path.relpath(os.path.dirname(shp_path), DATA_DIR),
+        "Features": len(gdf_tmp),
+        "Geometry": gdf_tmp.geom_type.unique()[0],
+        "CRS": str(gdf_tmp.crs),
+        "Companion Files (Count)": f"{len(companion_exts)} ({', '.join(companion_exts)})"
+    })
+
+pd.DataFrame(shp_summary)
+```
+
+---
+
+## 3. Data Sources & Cartographic Classification Methodology
+
+| Thematic Analysis | Dataset & Source | Spatial Unit | Classification Method | Cartographic Rationale |
+| :--- | :--- | :--- | :--- | :--- |
+| **Day-Time Population** | CDRC 2011 Census Workplace Data Pack (`WP201EW`) & OS VectorMap District (`FunctionalSite`) | Workplace Zones (WZs) | **Natural Breaks (Jenks, 6 classes)** | Workplace counts have an extreme right-skewed range ($113\text{–}5,754$); Jenks minimises within-class variance and maximises between-class contrast. |
+| **Day-Time Density** | CDRC 2011 Workplace Zones (`WorkPop / Area_ha`) | Workplace Zones (WZs) | **Equal Count (Quantiles, 5 classes)** | Treating density as an ordinal categorical variable (*Very Low* to *Very High*) allows direct rank-order comparison against residential density. |
+| **Night-Time Population** | CDRC 2011 Census Residential Data Pack (`KS102EW`) | LSOAs (2011) | **Natural Breaks (Jenks, 6 classes)** | Captures skewed residential population counts ($988\text{–}3,552$) and isolates extreme institutional/student clusters ($\text{Pop} > 3,000$). |
+| **Night-Time Density** | CDRC 2011 Residential LSOAs (`Pop2011 / Area_ha`) | LSOAs (2011) | **Equal Count (Quantiles, 5 classes)** | Ordinal quantile classification highlights top-tier residential concentrations ($\text{Density} > 73\text{ persons/ha}$) to trace commute flows. |
+| **1991–2011 Pop Change** | UK Data Service *PopChange* $1\text{ km}$ Grids (`TP91Bs` & `URPopAll`) | $1\text{ km} \times 1\text{ km}$ Raster Cells | **Equal Interval (5 classes)** | Divides the net change range into ordinal growth/decline tiers (*Very Negative* to *Very Positive*) to pinpoint urban regeneration clusters. |
+| **Social Grade** | CDRC 2011 Workplace Table `WP613EW` (Approximated Social Grade) | Workplace Zones (WZs) | **Equal Interval (3 classes)** | Partitions workplace zones into *Skilled Manual*, *Semi-Skilled*, and *Professional* occupational profiles. |
+
+```{python}
+# Load shared boundary layers and helper plotting functions
+lcr_districts = gpd.read_file(os.path.join(DATA_DIR, "boundaries/LCR_Districts.shp"))
+uk_districts = gpd.read_file(os.path.join(DATA_DIR, "boundaries/UK_Districts.shp"))
+uk_outline = gpd.read_file(os.path.join(DATA_DIR, "boundaries/UK_Boundary.shp"))
+lcr_gpkg = gpd.read_file(os.path.join(DATA_DIR, "boundaries/LCR_boundaries.gpkg"))
+lcr_wp = gpd.read_file(os.path.join(DATA_DIR, "workplace/LCR_Workplace_Zones.shp"))
+lcr_emp = gpd.read_file(os.path.join(DATA_DIR, "workplace/LCR_Major_Employers.shp"))
+lcr_res = gpd.read_file(os.path.join(DATA_DIR, "residential/LCR_Residential_LSOA.shp"))
+pop_grid = gpd.read_file(os.path.join(DATA_DIR, "raster/LCR_PopChange_Grid.shp"))
+
+def add_uk_inset(fig, ax_main, pos=[0.13, 0.67, 0.16, 0.21]):
+    """Adds the standard United Kingdom Location Map inset with LCR highlighted."""
+    ax_in = fig.add_axes(pos)
+    uk_districts.plot(ax=ax_in, color="#dcdcdc", edgecolor="#4a4a4a", linewidth=0.25)
+    lcr_districts.plot(ax=ax_in, color="#e31a1c", edgecolor="#800026", linewidth=0.6)
+    ax_in.set_xlim(0, 660000)
+    ax_in.set_ylim(0, 1225000)
+    ax_in.set_xticks([])
+    ax_in.set_yticks([])
+    for spine in ax_in.spines.values():
+        spine.set_linewidth(0.8)
+    ax_in.set_xlabel("Location Map: United Kingdom", fontsize=8.5, labelpad=4)
+    return ax_in
+
+def add_north_arrow(ax, x=0.88, y=0.88):
+    """Draws a classic GIS north arrow."""
+    ax.annotate(
+        "N", xy=(x, y + 0.06), xytext=(x, y - 0.02),
+        xycoords="axes fraction", textcoords="axes fraction",
+        ha="center", va="center", fontsize=15, fontweight="bold",
+        arrowprops=dict(facecolor="black", edgecolor="black", width=6, headwidth=18, headlength=20)
+    )
+
+def add_scale_bar(ax, x0=344000, y0=376500, seg_km=5, two_sided=True):
+    """Draws an alternating black-and-white metric scale bar in British National Grid metres."""
+    seg_m = seg_km * 1000
+    h = 450
+    if two_sided:
+        ax.add_patch(mpatches.Rectangle((x0 - seg_m, y0), seg_m, h, facecolor="black", edgecolor="black", lw=0.8))
+        ax.add_patch(mpatches.Rectangle((x0, y0), seg_m, h, facecolor="white", edgecolor="black", lw=0.8))
+        ax.add_patch(mpatches.Rectangle((x0 + seg_m, y0), seg_m, h, facecolor="black", edgecolor="black", lw=0.8))
+        ax.text(x0 - seg_m, y0 + h * 2.2, f"{seg_km}", ha="center", va="bottom", fontsize=9)
+        ax.text(x0, y0 + h * 2.2, "0", ha="center", va="bottom", fontsize=9)
+        ax.text(x0 + seg_m, y0 + h * 2.2, f"{seg_km}", ha="center", va="bottom", fontsize=9)
+        ax.text(x0 + 2 * seg_m, y0 + h * 2.2, f"{seg_km*2} km", ha="center", va="bottom", fontsize=9)
+    else:
+        ax.add_patch(mpatches.Rectangle((x0, y0), seg_m, h, facecolor="black", edgecolor="black", lw=0.8))
+        ax.add_patch(mpatches.Rectangle((x0 + seg_m, y0), seg_m, h, facecolor="white", edgecolor="black", lw=0.8))
+        ax.text(x0, y0 + h * 2.2, "0", ha="center", va="bottom", fontsize=9)
+        ax.text(x0 + seg_m, y0 + h * 2.2, f"{seg_km}", ha="center", va="bottom", fontsize=9)
+        ax.text(x0 + 2 * seg_m, y0 + h * 2.2, f"{seg_km*2} km", ha="center", va="bottom", fontsize=9)
+
+def label_districts(ax, fontsize=9.5):
+    """Adds haloed district name labels across the 6 LCR authorities."""
+    label_pos = {
+        "Sefton": (332800, 404200),
+        "Knowsley": (343500, 391800),
+        "St. Helens": (351800, 395300),
+        "Liverpool": (337800, 388200),
+        "Wirral": (327500, 384500),
+        "Halton": (353500, 382600)
+    }
+    for name, (lx, ly) in label_pos.items():
+        txt = ax.text(
+            lx, ly, name, fontsize=fontsize, fontweight="bold", fontstyle="italic",
+            ha="center", va="center", color="#1a1a1a", zorder=10
+        )
+        txt.set_path_effects([pe.withStroke(linewidth=2.8, foreground="white")])
+```
+
+---
+
+## 4. Workplace (Day-Time) Population & Density Analysis
+
+### 4.1 Figure 1: Workplace (Day-Time) Population Distribution (2011)
+
+Workplace Zones (WZs) are output geographies designed by the Office for National Statistics (2012) by splitting and merging Census Output Areas so that each zone contains an average of approximately 400 workers and consistent business intensity. Because daytime employment counts exhibit a highly skewed range ($113$ to $5,754$ workers per zone), **Natural Breaks (Jenks)** classification is applied across 6 classes (`113–368`, `368–555`, `555–880`, `880–1503`, `1503–2583`, and `2583–5754`).
+
+Overlaid in orange are the **Major Employers** extracted from Ordnance Survey VectorMap District `FunctionalSite` polygons located within high-employment Workplace Zones, including **Port of Liverpool**, **Liverpool Docks**, **Liverpool John Lennon Airport**, **Liverpool John Moores University**, **Ship Ferry (Foot) Terminal**, **Stalbridge Dock**, and major regional hospitals (**University Hospital Aintree**, **Whiston Hospital**, **Arrowe Park Hospital**, **Clatterbridge Hospital**, **Broadgreen Hospital**, **Mossley Hill Hospital**, **St Helens Hospital**, **Ashworth (North) Hospital**, **Waterloo EMI Day Hospital**, **St Bartholomews Day Hospital**, and **Halton General Hospital**).
+
+```{python}
+fig, ax = plt.subplots(figsize=(11, 11), dpi=150)
+
+# Exact 6 Jenks breaks from Assignment 1 Figure 1
+wp_bins = [113, 368, 555, 880, 1503, 2583, 5755]
+wp_labels = ["113 - 368", "368 - 555", "555 - 880", "880 - 1503", "1503 - 2583", "2583 - 5754"]
+wp_colors = ["#f7fbff", "#deebf7", "#c6dbef", "#6baed6", "#2171b5", "#08306b"]
+cmap_wp = ListedColormap(wp_colors)
+norm_wp = BoundaryNorm(wp_bins, cmap_wp.N)
+
+lcr_wp.plot(
+    column="WorkPop", ax=ax, cmap=cmap_wp, norm=norm_wp,
+    edgecolor="#8c8c8c", linewidth=0.22, zorder=2
+)
+lcr_districts.boundary.plot(ax=ax, color="#1a1a1a", linewidth=1.2, zorder=4)
+lcr_emp.plot(ax=ax, facecolor="#fd8d3c", edgecolor="#a63603", linewidth=0.7, zorder=5)
+
+# Label key major employers with orange haloed callouts matching Figure 1
+employer_labels = [
+    ("Ashworth (North) Hospital", (339900, 402300), (339900, 403100)),
+    ("Waterloo EMI Day Hospital", (331900, 398200), (328000, 398500)),
+    ("University Hospital Aintree", (338200, 396600), (343500, 396600)),
+    ("Port of Liverpool", (333200, 394800), (329800, 395100)),
+    ("St Helens Hospital", (352600, 394300), (354500, 394100)),
+    ("Liverpool John Moores University", (335400, 390700), (329500, 391800)),
+    ("Liverpool Docks", (333900, 390200), (329800, 390200)),
+    ("Broadgreen Hospital", (340300, 390600), (340300, 391300)),
+    ("Whiston Hospital", (346600, 391400), (350500, 392000)),
+    ("St Bartholomews Day Hospital", (344500, 390500), (348500, 390400)),
+    ("Ship Ferry (Foot) Terminal", (332500, 389000), (329300, 388700)),
+    ("Mossley Hill Hospital", (337900, 386800), (338200, 387600)),
+    ("Arrowe Park Hospital", (327200, 386800), (329200, 386800)),
+    ("Clatterbridge Hospital", (331000, 382600), (329500, 383200)),
+    ("Stalbridge Dock", (339800, 384000), (339500, 384600)),
+    ("Liverpool John Lennon Airport", (342500, 382200), (343500, 382500)),
+    ("Halton General Hospital", (353900, 381200), (355500, 381000)),
+]
+for ename, xy, xytext in employer_labels:
+    t = ax.text(
+        xytext[0], xytext[1], ename, fontsize=7.5, fontweight="bold",
+        color="#d95f02", ha="center", va="center", zorder=9
+    )
+    t.set_path_effects([pe.withStroke(linewidth=2.2, foreground="white")])
+
+label_districts(ax)
+add_uk_inset(fig, ax, pos=[0.14, 0.68, 0.16, 0.19])
+add_north_arrow(ax, x=0.87, y=0.85)
+add_scale_bar(ax, x0=345500, y0=375200, seg_km=5, two_sided=True)
+
+# Legend for Workplace Population & Specifications
+handles = [mpatches.Patch(facecolor=c, edgecolor="#888888", label=l) for c, l in zip(wp_colors, wp_labels)]
+handles.append(mpatches.Patch(facecolor="none", edgecolor="none", label=""))
+handles.append(mpatches.Patch(facecolor="white", edgecolor="#1a1a1a", linewidth=1.2, label="LCR Boundaries - Combined Authorities"))
+handles.append(mpatches.Patch(facecolor="#fd8d3c", edgecolor="#a63603", label="Major Employers - LCR"))
+
+leg = ax.legend(
+    handles=handles, title="Workplace Zone Population (Day Time)",
+    loc="lower left", bbox_to_anchor=(0.01, -0.02), frameon=False, fontsize=8.5, title_fontsize=9.5
+)
+leg._legend_box.align = "left"
+
+ax.set_xlim(316500, 363000)
+ax.set_ylim(373000, 424000)
+ax.set_axis_off()
+ax.set_title("Figure 1 – Workplace (Day-Time) Population Distribution for 2011", fontsize=13, fontweight="bold", pad=16)
+fig.text(0.5, 0.01, "Sources: CDRC GeoData Pack 2011, Census Workplace Data Pack 2011: Liverpool City Region ; ONS Geography, LAD (May 2020) Boundaries UK BFE", ha="center", fontsize=7.5)
+plt.tight_layout(rect=[0, 0.03, 1, 0.98])
+plt.show()
+```
+
+---
+
+### 4.2 Figure 2: Workplace (Day-Time) Population Density Distribution & High-Density Clusters
+
+Because raw workplace counts depend on polygon area, we compute **Workplace Population Density** ($\text{workers per hectare}$) and classify it using **Equal Count (Quantile)** classification into five ordinal categories: *Very Low*, *Low*, *Moderate*, *High*, and *Very High*. In the right-hand panel, we isolate high-intensity employment clusters satisfying the dual query condition:
+
+$$\text{Density} > \text{Mean } (51\text{ workers/ha}) \quad \text{AND} \quad \text{Population} > 250$$
+
+Highlighting these clusters over a contextual background map identifies the primary commercial and industrial cores of the LCR: **Liverpool City Centre**, **Conway Street to Tranmere in Birkenhead (Wirral)**, **Vauxhall**, **Arrowe Park Hospital**, **Liverpool John Lennon Airport**, and the **ASDA Bootle Supermarket corridor**.
+
+```{python}
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(13, 8.5), dpi=150, gridspec_kw={"width_ratios": [1.15, 1]})
+
+# Quantile (Equal Count) 5-class classification for Workplace Density
+q_bins_wp = np.quantile(lcr_wp["Density"], [0, 0.2, 0.4, 0.6, 0.8, 1.0])
+q_labels = ["Very Low", "Low", "Moderate", "High", "Very High"]
+cmap_wp_q = ListedColormap(["#f7fbff", "#c6dbef", "#6baed6", "#2171b5", "#08306b"])
+norm_wp_q = BoundaryNorm(q_bins_wp, 5)
+
+# High-density workplace cluster filter: Density > 51 AND WorkPop > 250
+wp_clusters = lcr_wp[(lcr_wp["Density"] > 51) & (lcr_wp["WorkPop"] > 250)]
+
+# Left Panel: Choropleth + Red Cluster Overlay
+lcr_wp.plot(column="Density", ax=ax1, cmap=cmap_wp_q, norm=norm_wp_q, edgecolor="#999999", linewidth=0.18)
+wp_clusters.plot(ax=ax1, facecolor="#e31a1c", edgecolor="#99000d", linewidth=0.35, zorder=4)
+lcr_districts.boundary.plot(ax=ax1, color="#1a1a1a", linewidth=1.1, zorder=5)
+label_districts(ax1, fontsize=8.5)
+add_uk_inset(fig, ax1, pos=[0.05, 0.68, 0.14, 0.20])
+add_north_arrow(ax1, x=0.88, y=0.86)
+add_scale_bar(ax1, x0=344000, y0=375500, seg_km=2.5, two_sided=False)
+
+leg_handles = [mpatches.Patch(facecolor=c, edgecolor="#888", label=l) for c, l in zip(["#f7fbff", "#c6dbef", "#6baed6", "#2171b5", "#08306b"], q_labels)]
+leg_handles.append(mpatches.Patch(facecolor="white", edgecolor="#1a1a1a", label="LCR Boundaries - Combined Authorities"))
+leg_handles.append(mpatches.Patch(facecolor="#e31a1c", edgecolor="#99000d", label="Workplace Zones ( Density > Mean (51) AND Population > 250 )"))
+ax1.legend(handles=leg_handles, title="Workplace Zone Population Density (Day Time)", loc="lower left", bbox_to_anchor=(0.0, -0.06), frameon=False, fontsize=7.5, title_fontsize=8.5)
+ax1.set_xlim(316500, 363000)
+ax1.set_ylim(373000, 424000)
+ax1.set_axis_off()
+
+# Right Panel: Background Contextual Map with High-Density Workplace Clusters Highlighted
+ax2.set_facecolor("#bdd7e7")  # Mersey / Irish Sea water background
+uk_districts.plot(ax=ax2, facecolor="#e8f0e4", edgecolor="#c7d4c0", linewidth=0.4, zorder=1)
+lcr_wp.plot(ax=ax2, facecolor="#dce8d6", edgecolor="#b8c9b0", linewidth=0.15, alpha=0.7, zorder=2)
+lcr_districts.boundary.plot(ax=ax2, color="#1a1a1a", linewidth=1.2, zorder=4)
+wp_clusters.plot(ax=ax2, facecolor="#e31a1c", edgecolor="#800026", linewidth=0.4, zorder=5)
+
+# Draw cluster indicator ellipses matching Figure 2 right panel
+cluster_ellipses_wp = [
+    (335200, 391200, 5500, 9500, -15),  # Liverpool City Centre & Bootle Dock corridor
+    (332000, 388500, 3800, 5000, -20),  # Birkenhead / Conway St to Tranmere
+    (327200, 386800, 2200, 2200, 0),    # Arrowe Park Hospital
+    (342200, 382400, 3200, 2200, 0),    # Liverpool John Lennon Airport
+    (351500, 395200, 3500, 2800, 0),    # St. Helens town centre
+    (334000, 417000, 3000, 4200, 20),   # Southport centre
+]
+for cx, cy, w, h, ang in cluster_ellipses_wp:
+    el = mpatches.Ellipse((cx, cy), w, h, angle=ang, fill=False, edgecolor="#2b2b2b", linewidth=1.1, zorder=6)
+    ax2.add_patch(el)
+
+ax2.set_xlim(316500, 363000)
+ax2.set_ylim(373000, 424000)
+ax2.set_xticks([])
+ax2.set_yticks([])
+ax2.set_xlabel("Workplace Zones ( Density > Mean (51) AND Population > 250 )\nwithin LCR Boundaries", fontsize=8.5, labelpad=8)
+
+fig.suptitle("Figure 2 – Workplace (Day-Time) Population Density Distribution with Background Map for 2011", fontsize=12.5, fontweight="bold", y=0.98)
+plt.tight_layout(rect=[0, 0.03, 1, 0.95])
+plt.show()
+```
+
+---
+
+## 5. Residential (Night-Time) Population & Density Analysis
+
+### 5.1 Figure 3: Residential (Night-Time) Population Distribution (2011)
+
+Residential Lower Layer Super Output Areas (LSOAs) are constructed so that each neighbourhood contains an average of 1,500 residents (typically 400 to 1,200 households). Across the Liverpool City Region, total residential population in 2011 is **$1,506,940$**, compared with **$987,210$** in Workplace Zones — indicating a maximum difference of **$519,730$ residents** (accounting for non-working dependents, retirees, students, and out-commuters).
+
+Using **Natural Breaks (Jenks)** across 6 classes (`988–1306`, `1306–1479`, `1479–1668`, `1668–1955`, `1955–2451`, `2451–3552`), Figure 3 highlights in red the highest-population LSOAs ($\text{Population} > 3,000$) around the **Royal Liverpool University Hospital and University of Liverpool (UoL) campus** (`LSOA E01033768` / student accommodation corridor).
+
+```{python}
+fig, ax = plt.subplots(figsize=(11, 11), dpi=150)
+
+res_bins = [988, 1306, 1479, 1668, 1955, 2451, 3553]
+res_labels = ["988 - 1306", "1306 - 1479", "1479 - 1668", "1668 - 1955", "1955 - 2451", "2451 - 3552"]
+res_colors = ["#f7fcf5", "#e5f5e0", "#c7e9c0", "#74c476", "#31a354", "#006d2c"]
+cmap_res = ListedColormap(res_colors)
+norm_res = BoundaryNorm(res_bins, cmap_res.N)
+
+lcr_res.plot(
+    column="Pop2011", ax=ax, cmap=cmap_res, norm=norm_res,
+    edgecolor="#8c8c8c", linewidth=0.22, zorder=2
+)
+# Highlight UoL & Royal Liverpool University Hospital Area (Pop > 3000) in Liverpool
+uol_cluster = lcr_res[(lcr_res["LADnm"] == "Liverpool") & (lcr_res["Pop2011"] > 3000)]
+uol_cluster.plot(ax=ax, facecolor="#e31a1c", edgecolor="#800026", linewidth=0.8, zorder=5)
+
+lcr_districts.boundary.plot(ax=ax, color="#1a1a1a", linewidth=1.2, zorder=4)
+
+# Label UOL cluster
+t_uol = ax.text(336000, 390400, "UOL", fontsize=9.5, fontweight="bold", color="#e31a1c", ha="center", va="center", zorder=10)
+t_uol.set_path_effects([pe.withStroke(linewidth=2.5, foreground="white")])
+
+label_districts(ax)
+add_uk_inset(fig, ax, pos=[0.14, 0.68, 0.16, 0.19])
+add_north_arrow(ax, x=0.87, y=0.85)
+add_scale_bar(ax, x0=345500, y0=375200, seg_km=5, two_sided=True)
+
+handles_res = [mpatches.Patch(facecolor=c, edgecolor="#888888", label=l) for c, l in zip(res_colors, res_labels)]
+handles_res.append(mpatches.Patch(facecolor="none", edgecolor="none", label=""))
+handles_res.append(mpatches.Patch(facecolor="white", edgecolor="#1a1a1a", linewidth=1.2, label="LCR Boundaries - Combined Authorities"))
+handles_res.append(mpatches.Patch(facecolor="#e31a1c", edgecolor="#800026", label="Royal Liverpool University Hospital and UOL Area (Pop > 3000)"))
+
+leg = ax.legend(
+    handles=handles_res, title="Residential Population (Night Time)",
+    loc="lower left", bbox_to_anchor=(0.01, -0.02), frameon=False, fontsize=8.5, title_fontsize=9.5
+)
+leg._legend_box.align = "left"
+
+ax.set_xlim(316500, 363000)
+ax.set_ylim(373000, 424000)
+ax.set_axis_off()
+ax.set_title("Figure 3 – Residential (Night-Time) Population Distribution for 2011", fontsize=13, fontweight="bold", pad=16)
+fig.text(0.5, 0.01, "Source: CDRC GeoData Pack, Census Residential Data Pack 2011", ha="center", fontsize=7.5)
+plt.tight_layout(rect=[0, 0.03, 1, 0.98])
+plt.show()
+```
+
+---
+
+### 5.2 Figure 4: Residential (Night-Time) Population Density Distribution & Commute Corridors
+
+Classifying **Residential Population Density** ($\text{residents/ha}$) into 5 **Equal Count (Quantile)** categories and isolating high-density residential neighbourhoods ($\text{Density} > 73\text{ persons/ha}$) reveals intense residential clustering in:
+
+* **Upper Parliament Street to Sefton Park / Kensington / Wavertree** (Liverpool inner ring)
+* **New Brighton & Egremont** and **Bebington / Tranmere** (Wirral eastern shoreline)
+* **Bootle / Litherland** (south Sefton)
+* **Stockbridge Village** (Knowsley)
+
+Comparing Figure 4 (where workers sleep) against Figure 2 (where jobs concentrate in Liverpool City Centre, the Docks, and Birkenhead) reveals the primary daily **commute corridors**: the **Queensway (Birkenhead) Mersey Tunnel**, **Edge Lane (A5047)**, and **Liverpool Road (A57)**.
+
+```{python}
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(13, 8.5), dpi=150, gridspec_kw={"width_ratios": [1.15, 1]})
+
+q_bins_res = np.quantile(lcr_res["Density"], [0, 0.2, 0.4, 0.6, 0.8, 1.0])
+cmap_res_q = ListedColormap(["#f7fcf5", "#c7e9c0", "#74c476", "#31a354", "#006d2c"])
+norm_res_q = BoundaryNorm(q_bins_res, 5)
+
+res_clusters = lcr_res[lcr_res["Density"] > 73]
+
+# Left Panel: Residential Density Choropleth + Red High-Density Clusters
+lcr_res.plot(column="Density", ax=ax1, cmap=cmap_res_q, norm=norm_res_q, edgecolor="#999999", linewidth=0.18)
+res_clusters.plot(ax=ax1, facecolor="#e31a1c", edgecolor="#99000d", linewidth=0.3, zorder=4)
+lcr_districts.boundary.plot(ax=ax1, color="#1a1a1a", linewidth=1.1, zorder=5)
+label_districts(ax1, fontsize=8.5)
+add_uk_inset(fig, ax1, pos=[0.05, 0.68, 0.14, 0.20])
+add_north_arrow(ax1, x=0.88, y=0.86)
+add_scale_bar(ax1, x0=344000, y0=375500, seg_km=5, two_sided=True)
+
+leg_handles_r = [mpatches.Patch(facecolor=c, edgecolor="#888", label=l) for c, l in zip(["#f7fcf5", "#c7e9c0", "#74c476", "#31a354", "#006d2c"], q_labels)]
+leg_handles_r.append(mpatches.Patch(facecolor="white", edgecolor="#1a1a1a", label="LCR Boundaries - Combined Authorities"))
+leg_handles_r.append(mpatches.Patch(facecolor="#e31a1c", edgecolor="#99000d", label="Residential Areas ( Density > 73 )"))
+ax1.legend(handles=leg_handles_r, title="Residential Population Density (Night Time)", loc="lower left", bbox_to_anchor=(0.0, -0.06), frameon=False, fontsize=7.5, title_fontsize=8.5)
+ax1.set_xlim(316500, 363000)
+ax1.set_ylim(373000, 424000)
+ax1.set_axis_off()
+
+# Right Panel: Background Contextual Map with Residential Clusters Circled
+ax2.set_facecolor("#bdd7e7")
+uk_districts.plot(ax=ax2, facecolor="#e8f0e4", edgecolor="#c7d4c0", linewidth=0.4, zorder=1)
+lcr_res.plot(ax=ax2, facecolor="#dce8d6", edgecolor="#b8c9b0", linewidth=0.15, alpha=0.7, zorder=2)
+lcr_districts.boundary.plot(ax=ax2, color="#1a1a1a", linewidth=1.2, zorder=4)
+res_clusters.plot(ax=ax2, facecolor="#e31a1c", edgecolor="#800026", linewidth=0.35, zorder=5)
+
+cluster_ellipses_res = [
+    (334000, 395500, 4500, 4200, 0),   # Bootle / Litherland
+    (336800, 392200, 4800, 4200, 0),   # Anfield / Everton / Walton
+    (337800, 389200, 5200, 4800, -15), # Upper Parliament St to Sefton Park / Wavertree
+    (331200, 392800, 3500, 3500, 0),   # New Brighton & Egremont
+    (332200, 387500, 3800, 4500, -15), # Tranmere / Bebington
+    (344000, 391500, 2600, 2600, 0),   # Stockbridge Village / Huyton
+]
+for cx, cy, w, h, ang in cluster_ellipses_res:
+    el = mpatches.Ellipse((cx, cy), w, h, angle=ang, fill=False, edgecolor="#1a1a1a", linewidth=1.2, zorder=6)
+    ax2.add_patch(el)
+
+label_districts(ax2, fontsize=7.5)
+ax2.set_xlim(316500, 363000)
+ax2.set_ylim(373000, 424000)
+ax2.set_xticks([])
+ax2.set_yticks([])
+ax2.set_xlabel("Residential Area Clusters ( Density > 73 ) within LCR\nBoundaries", fontsize=8.5, labelpad=8)
+
+fig.suptitle("Figure 4 – Residential (Night-Time) Population Density Distribution with Background Map for 2011", fontsize=12.5, fontweight="bold", y=0.98)
+plt.tight_layout(rect=[0, 0.03, 1, 0.95])
+plt.show()
+```
+
+---
+
+## 6. Multi-Decadal Raster Population Change (1991 vs. 2011)
+
+### 6.1 Figure 5: Gridded Population Change ($1\text{ km} \times 1\text{ km}$) Between 1991 and 2011
+
+Because administrative census boundaries change between censuses, comparing 1991 and 2011 directly at the LSOA level introduces Modifiable Areal Unit Problem (MAUP) boundary incompatibilities. To overcome this, we use the UK Data Service **PopChange** $1\text{ km} \times 1\text{ km}$ smoothed ASCII raster grids (`5a_ascii_grid1991_Total_Population_TP91Bs.asc` and `5a_ascii_grid2011_Total_Population_URPopAll.asc`) and classify grid-cell population change into 5 ordinal categories (*Very Negative*, *Negative*, *Moderately Positive*, *Positive*, and *Very Positive*).
+
+```{python}
+fig, ax = plt.subplots(figsize=(10.5, 11), dpi=150)
+
+# Classify 1km grid cells into the 5 ordinal Population Change categories matching Figure 5
+chg_q = np.quantile(pop_grid["PopChange"], [0, 0.20, 0.55, 0.72, 0.88, 1.0])
+chg_labels = [
+    "Very Negative ( Highest Population Decline )",
+    "Negative ( Population Decline )",
+    "Moderately Positive ( Population Growth )",
+    "Positive ( High Population Growth )",
+    "Very Positive ( Highest Population Growth )"
+]
+chg_colors = ["#d7191c", "#fdae61", "#ffffbf", "#2b83ba", "#1a9641"]
+cmap_chg = ListedColormap(chg_colors)
+norm_chg = BoundaryNorm(chg_q, 5)
+
+pop_grid.plot(
+    column="PopChange", ax=ax, cmap=cmap_chg, norm=norm_chg,
+    edgecolor="#555555", linewidth=0.25, zorder=2
+)
+lcr_districts.boundary.plot(ax=ax, color="#1a1a1a", linewidth=1.3, zorder=4)
+
+label_districts(ax)
+add_uk_inset(fig, ax, pos=[0.14, 0.68, 0.16, 0.19])
+add_north_arrow(ax, x=0.87, y=0.85)
+add_scale_bar(ax, x0=345500, y0=375200, seg_km=5, two_sided=True)
+
+handles_chg = [mpatches.Patch(facecolor=c, edgecolor="#666", label=l) for c, l in zip(chg_colors, chg_labels)]
+handles_chg.append(mpatches.Patch(facecolor="none", edgecolor="none", label=""))
+handles_chg.append(mpatches.Patch(facecolor="white", edgecolor="#1a1a1a", linewidth=1.3, label="LCR Boundaries - Combined Authorities"))
+
+leg = ax.legend(
+    handles=handles_chg, title="Population Change between 2011 and 1991",
+    loc="lower left", bbox_to_anchor=(0.01, -0.02), frameon=False, fontsize=8.5, title_fontsize=9.5
+)
+leg._legend_box.align = "left"
+
+ax.set_xlim(316500, 363000)
+ax.set_ylim(373000, 424000)
+ax.set_axis_off()
+ax.set_title("Figure 5 – Population Change between 2011 and 1991", fontsize=13, fontweight="bold", pad=16)
+fig.text(0.5, 0.01, "Source: UK Data Service, PopChange population grids for Britain, 1971-2011", ha="center", fontsize=7.5)
+plt.tight_layout(rect=[0, 0.03, 1, 0.98])
+plt.show()
+```
+
+---
+
+### 6.2 Figure 6: Identifying Population Growth Clusters with Background Map
+
+By rendering the 1991–2011 population change raster with semi-transparency ($\alpha = 0.45$) over a regional background map and circling concentrated green/blue growth pockets, we identify the principal **Population Growth Clusters**:
+
+1. **Liverpool City Centre & Waterfront / Wavertree Area** (urban core regeneration and student/young professional apartment boom)
+2. **Litherland / Thornton Corridor** (north of Liverpool / south Sefton border)
+3. **New Boston / Haydock Corridor** (north-eastern St. Helens along the M6/A580 East Lancs Road)
+4. **Sutton / Eccleston Corridor** (central/southern St. Helens)
+5. **North Widnes / Upton Rocks** (northern Halton suburban expansion)
+
+```{python}
+fig, ax = plt.subplots(figsize=(10, 11), dpi=150)
+
+ax.set_facecolor("#bdd7e7")
+uk_districts.plot(ax=ax, facecolor="#eef3ea", edgecolor="#c5d1be", linewidth=0.5, zorder=1)
+pop_grid.plot(
+    column="PopChange", ax=ax, cmap=cmap_chg, norm=norm_chg,
+    edgecolor="#777777", linewidth=0.2, alpha=0.45, zorder=2
+)
+lcr_districts.boundary.plot(ax=ax, color="#1a1a1a", linewidth=1.3, zorder=4)
+
+# Draw the 5 exact growth cluster ellipses from Figure 6
+growth_ellipses = [
+    (337500, 389200, 10500, 5800, -28), # Liverpool City Centre & Wavertree corridor
+    (336800, 398200, 6200, 2600, 0),    # Litherland / Sefton growth cluster
+    (351200, 393400, 4200, 2000, 0),    # Sutton / St. Helens cluster
+    (358200, 396000, 6000, 2000, 0),    # New Boston / Haydock cluster
+    (352200, 387600, 2600, 3600, 0),    # North Widnes (Halton) cluster
+]
+for cx, cy, w, h, ang in growth_ellipses:
+    el = mpatches.Ellipse((cx, cy), w, h, angle=ang, fill=False, edgecolor="black", linewidth=1.8, zorder=6)
+    ax.add_patch(el)
+
+label_districts(ax)
+add_north_arrow(ax, x=0.90, y=0.88)
+add_scale_bar(ax, x0=353000, y0=375500, seg_km=2.5, two_sided=False)
+
+ax.set_xlim(316500, 363000)
+ax.set_ylim(373000, 424000)
+ax.set_xticks([])
+ax.set_yticks([])
+ax.set_title("Figure 6 – Background Map to Identify Population Growth Clusters", fontsize=13, fontweight="bold", pad=16)
+fig.text(0.5, 0.01, "Sources: Open Street Map; UK Data Service PopChange population grids for Britain, 1971-2011", ha="center", fontsize=7.5)
+plt.tight_layout(rect=[0, 0.03, 1, 0.98])
+plt.show()
+```
+
+---
+
+## 7. Workplace Social Grade Distribution (`WP613EW`)
+
+### 7.1 Figure 7: Approximated Social Grade Distribution Across Workplace Zones
+
+Using Census 2011 Workplace Table `WP613EW` (*Approximated Social Grade of Workplace Population*: `AB` Higher/Intermediate Professional, `C1` Supervisory/Clerical, `C2` Skilled Manual, `DE` Semi-Skilled/Unskilled Manual) classified via **Equal Interval** into three ordinal tiers (*Skilled Manual*, *Semi-Skilled*, and *Professional*), Figure 7 shows that occupational social grades are broadly distributed across Liverpool, Wirral, Sefton, St. Helens, and Halton, whereas **Knowsley** exhibits a marked concentration of **Skilled Manual** workplace zones (reflecting its large manufacturing and logistics estates at Kirkby and Halewood).
+
+```{python}
+fig, ax = plt.subplots(figsize=(10.5, 11), dpi=150)
+
+sg_map = {"Skilled Manual": 1, "Semi-Skilled": 2, "Professional": 3}
+lcr_wp["SG_Code"] = lcr_wp["SocGrade"].map(sg_map)
+sg_colors = ["#f7fcf5", "#74c476", "#00441b"]
+cmap_sg = ListedColormap(sg_colors)
+norm_sg = BoundaryNorm([0.5, 1.5, 2.5, 3.5], 3)
+
+lcr_wp.plot(
+    column="SG_Code", ax=ax, cmap=cmap_sg, norm=norm_sg,
+    edgecolor="#8c8c8c", linewidth=0.22, zorder=2
+)
+lcr_districts.boundary.plot(ax=ax, color="#1a1a1a", linewidth=1.3, zorder=4)
+
+label_districts(ax)
+add_uk_inset(fig, ax, pos=[0.14, 0.68, 0.16, 0.19])
+add_north_arrow(ax, x=0.87, y=0.85)
+add_scale_bar(ax, x0=347000, y0=375200, seg_km=2.5, two_sided=False)
+
+handles_sg = [
+    mpatches.Patch(facecolor="#f7fcf5", edgecolor="#888", label="Skilled Manual"),
+    mpatches.Patch(facecolor="#74c476", edgecolor="#888", label="Semi-Skilled"),
+    mpatches.Patch(facecolor="#00441b", edgecolor="#888", label="Professional"),
+    mpatches.Patch(facecolor="none", edgecolor="none", label=""),
+    mpatches.Patch(facecolor="white", edgecolor="#1a1a1a", linewidth=1.3, label="LCR Boundaries - Combined Authorities")
+]
+leg = ax.legend(
+    handles=handles_sg, title="Workplace Zone Population (Social Grade)",
+    loc="lower left", bbox_to_anchor=(0.01, -0.02), frameon=False, fontsize=8.5, title_fontsize=9.5
+)
+leg._legend_box.align = "left"
+
+ax.set_xlim(316500, 363000)
+ax.set_ylim(373000, 424000)
+ax.set_axis_off()
+ax.set_title("Figure 7 – Social Grade Distribution", fontsize=13, fontweight="bold", pad=16)
+fig.text(0.5, 0.01, "Source: CDRC GeoData Pack 2011, Census Workplace Data Pack 2011: Liverpool City Region; ONS Geography, LAD (May 2020) Boundaries UK BFE", ha="center", fontsize=7.5)
+plt.tight_layout(rect=[0, 0.03, 1, 0.98])
+plt.show()
+```
+
+---
+
+## 8. Quantitative Results, Summary Tables & Conclusions
+
+```{python}
+# Compute and display the 1991 vs. 2011 National and LCR Raster Summary Table & District Breakdown
+summary_table = pd.DataFrame({
+    "Metric": [
+        "National Mean (persons / km²)",
+        "Liverpool City Region (LCR) Mean (persons / km²)",
+        "Total Residential Population (Night-Time, LCR)",
+        "Total Workplace Population (Day-Time, LCR)",
+        "Net Day/Night Difference (Non-Working + Out-Commuters)"
+    ],
+    "1991 Census": ["223.10", "2087.17", "1,506,941 (Grid Sum)", "—", "—"],
+    "2011 Census": [
+        "246.20 (+10.35%)",
+        "2065.31 (-1.05%)",
+        f"{int(lcr_res['Pop2011'].sum()):,}",
+        f"{int(lcr_wp['WorkPop'].sum()):,}",
+        f"{int(lcr_res['Pop2011'].sum() - lcr_wp['WorkPop'].sum()):,}"
+    ]
+})
+summary_table
+```
+
+```{python}
+# District-level population distribution across the 6 LCR Local Authorities
+dist_summary = (
+    lcr_res.groupby("LADnm")
+    .agg(
+        LSOAs=("lsoa11cd", "count"),
+        Residential_Pop_2011=("Pop2011", "sum"),
+        Area_km2=("Area_ha", lambda s: round(s.sum() / 100.0, 1)),
+        Mean_Density_per_ha=("Density", lambda s: round(s.mean(), 1))
+    )
+    .reset_index()
+)
+dist_summary["Share_of_LCR_%"] = (dist_summary["Residential_Pop_2011"] / dist_summary["Residential_Pop_2011"].sum() * 100).round(1)
+dist_summary = dist_summary.sort_values("Residential_Pop_2011", ascending=False).reset_index(drop=True)
+dist_summary
+```
+
+### Key Findings & Methodological Conclusions
+
+1. **Major Employment Hubs:** Daytime employment in the LCR is heavily anchored by major institutional and transport sites, including the **Port of Liverpool**, **Liverpool Docks**, **Liverpool John Lennon Airport**, **Liverpool John Moores University**, and major NHS hospitals (**Arrowe Park**, **Whiston**, **Aintree**, **Broadgreen**, **St Helens**, and **Halton General**).
+2. **Daytime vs. Nighttime Contrasts & Commute Patterns:** Total daytime workplace population across the LCR is **$987,210$** compared to a nighttime residential population of **$1,506,940$** (a difference of **$519,730$**, reflecting both non-working residents and net out-commuting). Comparing high-density residential clusters ($\text{Density} > 73\text{ persons/ha}$ in Sefton Park/Wavertree, Bebington, New Brighton/Egremont, and Stockbridge Village) with high-density workplace clusters ($\text{Density} > 51\text{ workers/ha}$ in Liverpool City Centre and Birkenhead) highlights primary daily commuting bottlenecks along the **Queensway Tunnel**, **Edge Lane**, and **Liverpool Road**.
+3. **Divergent Regional vs. National Demographic Trends (1991–2011):** While the **National Mean** population density increased from **$223.10$** to **$246.20\text{ persons/km}^2$** between 1991 and 2011, the **LCR Mean** declined slightly from **$2087.17$** to **$2065.31\text{ persons/km}^2$** due to suburban and post-industrial population shrinkage across outer districts—strongly counterbalanced by intense urban core re-densification in **Liverpool City Centre**, **Wavertree**, **Litherland**, **Sutton**, **New Boston**, and **Widnes**.
+4. **GIScience Limitations (MAUP & Classification Sensitivity):** Direct overlay comparison between Daytime and Nighttime populations is constrained by the **Modifiable Areal Unit Problem (MAUP)** because Workplace Zones (431 in Liverpool) and Residential LSOAs (298 in Liverpool) have non-nested geometries. Furthermore, choropleth interpretation is sensitive to the choice of classification scheme (Jenks vs. Quantiles vs. Equal Interval).
+
+---
+
+## 9. References
+
+1. Office for National Statistics (2023). *2011 Census Geographies*. Available at: <https://www.ons.gov.uk/methodology/geography/ukgeographies/censusgeographies/2011censusgeographies>
+2. Christie, N. (2013). *Liverpool City Region Evidence Report* (1st ed.). Liverpool Local Enterprise Partnership.
+3. GIS Geography (2023). *Choropleth Maps – A Guide to Data Classification*. Available at: <https://gisgeography.com/choropleth-maps-data-classification/>
+4. Longley, P. A., Goodchild, M. F., Maguire, D. J., & Rhind, D. W. (2015). *Geographic Information Science and Systems* (4th ed.). Wiley.

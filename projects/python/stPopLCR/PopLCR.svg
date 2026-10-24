@@ -1,0 +1,94 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 700" width="100%" height="100%" style="background: #0b0f19; font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;">
+  <defs>
+    <!-- Background Gradient -->
+    <radialGradient id="bg-glow" cx="50%" cy="50%" r="65%">
+      <stop offset="0%" stop-color="#141e33" />
+      <stop offset="100%" stop-color="#070a10" />
+    </radialGradient>
+
+    <!-- River Mersey Gradient -->
+    <linearGradient id="riverGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00f2fe" stop-opacity="0.8" />
+      <stop offset="100%" stop-color="#4facfe" stop-opacity="0.3" />
+    </linearGradient>
+
+    <!-- Density Core Glow -->
+    <radialGradient id="coreGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ff3366" stop-opacity="0.6" />
+      <stop offset="60%" stop-color="#ff9900" stop-opacity="0.2" />
+      <stop offset="100%" stop-color="#ff9900" stop-opacity="0" />
+    </radialGradient>
+
+    <!-- Grid Pattern (1km PopChange raster style) -->
+    <pattern id="rasterGrid" width="24" height="24" patternUnits="userSpaceOnUse">
+      <path d="M 24 0 L 0 0 0 24" fill="none" stroke="#22324d" stroke-width="0.75" stroke-opacity="0.4"/>
+    </pattern>
+
+    <!-- Filter for Glow -->
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="6" result="blur" />
+      <feMerge>
+        <feMergeNode in="blur" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Base Layer -->
+  <rect width="1000" height="700" fill="url(#bg-glow)" />
+  <rect width="1000" height="700" fill="url(#rasterGrid)" />
+
+  <!-- Stylized District Outlines & Density Meshes -->
+  <!-- 1. Sefton (North Coastal) -->
+  <path d="M420,120 L480,160 L500,270 L430,290 L390,220 Z" fill="#1b2a47" fill-opacity="0.4" stroke="#3d629b" stroke-dasharray="3,3" stroke-width="1.5" />
+  
+  <!-- 2. Wirral (Peninsula - West of Mersey) -->
+  <path d="M310,310 L390,320 L420,440 L340,510 L270,420 Z" fill="#14243b" fill-opacity="0.5" stroke="#3d629b" stroke-dasharray="3,3" stroke-width="1.5" />
+  
+  <!-- 3. Liverpool (Core) -->
+  <path d="M430,290 L530,280 L540,390 L460,410 L440,330 Z" fill="#2d1f3d" fill-opacity="0.6" stroke="#9048b6" stroke-width="1.5" />
+  
+  <!-- 4. Knowsley (Inner Belt) -->
+  <path d="M530,280 L610,270 L620,380 L540,390 Z" fill="#1a263d" fill-opacity="0.4" stroke="#3d629b" stroke-dasharray="3,3" stroke-width="1.5" />
+  
+  <!-- 5. St. Helens (East) -->
+  <path d="M610,240 L730,230 L740,340 L620,360 Z" fill="#152238" fill-opacity="0.4" stroke="#3d629b" stroke-dasharray="3,3" stroke-width="1.5" />
+  
+  <!-- 6. Halton (Runcorn/Widnes Estuary) -->
+  <path d="M550,400 L680,380 L700,470 L580,480 Z" fill="#152438" fill-opacity="0.4" stroke="#3d629b" stroke-dasharray="3,3" stroke-width="1.5" />
+
+  <!-- River Mersey & Estuary Path -->
+  <path d="M 330,120 C 370,180 400,240 410,290 C 425,360 445,410 490,430 C 540,450 630,440 710,480" 
+        fill="none" stroke="url(#riverGrad)" stroke-width="14" stroke-linecap="round" filter="url(#glow)"/>
+  <path d="M 330,120 C 370,180 400,240 410,290 C 425,360 445,410 490,430 C 540,450 630,440 710,480" 
+        fill="none" stroke="#e0f7fa" stroke-width="3" stroke-linecap="round" />
+
+  <!-- Metropolitan Core Daytime Density Heatmap -->
+  <circle cx="470" cy="340" r="110" fill="url(#coreGlow)" />
+  <circle cx="470" cy="340" r="45" fill="#ff3366" fill-opacity="0.5" filter="url(#glow)" />
+  <circle cx="470" cy="340" r="8" fill="#ffffff" filter="url(#glow)" />
+
+  <!-- Commuting Flow Lines (Nighttime residential -> Daytime employment) -->
+  <path d="M340,440 Q400,390 465,345" fill="none" stroke="#f6d365" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="6,4" opacity="0.8" />
+  <path d="M450,190 Q455,270 468,335" fill="none" stroke="#f6d365" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="6,4" opacity="0.8" />
+  <path d="M660,280 Q560,300 475,338" fill="none" stroke="#f6d365" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="6,4" opacity="0.8" />
+  <path d="M620,440 Q540,410 475,345" fill="none" stroke="#f6d365" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="6,4" opacity="0.8" />
+
+  <!-- Employment Nodes / Major Activity Hubs -->
+  <g fill="#00f2fe" filter="url(#glow)">
+    <circle cx="435" cy="310" r="5" /> <!-- Port / Docks -->
+    <circle cx="485" cy="355" r="5" /> <!-- Universities & Hospitals -->
+    <circle cx="530" cy="425" r="4" /> <!-- Speke / Airport -->
+    <circle cx="670" cy="290" r="4" /> <!-- St Helens Hub -->
+    <circle cx="360" cy="360" r="4" /> <!-- Birkenhead Center -->
+  </g>
+
+  <!-- Distinct 3D Gridded Raster Cells (PopChange 1km sampling) -->
+  <polygon points="460,320 480,310 500,320 480,330" fill="#ff3366" fill-opacity="0.7" />
+  <polygon points="480,310 500,300 520,310 500,320" fill="#ff758c" fill-opacity="0.5" />
+  <polygon points="440,330 460,320 480,330 460,340" fill="#fda085" fill-opacity="0.6" />
+  <polygon points="460,340 480,330 500,340 480,350" fill="#f6d365" fill-opacity="0.7" />
+
+  <!-- Single Clean Text Element (Contains EXACTLY 3 Words) -->
+  <text x="500" y="625" text-anchor="middle" fill="#ffffff" font-size="28" font-weight="800" letter-spacing="9" opacity="0.95">LIVERPOOL CITY REGION</text>
+</svg>

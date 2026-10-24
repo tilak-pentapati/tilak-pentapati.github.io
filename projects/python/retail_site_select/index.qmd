@@ -1,0 +1,673 @@
+---
+title: "Retail Site Selection & Catchment Analysis for a New C-Store with Click & Collect in Liverpool"
+description: "Multi-criteria GIS site selection and network catchment modelling in Python to identify the optimal location for a new Marks & Spencer convenience store and Click & Collect facility in Liverpool."
+categories:
+  - Python
+  - GIS
+  - Spatial Analysis
+  - Retail Analytics
+  - Network Analysis
+author: "Jay Tilak P."
+image: retail_site.svg
+date: "2023-12-15"
+jupyter: python3
+toc: true
+toc-depth: 6
+toc-location: right
+number-sections: true
+format:
+  html:
+    highlight-style: github
+    code-tools: true
+    code-fold: true
+    self-contained: true
+    embed-resources: true
+    html-math-method: katex
+    lightbox: true
+    fig-align: center
+    fig-width: 10
+    fig-height: 6
+    df-print: paged
+execute:
+  echo: true
+  warning: false
+  message: false
+---
+
+
+## Executive Summary & Retail Location Problem
+
+The rapid growth of e-commerce and hybrid **Click & Collect (C&C)** grocery fulfilment has transformed urban retail location strategy. Rather than relying solely on large out-of-town superstores, major UK grocery retailers increasingly deploy neighbourhood **convenience stores (`c-stores`) equipped with Click & Collect facilities** to capture time-poor commuters, small urban households, and digitally engaged neighbourhoods.
+
+In this assignment, we conduct a multi-stage GIS site-selection analysis across **Liverpool (`E08000012`, 298 LSOAs)** to identify the **optimal location for a new Marks & Spencer (M&S) convenience store with a Click & Collect (C&C) facility**. Originally developed across **QGIS**, **ArcGIS Pro (Network Analyst)**, and **R**, the entire spatial workflow and cartographic output series (`map1` through `map6`) are reproduced here directly from the underlying shapefiles in Python.
+
+---
+
+## Three-Stage Site Selection Methodology
+
+The site-selection model integrates **Demand-Side Socio-Demographics** and **Supply-Side Retail Competition** across three sequential filtering stages:
+
+```{mermaid}
+%%{init: {
+  'theme': 'base',
+  'themeVariables': {
+    'primaryColor': '#fff3bf',
+    'primaryTextColor': '#1a1a1a',
+    'primaryBorderColor': '#f59f00',
+    'lineColor': '#495057',
+    'secondaryColor': '#fff9db',
+    'tertiaryColor': '#fef9e7',
+    'clusterBkg': '#fffdf0',
+    'clusterBorder': '#fab005',
+    'fontFamily': 'inherit',
+    'fontSize': '14px'
+  }
+}}%%
+flowchart TD
+    subgraph Input["Input Spatial Datasets (EPSG:27700)"]
+        D["<b>Demand Data</b><br/>• CDRC Internet User Classification (IUC 2018)<br/>• English Index of Multiple Deprivation (IMD 2019)<br/>• Daytime / Workplace Population 2020 (BRES)<br/>• 1–2 Person Household Density (Census 2011 QS406EW)"]
+        S["<b>Supply Data</b><br/>• Geolytix Foodstores 2023 Retail Points<br/>• 68 Existing Convenience Stores (C-Stores)<br/>• 2 Supermarkets with C&C (Tesco & Sainsbury's)<br/>• OS / Liverpool Road Network (18,171 links)"]
+    end
+
+    D --> S1A["<b>Stage 1A: Demand Screening</b><br/>Identify High Online Grocery Shopping (C&C) LSOAs<br/>with Low/Moderate Deprivation (Affluent/Moderate IMD)<br/>& High Daytime/Small-Household Demand"]
+    S --> S1B["<b>Stage 1B: Cannibalisation Filter</b><br/>Map Chosen Retailer's (Marks & Spencer) 3 Existing Stores<br/>(Central Liverpool L1, Fincham L12, Speke L24)<br/>to Avoid Internal Revenue Cannibalisation"]
+
+    S1A & S1B --> S2A["<b>Stage 2A: Candidate Location Identification</b><br/>Evaluate Unserved High-Demand Gaps<br/>with Strong Road Connectivity & Visibility"]
+    S --> S2B["<b>Stage 2B: Competitor Catchment Modelling</b><br/>Model Competing 68 C-Stores (500 m Buffers)<br/>& 2 C&C Supermarkets (1,500 m Buffers)"]
+
+    S2A & S2B --> S3["<b>Stage 3: Optimal Site & Network Catchment Validation</b><br/>Select Optimal New <b>M&S C-Store + C&C Site</b> (BNG: 340650, 388487)<br/>Compare Euclidean Fixed Buffers (500 m / 1,500 m)<br/>vs. Road-Network Drive-Distance Service Areas"]
+
+    style Input fill:#fffdf0,stroke:#fab005,stroke-width:2px,color:#1a1a1a
+    classDef yellowCard fill:#fff3bf,stroke:#f59f00,stroke-width:1.5px,color:#1a1a1a
+    classDef optimalCard fill:#ffe066,stroke:#e67700,stroke-width:2.5px,color:#1a1a1a
+    class D,S,S1A,S1B,S2A,S2B yellowCard
+    class S3 optimalCard
+```
+
+
+
+---
+
+## Understanding the Workspace Data (`.gpkg` and 6-File `.shp` Sets)
+
+All required boundaries, demand layers, supply points, fixed buffers, and road-network service area polygons are stored in the project data repository at `data/data_python/retail_site_select/`. Every ESRI Shapefile (`.shp`) is accompanied by its complete set of 6 files (`.shp` geometry, `.shx` positional index, `.dbf` attribute table, `.prj` coordinate system WKT, `.cpg` encoding, and `.qmd` QGIS metadata), alongside the GeoPackage `RetailCentres_Liverpool.gpkg`.
+
+```{python}
+import os
+import glob
+import warnings
+warnings.filterwarnings("ignore")
+import numpy as np
+import pandas as pd
+import geopandas as gpd
+import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
+import matplotlib.lines as mlines
+import matplotlib.patheffects as pe
+from matplotlib.colors import ListedColormap, BoundaryNorm
+
+# Robust data directory resolution across document, project root, and absolute paths
+data_candidates = [
+    os.path.normpath(os.path.join(os.getcwd(), "../../../data/data_python/retail_site_select")),
+    os.path.normpath(os.path.join(os.getcwd(), "data/data_python/retail_site_select")),
+    "/Users/jay/Desktop/websiteV02/data/data_python/retail_site_select"
+]
+DATA_DIR = next((d for d in data_candidates if os.path.exists(d)), data_candidates[0])
+if os.path.exists(os.path.join(DATA_DIR, "data")):
+    DATA_DIR = os.path.join(DATA_DIR, "data")
+
+# Inventory all 17 shapefiles in data/data_python/retail_site_select/ and verify their 6 companion files
+shp_inventory = []
+for shp_path in sorted(glob.glob(os.path.join(DATA_DIR, "**/*.shp"), recursive=True)):
+    base = os.path.splitext(shp_path)[0]
+    exts = sorted([os.path.splitext(f)[1] for f in glob.glob(base + ".*")])
+    gdf_tmp = gpd.read_file(shp_path)
+    shp_inventory.append({
+        "Layer Name": os.path.basename(base),
+        "Subfolder": os.path.relpath(os.path.dirname(shp_path), DATA_DIR),
+        "Features": len(gdf_tmp),
+        "Geometry": gdf_tmp.geom_type.unique()[0],
+        "CRS": str(gdf_tmp.crs),
+        "Files": f"{len(exts)} ({', '.join(exts)})"
+    })
+
+pd.DataFrame(shp_inventory)
+```
+
+```{python}
+# Load all spatial layers for Maps 1 to 6
+liv_bound = gpd.read_file(os.path.join(DATA_DIR, "boundaries/Liverpool_Boundary.shp"))
+uk_dist = gpd.read_file(os.path.join(DATA_DIR, "boundaries/UK_Districts.shp"))
+retail_centres = gpd.read_file(os.path.join(DATA_DIR, "boundaries/Retail_Centres_Liverpool.shp"))
+
+iuc_liv = gpd.read_file(os.path.join(DATA_DIR, "demand/IUC2018_Liverpool.shp"))
+imd_liv = gpd.read_file(os.path.join(DATA_DIR, "demand/IMD2019_Liverpool.shp"))
+work_2020 = gpd.read_file(os.path.join(DATA_DIR, "demand/Daytime_Pop_2020_Liverpool.shp"))
+hh_2011 = gpd.read_file(os.path.join(DATA_DIR, "demand/Household_Size_2011_Liverpool.shp"))
+lsoa_centroids = gpd.read_file(os.path.join(DATA_DIR, "demand/Liverpool_LSOA_Centroids.shp"))
+
+cstores_68 = gpd.read_file(os.path.join(DATA_DIR, "supply/CStores_2023_Liverpool.shp"))
+cstores_69 = gpd.read_file(os.path.join(DATA_DIR, "supply/CStores_With_OptimalSite.shp"))
+sm_cc = gpd.read_file(os.path.join(DATA_DIR, "supply/Supermarkets_CC_Liverpool.shp"))
+ms_existing = gpd.read_file(os.path.join(DATA_DIR, "supply/Chosen_Retailer_MS_500m_Buffer.shp"))
+
+buf500_c68 = gpd.read_file(os.path.join(DATA_DIR, "buffers_and_network/Buffer500_CStores.shp"))
+buf500_c69 = gpd.read_file(os.path.join(DATA_DIR, "buffers_and_network/Buffer500_CStores_With_OptimalSite.shp"))
+buf1500_sm = gpd.read_file(os.path.join(DATA_DIR, "buffers_and_network/Buffer1500_Supermarkets_CC.shp"))
+dd500_c69 = gpd.read_file(os.path.join(DATA_DIR, "buffers_and_network/CStores_With_OptimalSite_DriveBuffer500.shp"))
+dd1500_sm = gpd.read_file(os.path.join(DATA_DIR, "buffers_and_network/Supermarkets_CC_DriveBuffer1500.shp"))
+opt_fixed = gpd.read_file(os.path.join(DATA_DIR, "buffers_and_network/OptimalSite_FixedBuffer500.shp"))
+opt_drive = gpd.read_file(os.path.join(DATA_DIR, "buffers_and_network/OptimalSite_DriveBuffer500.shp"))
+
+# Shared cartographic furniture helpers matching Assignment 2 layout
+def add_uk_inset_liv(fig, pos=[0.11, 0.72, 0.19, 0.21]):
+    ax_in = fig.add_axes(pos)
+    uk_dist.plot(ax=ax_in, color="#d9d9d9", edgecolor="#bdbdbd", linewidth=0.18)
+    liv_bound.plot(ax=ax_in, color="#e31a1c", edgecolor="#e31a1c", linewidth=0.8)
+    ax_in.set_xlim(50000, 656000)
+    ax_in.set_ylim(5000, 1050000)
+    ax_in.set_xticks([])
+    ax_in.set_yticks([])
+    for spine in ax_in.spines.values():
+        spine.set_linewidth(0.8)
+    ax_in.set_xlabel("Location Map: United Kingdom", fontsize=9.5, labelpad=4)
+    return ax_in
+
+def add_north_arrow(ax, x=0.88, y=0.88):
+    ax.annotate(
+        "N", xy=(x, y + 0.065), xytext=(x, y - 0.015),
+        xycoords="axes fraction", textcoords="axes fraction",
+        ha="center", va="center", fontsize=17, fontweight="bold",
+        arrowprops=dict(facecolor="black", edgecolor="black", width=7, headwidth=20, headlength=22)
+    )
+
+def add_tick_scale_bar(ax, x0=342500, y0=381200):
+    """Draws the 1 - 0 - 1 - 2 km tick scale bar used in Assignment 2 maps."""
+    xs = [x0, x0 + 1000, x0 + 2000, x0 + 3000]
+    labels = ["1", "0", "1", "2 km"]
+    ax.plot([xs[0], xs[-1]], [y0, y0], color="black", linewidth=0.9)
+    for x, lbl in zip(xs, labels):
+        ax.plot([x, x], [y0 - 200, y0 + 200], color="black", linewidth=0.9)
+        ax.text(x, y0 + 320, lbl, ha="center", va="bottom", fontsize=10)
+
+def plot_retail_centres(ax, black_outline=True):
+    """Plots the 10 Liverpool Retail Centres with Hierarchy-scaled white circles and yellow-haloed labels."""
+    sizes = retail_centres["Hierarchy"].map({1: 180, 2: 95, 3: 55})
+    pts = retail_centres.geometry.centroid
+    ax.scatter(
+        pts.x, pts.y, s=sizes, c="white",
+        edgecolors="black" if black_outline else "#7f7f7f",
+        linewidths=1.0, zorder=8
+    )
+    offsets = {
+        "Walton Vale": (650, 120),
+        "Kirkdale": (650, 150),
+        "Everton": (550, 100),
+        "Old Swan": (850, 180),
+        "Liverpool": (1100, 200),
+        "Smithdown Road": (1150, 120),
+        "Allerton Road": (1250, 160),
+        "Gateacre": (750, 120),
+        "Woolton": (350, 260),
+        "Garston": (600, 100),
+    }
+    for _, row in retail_centres.iterrows():
+        lbl = row["LABEL"]
+        pt = row.geometry.centroid
+        dx, dy = offsets.get(lbl, (500, 120))
+        fs = 11.5 if lbl == "Liverpool" else (10.0 if row["Hierarchy"] == 2 else 8.8)
+        t = ax.text(
+            pt.x + dx, pt.y + dy, lbl, fontsize=fs, fontweight="bold",
+            color="#2b2b2b", ha="center", va="center", zorder=9
+        )
+        t.set_path_effects([pe.withStroke(linewidth=2.8, foreground="#fff7bc")])
+
+def label_stores_on_map(ax, include_optimal=False):
+    """Adds haloed fascia labels for C-Stores, existing M&S stores, and C&C Supermarkets."""
+    # Selected non-overlapping representative C-Store labels matching map4-1, map5, map6
+    c_sample_indices = [0, 2, 4, 6, 9, 11, 14, 17, 20, 23, 26, 29, 32, 35, 38, 42, 46, 50, 54, 58, 62, 65, 67]
+    for idx in c_sample_indices:
+        row = cstores_68.iloc[idx]
+        if row["retailer"] == "Marks and Spencer":
+            continue
+        pt = row.geometry.centroid
+        color_txt = "#1a1a1a" if row["fascia"] in ["Tesco", "Co-op"] else "#7f7f00"
+        t = ax.text(pt.x, pt.y + 230, row["fascia"], fontsize=8.2, fontweight="bold", color=color_txt, ha="center", zorder=9)
+        t.set_path_effects([pe.withStroke(linewidth=2.2, foreground="#ffffcc")])
+
+    # Highlight the 3 existing Marks and Spencer stores
+    for _, row in ms_existing.iterrows():
+        pt = row.geometry.centroid
+        t = ax.text(pt.x + 850, pt.y + 120, "Marks and Spencer", fontsize=9.0, fontweight="bold", color="#2b2b2b", ha="center", zorder=11)
+        t.set_path_effects([pe.withStroke(linewidth=3.0, foreground="#e31a1c" if not include_optimal else "#ffffb2")])
+
+    # Highlight the 2 Supermarkets with C&C Facility (Tesco Allerton Rd & Sainsbury's Woolton)
+    for _, row in sm_cc.iterrows():
+        pt = row.geometry.centroid
+        dx = -550 if row["retailer"] == "Tesco" else 900
+        dy = 220 if row["retailer"] == "Tesco" else 180
+        t = ax.text(pt.x + dx, pt.y + dy, row["retailer"], fontsize=9.5, fontweight="bold", color="#1a1a1a", ha="center", zorder=11)
+        t.set_path_effects([pe.withStroke(linewidth=3.0, foreground="#fd8d3c")])
+
+    # Highlight Optimal New M&S Site if requested (Map 6)
+    if include_optimal:
+        opt_pt = cstores_69.iloc[68].geometry.centroid
+        t_opt = ax.text(opt_pt.x + 150, opt_pt.y + 220, "M&S", fontsize=10.5, fontweight="bold", color="#08519c", ha="center", zorder=12)
+        t_opt.set_path_effects([pe.withStroke(linewidth=3.5, foreground="#e31a1c")])
+```
+
+---
+
+## Stage 1: Demand Screening — Online Grocery Shopping & Deprivation
+
+### Map 1: Online Grocery Shopping Prevalence Across Liverpool LSOAs (`IUC 2018`)
+
+The Consumer Data Research Centre (CDRC) **2018 Internet User Classification (`IUC 2018`)** segments Great Britain neighbourhoods into 10 distinct digital engagement profiles using Small Area Estimation (SAE) and gradient-boosted decision trees trained on British Population Survey (BPS) online shopping transactions, Ofcom broadband infrastructure, and ONS Census demographics.
+
+Based on each IUC group's *Buy Groceries Online* propensity $z$-score in the CDRC User Guide, Liverpool's 298 LSOAs are classified into four ordinal **Online Grocery Shopping Prevalence** tiers (`OrdinalTes`):
+
+* **High Prevalence (`4`, Blue Hatching `///`):** *e-Cultural Creators* (`GRP 1`, $z = +1.6$), *e-Professionals* (`GRP 2`, $z = +1.4$), *e-Veterans* (`GRP 3`, $z = +0.9$), and *e-Rational Utilitarians* (`GRP 5`, $z = +0.65$) — $61$ LSOAs ($20.5\%$).
+* **Moderate Prevalence (`3`, Green Hatching `///`):** *e-Mainstream* (`GRP 6`, $z = +0.05$) — $38$ LSOAs ($12.8\%$).
+* **Low Prevalence (`2`, Orange Hatching `///`):** *Digital Seniors* (`GRP 8`, $z = -0.10$) and *Settled Offline Communities* (`GRP 9`, $z = -0.35$) — $8$ LSOAs ($2.7\%$).
+* **Very Low Prevalence (`1`, Red Hatching `///`):** *Youthful Urban Fringe* (`GRP 4`, $z = -0.45$), *Passive and Uncommitted Users* (`GRP 7`, $z = -0.45$), and *e-Withdrawn* (`GRP 10`, $z = -1.60$) — $191$ LSOAs ($64.1\%$).
+
+```{python}
+fig, ax = plt.subplots(figsize=(10.5, 12.5), dpi=150)
+
+# Base Liverpool LSOA fill
+liv_bound.plot(ax=ax, facecolor="#f2f2f2", edgecolor="#4a4a4a", linewidth=1.2, zorder=1)
+
+# Plot each Online Grocery Shopping Prevalence category with coloured diagonal hatching matching map1.png
+prevalence_styles = [
+    (4, "High Prevalence", "#1f78b4", "#deebf7"),
+    (3, "Moderate Prevalence", "#74c476", "#e5f5e0"),
+    (2, "Low Prevalence", "#fdae6b", "#feedde"),
+    (1, "Very Low Prevalence", "#e31a1c", "#fee5d9"),
+]
+for code, label, edge_col, fill_col in prevalence_styles:
+    sub = iuc_liv[iuc_liv["OrdinalTes"] == code]
+    sub.plot(
+        ax=ax, facecolor=fill_col, edgecolor=edge_col,
+        hatch="///", linewidth=0.6, alpha=0.85, zorder=3
+    )
+
+liv_bound.boundary.plot(ax=ax, color="#333333", linewidth=1.3, zorder=5)
+plot_retail_centres(ax, black_outline=False)
+add_uk_inset_liv(fig, pos=[0.08, 0.73, 0.19, 0.20])
+add_north_arrow(ax, x=0.88, y=0.88)
+add_tick_scale_bar(ax, x0=342500, y0=381200)
+
+# Build exact legend matching map1.png
+leg_handles = [
+    mpatches.Patch(facecolor=fill_col, edgecolor=edge_col, hatch="///", label=label)
+    for _, label, edge_col, fill_col in prevalence_styles
+]
+leg_handles.extend([
+    mpatches.Patch(facecolor="none", edgecolor="none", label=""),
+    mlines.Line2D([], [], color="white", marker="o", markeredgecolor="#7f7f7f", markersize=8, linestyle="None", label="Retail Centres in Liverpool"),
+    mpatches.Patch(facecolor="#e5e5e5", edgecolor="#7f7f7f", label="Liverpool Boundary")
+])
+leg = ax.legend(
+    handles=leg_handles, title="Online Grocery Shopping Prevalence",
+    loc="lower left", bbox_to_anchor=(0.02, 0.01), frameon=False, fontsize=10, title_fontsize=11
+)
+leg._legend_box.align = "left"
+
+ax.set_xlim(331800, 346500)
+ax.set_ylim(379500, 398500)
+ax.set_axis_off()
+fig.text(0.5, 0.005, "Source: CDRC IUC 2018; CDRC Retail Centre Boundaries (Previous Versions); ONS Geography, LAD (May 2020) Boundaries UK BFE.", ha="center", fontsize=8)
+plt.tight_layout()
+plt.show()
+```
+
+---
+
+### Map 2: Overlaying Deprivation (`IMD 2019`) with Online Grocery Shopping Prevalence
+
+A new Marks & Spencer C-Store with Click & Collect requires a catchment that is not only digitally engaged (`High Prevalence`) but also economically affluent enough to sustain premium convenience expenditure. In Map 2, we classify the **English Index of Multiple Deprivation (`IMD 2019`) Rank** across Liverpool (`1` = most deprived in England, `32,844` = least deprived) into three tiers:
+
+1. **More Deprived (`Rank 10 – 1,416`, Solid Red):** Severely deprived neighbourhoods concentrated in north Liverpool (*Kirkdale*, *Everton*, *Anfield*, *Walton*) and outer social housing estates (*Speke*, *Norris Green*).
+2. **Moderate (`Rank 1,416 – 15,000`, Salmon Pink):** Transitional middle-income urban neighbourhoods.
+3. **More Affluent (`Rank 15,000 – 31,562`, White):** Affluent suburban and waterfront neighbourhoods (*Allerton Road*, *Mossley Hill*, *Childwall*, *Woolton*, *Wavertree*, and *Liverpool City Centre Waterfront*).
+
+Overlaying the hatched `Online Grocery Shopping Prevalence` layer reveals a striking spatial inverse correlation: **High Online Grocery Shopping Prevalence (blue hatching over white/pink background) clusters tightly in south-central and central Liverpool** around the **Allerton Road**, **Smithdown Road**, **Woolton**, and **City Centre** corridors, as well as an affluent pocket north of **Old Swan**.
+
+```{python}
+fig, ax = plt.subplots(figsize=(10.5, 12.5), dpi=150)
+
+# 1. Plot underlying IMD 2019 Rank classes (More Deprived, Moderate, More Affluent)
+imd_bins = [0, 1416, 15000, 32845]
+imd_colors = ["#ff0000", "#fcae91", "#ffffff"]
+cmap_imd = ListedColormap(imd_colors)
+norm_imd = BoundaryNorm(imd_bins, 3)
+
+imd_liv.plot(
+    column="IMD_Rank", ax=ax, cmap=cmap_imd, norm=norm_imd,
+    edgecolor="#777777", linewidth=0.3, zorder=1
+)
+
+# 2. Overlay hatched Online Grocery Shopping Prevalence (transparent fill so IMD colours show through!)
+for code, label, edge_col, _ in prevalence_styles:
+    sub = iuc_liv[iuc_liv["OrdinalTes"] == code]
+    sub.plot(
+        ax=ax, facecolor="none", edgecolor=edge_col,
+        hatch="///", linewidth=0.65, zorder=3
+    )
+
+liv_bound.boundary.plot(ax=ax, color="#333333", linewidth=1.3, zorder=5)
+plot_retail_centres(ax, black_outline=True)
+add_uk_inset_liv(fig, pos=[0.08, 0.73, 0.19, 0.20])
+add_north_arrow(ax, x=0.88, y=0.88)
+add_tick_scale_bar(ax, x0=342500, y0=381200)
+
+leg_handles_m2 = [
+    mpatches.Patch(facecolor="#ff0000", edgecolor="black", label="More Deprived (10 - 1416)"),
+    mpatches.Patch(facecolor="#fcae91", edgecolor="black", label="Moderate (1416 - 15000)"),
+    mpatches.Patch(facecolor="#ffffff", edgecolor="black", label="More Affluent (15000 - 31562)"),
+    mpatches.Patch(facecolor="none", edgecolor="none", label=""),
+    mpatches.Patch(facecolor="none", edgecolor="#1f78b4", hatch="///", label="High Prevalence"),
+    mpatches.Patch(facecolor="none", edgecolor="#74c476", hatch="///", label="Moderate Prevalence"),
+    mpatches.Patch(facecolor="none", edgecolor="#fdae6b", hatch="///", label="Low Prevalence"),
+    mpatches.Patch(facecolor="none", edgecolor="#e31a1c", hatch="///", label="Very Low Prevalence"),
+    mpatches.Patch(facecolor="none", edgecolor="none", label=""),
+    mlines.Line2D([], [], color="white", marker="o", markeredgecolor="black", markersize=8, linestyle="None", label="Retail Centres in Liverpool"),
+]
+leg = ax.legend(
+    handles=leg_handles_m2, title="IMD2019 Rank & Online Grocery Shopping Prevalence",
+    loc="lower left", bbox_to_anchor=(0.02, 0.01), frameon=False, fontsize=9.5, title_fontsize=10.5
+)
+leg._legend_box.align = "left"
+
+ax.set_xlim(331800, 346500)
+ax.set_ylim(379500, 398500)
+ax.set_axis_off()
+fig.text(0.5, 0.005, "Source: CDRC IMD 2019; CDRC IUC 2018; CDRC Retail Centre Boundaries (Previous Versions); ONS Geography, LAD (May 2020) Boundaries UK BFE.", ha="center", fontsize=8)
+plt.tight_layout()
+plt.show()
+```
+
+---
+
+## Stage 2: Evaluating Daytime Population, Household Size & Competitor Catchments
+
+### Map 3 / 4: Daytime Population (2020), Existing C-Stores, Cannibalisation & Competing C&C Supermarkets
+
+Click & Collect convenience stores thrive on **commuter and workplace footfall** (`Daytime Population 2020`, sourced from the ONS Business Register and Employment Survey, BRES). In Map 4, `Total_Work` is classified into four tiers (*Very Low* `0–91`, *Low* `91–500`, *Moderate* `500–950`, *High* `950–31,200`) and overlaid with:
+
+* **Binary Online Grocery Shopping Prevalence (`OnlineShop = 1`):** High-prevalence LSOAs hatched in blue.
+* **All 68 Existing Convenience Stores (`C-Stores 2023`):** Shown with their **$500\text{ m}$ Fixed Distance Buffers** (`Buffer500_CStores.shp`), representing a standard 5–7 minute walk catchment.
+* **Chosen Retailer's Existing Stores (Marks & Spencer):** M&S operates **3 existing stores** in Liverpool (`Central Liverpool L1 1JD`, `Fincham / East Prescot Rd L12 2AP`, and `Speke L24 1YD`), highlighted in red. Any new M&S site must lie outside these three catchments to **prevent revenue cannibalisation**.
+* **Competing Supermarkets with C&C Facilities:** Only **2 large supermarkets** in Liverpool currently operate dedicated Click & Collect grocery facilities — **Tesco Superstore (`Allerton Road, L18 6HF`)** and **Sainsbury's Superstore (`Woolton, L25 5QA`)** — shown with **$1,500\text{ m}$ Fixed Distance Buffers**.
+
+```{python}
+fig, ax = plt.subplots(figsize=(10.5, 12.5), dpi=150)
+
+# 1. Daytime Population 2020 choropleth
+work_bins = [-1, 91.25, 500, 950, 32000]
+work_colors = ["#ffffff", "#bdd7e7", "#6baed6", "#08306b"]
+cmap_work = ListedColormap(work_colors)
+norm_work = BoundaryNorm(work_bins, 4)
+
+work_2020.plot(
+    column="Total_Work", ax=ax, cmap=cmap_work, norm=norm_work,
+    edgecolor="#2b2b2b", linewidth=0.45, zorder=1
+)
+
+# 2. Binary Online Grocery Shopping Prevalence (High Prevalence = blue hatching)
+iuc_liv[iuc_liv["OnlineShop"] == 1].plot(
+    ax=ax, facecolor="none", edgecolor="#2b83ba",
+    hatch="///", linewidth=0.6, zorder=2
+)
+
+# 3. Fixed Distance Buffers: Supermarkets with C&C (1500m) & C-Stores (500m)
+buf1500_sm.plot(ax=ax, facecolor="#fdb863", edgecolor="#b35806", alpha=0.35, linewidth=0.9, zorder=3)
+buf500_c68.plot(ax=ax, facecolor="#ffffbf", edgecolor="#8c8c5a", alpha=0.45, linewidth=0.7, zorder=4)
+
+# 4. Store Points & Liverpool Boundary
+liv_bound.boundary.plot(ax=ax, color="black", linewidth=1.4, zorder=5)
+cstores_68.plot(ax=ax, color="#ffff33", edgecolor="black", markersize=32, linewidth=0.9, zorder=7)
+sm_cc.plot(ax=ax, color="#ff7f00", edgecolor="black", markersize=42, linewidth=1.0, zorder=8)
+
+label_stores_on_map(ax, include_optimal=False)
+add_uk_inset_liv(fig, pos=[0.08, 0.73, 0.19, 0.20])
+add_north_arrow(ax, x=0.88, y=0.88)
+add_tick_scale_bar(ax, x0=342500, y0=381200)
+
+leg_handles_m4 = [
+    mpatches.Patch(facecolor="#ffffff", edgecolor="black", label="Very Low (0 - 91)"),
+    mpatches.Patch(facecolor="#bdd7e7", edgecolor="black", label="Low (91 - 500)"),
+    mpatches.Patch(facecolor="#6baed6", edgecolor="black", label="Moderate (500 - 950)"),
+    mpatches.Patch(facecolor="#08306b", edgecolor="black", label="High (950 - 31,200)"),
+    mpatches.Patch(facecolor="none", edgecolor="none", label=""),
+    mlines.Line2D([], [], color="#ffff33", marker="o", markeredgecolor="black", markersize=7, linestyle="None", label="C-Stores 2023"),
+    mlines.Line2D([], [], color="#ff7f00", marker="o", markeredgecolor="black", markersize=8, linestyle="None", label="Supermarkets with C&C Facility"),
+    mpatches.Patch(facecolor="#ffffbf", edgecolor="#8c8c5a", alpha=0.6, label="C-Stores Fixed Distance Buffer (500 m)"),
+    mpatches.Patch(facecolor="#fdb863", edgecolor="#b35806", alpha=0.5, label="Supermarkets with C&C Facility Fixed Distance Buffer (1,500 m)"),
+    mpatches.Patch(facecolor="white", edgecolor="black", linewidth=1.3, label="Liverpool Boundary"),
+    mpatches.Patch(facecolor="none", edgecolor="#2b83ba", hatch="///", label="Online Grocery Shopping: High Prevalence"),
+]
+leg = ax.legend(
+    handles=leg_handles_m4, title="Daytime Population 2020 & Retail Catchments",
+    loc="lower left", bbox_to_anchor=(0.01, -0.01), frameon=False, fontsize=8.8, title_fontsize=10
+)
+leg._legend_box.align = "left"
+
+ax.set_xlim(331800, 346500)
+ax.set_ylim(379500, 398500)
+ax.set_axis_off()
+fig.text(0.5, 0.003, "Source: Geolytix Open Data, Supermarket Retail Points; Nomis, Business Register and Employment Survey 2020; ONS Geography, LAD (May 2020) Boundaries UK BFE.", ha="center", fontsize=7.8)
+plt.tight_layout()
+plt.show()
+```
+
+---
+
+### Map 5: Density of 1- or 2-Person Households (`Census 2011 QS406EW`)
+
+Small households (`1 or 2 persons per household`, comprising young professionals, couples, and single-person urban dwellers) have the highest propensity to use convenience stores and Click & Collect lockers for top-up shopping rather than bulk weekly family supermarket trips. In Map 5, we compute `Hh_1 + Hh_2` from Census 2011 Table `QS406EW` and classify LSOAs into *Low* (`218–388`), *Moderate* (`388–650`), and *High* (`650–1,108`).
+
+```{python}
+fig, ax = plt.subplots(figsize=(10.5, 12.5), dpi=150)
+
+hh_bins = [217, 388, 650, 1110]
+hh_colors = ["#ffffff", "#74c476", "#00441b"]
+cmap_hh = ListedColormap(hh_colors)
+norm_hh = BoundaryNorm(hh_bins, 3)
+
+hh_2011.plot(
+    column="Hh_1_2", ax=ax, cmap=cmap_hh, norm=norm_hh,
+    edgecolor="#2b2b2b", linewidth=0.45, zorder=1
+)
+
+iuc_liv[iuc_liv["OnlineShop"] == 1].plot(
+    ax=ax, facecolor="none", edgecolor="#2b83ba",
+    hatch="///", linewidth=0.6, zorder=2
+)
+
+buf1500_sm.plot(ax=ax, facecolor="#fdb863", edgecolor="#b35806", alpha=0.35, linewidth=0.9, zorder=3)
+buf500_c68.plot(ax=ax, facecolor="#ffffbf", edgecolor="#8c8c5a", alpha=0.45, linewidth=0.7, zorder=4)
+
+liv_bound.boundary.plot(ax=ax, color="black", linewidth=1.4, zorder=5)
+cstores_68.plot(ax=ax, color="#ffff33", edgecolor="black", markersize=32, linewidth=0.9, zorder=7)
+sm_cc.plot(ax=ax, color="#ff7f00", edgecolor="black", markersize=42, linewidth=1.0, zorder=8)
+
+label_stores_on_map(ax, include_optimal=False)
+add_uk_inset_liv(fig, pos=[0.08, 0.73, 0.19, 0.20])
+add_north_arrow(ax, x=0.88, y=0.88)
+add_tick_scale_bar(ax, x0=342500, y0=381200)
+
+leg_handles_m5 = [
+    mpatches.Patch(facecolor="#ffffff", edgecolor="black", label="Low (218 - 388)"),
+    mpatches.Patch(facecolor="#74c476", edgecolor="black", label="Moderate (388 - 650)"),
+    mpatches.Patch(facecolor="#00441b", edgecolor="black", label="High (650 - 1,108)"),
+    mpatches.Patch(facecolor="none", edgecolor="none", label=""),
+    mpatches.Patch(facecolor="none", edgecolor="#2b83ba", hatch="///", label="Online Grocery Shopping: High Prevalence"),
+    mlines.Line2D([], [], color="#ffff33", marker="o", markeredgecolor="black", markersize=7, linestyle="None", label="C-Stores 2023"),
+    mlines.Line2D([], [], color="#ff7f00", marker="o", markeredgecolor="black", markersize=8, linestyle="None", label="Supermarkets with C&C Facility"),
+    mpatches.Patch(facecolor="#ffffbf", edgecolor="#8c8c5a", alpha=0.6, label="C-Stores Fixed Distance Buffer (500 m)"),
+    mpatches.Patch(facecolor="#fdb863", edgecolor="#b35806", alpha=0.5, label="Supermarkets with C&C Facility Fixed Distance Buffer (1,500 m)"),
+    mpatches.Patch(facecolor="white", edgecolor="black", linewidth=1.3, label="Liverpool Boundary"),
+]
+leg = ax.legend(
+    handles=leg_handles_m5, title="Density of Households (Census 2011) with 1 or 2 Persons",
+    loc="lower left", bbox_to_anchor=(0.01, -0.01), frameon=False, fontsize=8.8, title_fontsize=10
+)
+leg._legend_box.align = "left"
+
+ax.set_xlim(331800, 346500)
+ax.set_ylim(379500, 398500)
+ax.set_axis_off()
+fig.text(0.5, 0.003, "Source: CDRC IUC 2018; Census 2011; Geolytix Open Data, Supermarket Retail Points; ONS Geography, LAD (May 2020) Boundaries UK BFE.", ha="center", fontsize=7.8)
+plt.tight_layout()
+plt.show()
+```
+
+---
+
+## Stage 3: Optimal M&S Site Selection & Network Drive-Distance Catchments
+
+### Map 6: Optimal Site Selection & Euclidean Fixed Buffers vs. Network Drive-Distance Buffers
+
+Synthesising the demand and supply surfaces from Maps 1–5 identifies an unserved, high-potential gap in **Childwall / Wavertree / North Allerton** at British National Grid coordinates **`E: 340,650.3, N: 388,487.1`** (near the Queens Drive `A5058` / Childwall Valley Road arterial intersection):
+
+1. **Strong Online Grocery Demand & Affluence:** Located directly inside a contiguous cluster of **High Online Grocery Shopping Prevalence** (`IUC 2018` *e-Veterans* and *e-Professionals*) and **Low Deprivation / High Affluence** (`IMD 2019 Rank > 15,000`).
+2. **High Daytime & Small-Household Demand:** Positioned along a high-daytime-population and moderate-to-high 1–2 person household density corridor.
+3. **Zero Internal Cannibalisation:** Situated **$3.6\text{ km}$ south of M&S Fincham (`L12 2AP`)**, **$5.8\text{ km}$ east of M&S Central Liverpool (`L1 1JD`)**, and **$6.9\text{ km}$ north-west of M&S Speke (`L24 1YD`)**.
+4. **Realistic Road-Network Catchment Gap:** While simple Euclidean circular buffers ($500\text{ m}$ for C-Stores and $1,500\text{ m}$ for Supermarkets) overestimate accessibility across railway lines, parks, and cul-de-sacs, computing **Road-Network Drive-Distance Buffers** along `RoadLiv.shp` ($18,171$ road links) reveals that the competing **Tesco Allerton Road** and **Sainsbury's Woolton** $1,500\text{ m}$ network service areas contract substantially, leaving our **new M&S site (`Location 69`, network service area $= 566,250\text{ m}^2$)** with an uncontested local catchment.
+
+```{python}
+fig, ax = plt.subplots(figsize=(10.5, 12.5), dpi=150)
+
+# Base LSOA outlines + Binary High Online Grocery Shopping Prevalence hatching
+iuc_liv.plot(ax=ax, facecolor="#fafafa", edgecolor="#d9d9d9", linewidth=0.35, zorder=1)
+iuc_liv[iuc_liv["OnlineShop"] == 1].plot(
+    ax=ax, facecolor="none", edgecolor="#2b83ba",
+    hatch="///", linewidth=0.65, zorder=2
+)
+
+# 1. Supermarket 1500m Fixed Buffer (orange) & Drive Distance Buffer (grey)
+buf1500_sm.plot(ax=ax, facecolor="#fdb863", edgecolor="#b35806", alpha=0.32, linewidth=0.8, zorder=3)
+dd1500_sm.plot(ax=ax, facecolor="#969696", edgecolor="#525252", alpha=0.38, linewidth=0.8, zorder=4)
+
+# 2. C-Stores (with Optimal Site) 500m Fixed Buffer (pale yellow) & Drive Distance Buffer (dark grey)
+buf500_c69.plot(ax=ax, facecolor="#ffffbf", edgecolor="#8c8c5a", alpha=0.45, linewidth=0.65, zorder=5)
+dd500_c69.plot(ax=ax, facecolor="#737373", edgecolor="#252525", alpha=0.42, linewidth=0.75, zorder=6)
+
+# 3. Liverpool Boundary & Store Points (69 C-Stores including Optimal Site + 2 C&C Supermarkets)
+liv_bound.boundary.plot(ax=ax, color="black", linewidth=1.4, zorder=7)
+cstores_69.plot(ax=ax, color="#ffff33", edgecolor="black", markersize=32, linewidth=0.9, zorder=8)
+sm_cc.plot(ax=ax, color="#ff7f00", edgecolor="black", markersize=44, linewidth=1.0, zorder=9)
+
+# Highlight the Optimal M&S Site point
+cstores_69.iloc[[68]].plot(ax=ax, color="#e31a1c", edgecolor="black", markersize=65, linewidth=1.2, zorder=10)
+
+label_stores_on_map(ax, include_optimal=True)
+add_uk_inset_liv(fig, pos=[0.08, 0.73, 0.19, 0.20])
+add_north_arrow(ax, x=0.88, y=0.88)
+add_tick_scale_bar(ax, x0=342500, y0=381200)
+
+leg_handles_m6 = [
+    mpatches.Patch(facecolor="none", edgecolor="#2b83ba", hatch="///", label="Online Grocery Shopping: High Prevalence"),
+    mpatches.Patch(facecolor="white", edgecolor="black", linewidth=1.3, label="Liverpool Boundary"),
+    mlines.Line2D([], [], color="#ffff33", marker="o", markeredgecolor="black", markersize=7, linestyle="None", label="C-Stores 2023 with Optimal Site (M&S)"),
+    mlines.Line2D([], [], color="#ff7f00", marker="o", markeredgecolor="black", markersize=8, linestyle="None", label="Supermarkets with C&C Facility"),
+    mpatches.Patch(facecolor="#ffffbf", edgecolor="#8c8c5a", alpha=0.6, label="C-Stores with Optimal Site Fixed Distance Buffer (500 m)"),
+    mpatches.Patch(facecolor="#737373", edgecolor="#252525", alpha=0.5, label="C-Stores with Optimal Site Drive Distance Buffer (500 m)"),
+    mpatches.Patch(facecolor="#fdb863", edgecolor="#b35806", alpha=0.45, label="Supermarkets with C&C Facility Fixed Distance Buffer (1,500 m)"),
+    mpatches.Patch(facecolor="#969696", edgecolor="#525252", alpha=0.5, label="Supermarkets with C&C Facility Drive Distance Buffer (1,500 m)"),
+]
+leg = ax.legend(
+    handles=leg_handles_m6, title="Optimal Site & Euclidean vs. Network Catchments",
+    loc="lower left", bbox_to_anchor=(0.01, -0.01), frameon=False, fontsize=8.8, title_fontsize=10
+)
+leg._legend_box.align = "left"
+
+ax.set_xlim(331800, 346500)
+ax.set_ylim(379500, 398500)
+ax.set_axis_off()
+fig.text(0.5, 0.003, "Source: CDRC IUC 2018; Geolytix Open Data, Supermarket Retail Points; ONS Geography, LAD (May 2020) Boundaries UK BFE.", ha="center", fontsize=7.8)
+plt.tight_layout()
+plt.show()
+```
+
+---
+
+## Quantitative Catchment Comparison & Store-to-LSOA Distance Matrix 
+
+To complement the cartographic overlay, we reproduce the **Store-to-LSOA Centroid Distance Matrix** analysis (`69 stores × 298 LSOA centroids = 20,562 origin-destination pairs`) and compare the spatial footprint and captured demand of the **Optimal M&S Site** under **Euclidean Fixed Buffering ($500\text{ m}$)** versus **Road-Network Drive-Distance Buffering ($500\text{ m}$)**.
+
+```{python}
+# 1. Compute the 69 x 298 Store-to-LSOA Centroid Euclidean Distance Matrix (reproducing practice.R)
+store_pts = cstores_69.geometry.centroid.values
+lsoa_pts = lsoa_centroids.geometry.values
+
+dist_matrix = np.array([[s.distance(l) for l in lsoa_pts] for s in store_pts])
+dist_df = pd.DataFrame(
+    dist_matrix,
+    index=cstores_69["retailer"].fillna("M&S (Optimal Site)") + " (" + cstores_69["postcode"].fillna("Optimal_L16") + ")",
+    columns=lsoa_centroids["LSOA11CD"]
+)
+
+# Convert from wide to long format and summarise nearest LSOAs to the new Optimal M&S Site
+opt_distances = pd.DataFrame({
+    "LSOA11CD": lsoa_centroids["LSOA11CD"],
+    "Distance_to_Optimal_MS_m": dist_matrix[68, :].round(1)
+}).merge(
+    imd_liv[["lsoa11cd", "lsoa11nm", "IMD_Rank", "TotPop", "WorkPop"]],
+    left_on="LSOA11CD", right_on="lsoa11cd"
+).merge(
+    iuc_liv[["LSOA11_CD", "GRP_LABEL", "OrdinalTes", "OnlineShop"]],
+    left_on="LSOA11CD", right_on="LSOA11_CD"
+).merge(
+    hh_2011[["LSOA11CD", "Hh_1_2"]], on="LSOA11CD"
+)
+
+# Display the 10 closest LSOAs to the selected Optimal M&S Site
+opt_distances.sort_values("Distance_to_Optimal_MS_m").head(10)[
+    ["LSOA11CD", "lsoa11nm", "Distance_to_Optimal_MS_m", "GRP_LABEL", "IMD_Rank", "TotPop", "Hh_1_2"]
+].reset_index(drop=True)
+```
+
+```{python}
+# 2. Compare Euclidean Fixed Buffer vs. Network Drive-Distance Buffer for the Optimal Site & Existing M&S Stores
+fixed_area_ha = opt_fixed.geometry.area.iloc[0] / 10000.0
+drive_area_ha = opt_drive.geometry.area.iloc[0] / 10000.0
+
+# Intersect LSOAs with Optimal Site Fixed vs. Drive Buffer
+lsoas_fixed = gpd.sjoin(imd_liv, opt_fixed, predicate="intersects")
+lsoas_drive = gpd.sjoin(imd_liv, opt_drive, predicate="intersects")
+
+catchment_comparison = pd.DataFrame({
+    "Catchment Method": [
+        "Euclidean Fixed Distance Buffer (500 m)",
+        "Road-Network Drive-Distance Service Area (0–500 m)"
+    ],
+    "Catchment Area (m²)": [
+        f"{opt_fixed.geometry.area.iloc[0]:,.0f}",
+        f"{opt_drive.geometry.area.iloc[0]:,.0f}"
+    ],
+    "Catchment Area (ha)": [round(fixed_area_ha, 2), round(drive_area_ha, 2)],
+    "Intersecting LSOAs": [len(lsoas_fixed), len(lsoas_drive)],
+    "Captured Residential Pop": [f"{int(lsoas_fixed['TotPop'].sum()):,}", f"{int(lsoas_drive['TotPop'].sum()):,}"],
+    "Mean IMD 2019 Rank (Affluence)": [int(lsoas_fixed["IMD_Rank"].mean()), int(lsoas_drive["IMD_Rank"].mean())]
+})
+catchment_comparison
+```
+
+---
+
+## Key Conclusions & Strategic Recommendations
+
+1. **Optimal M&S Click & Collect Location:** The selected site at **`E: 340,650.3, N: 388,487.1`** (Wavertree / Childwall / North Allerton border) sits at the nexus of Liverpool's most affluent, digitally engaged residential suburbs (*e-Veterans* and *e-Professionals*, `IMD Rank > 18,000`) while maintaining high arterial road visibility and workplace accessibility.
+2. **Avoidance of Cannibalisation & Direct Superstore Overlap:** The site is completely separated from Marks & Spencer's three existing Liverpool stores (`L1 1JD` City Centre, `L12 2AP` Fincham, and `L24 1YD` Speke) and lies outside the **$1,500\text{ m}$ road-network drive-distance service areas** of both competing Click & Collect supermarkets (**Tesco Allerton Road** and **Sainsbury's Woolton**).
+3. **Superiority of Network Drive-Distance over Euclidean Buffers:** Whereas a $500\text{ m}$ Euclidean circle covers **$78.5\text{ ha}$** ($785,398\text{ m}^2$) by assuming isotropic straight-line travel across barriers, the **$500\text{ m}$ Road-Network Service Area** covers **$56.63\text{ ha}$** ($566,250\text{ m}^2$ — a **$27.9\%$ reduction**), accurately reflecting real street connectivity and physical barriers.
+
+---
+
+## References
+
+1. Alexiou, A., & Singleton, A. (2018). *Indicators of Internet Use and Engagement: 2018 Internet User Classification (IUC) User Guide*. Consumer Data Research Centre (CDRC), University of Liverpool.
+2. Geolytix (2023). *Retail Points (Foodstores) Open Data — August 2023*. Available at: <https://geolytix.com/>
+3. Ministry of Housing, Communities & Local Government (2019). *English Indices of Deprivation 2019*.
+4. Office for National Statistics (2020). *Business Register and Employment Survey (BRES) — Workplace Population Estimates*. Nomis.

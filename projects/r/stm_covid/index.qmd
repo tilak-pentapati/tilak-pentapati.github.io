@@ -1,0 +1,1130 @@
+---
+title: "Multilevel, Geographically Weighted and Spatio-Temporal Modelling of COVID-19 in England"
+description: "Empirical investigation of England's Alpha variant wave revealing how household overcrowding, ethnic diversity and health vulnerability drove local infection risk and south-to-north space-time viral diffusion."
+categories:
+  - R
+  - Spatial Modelling
+  - Multilevel Modelling
+  - GWR
+  - ST Analysis
+
+author: "Jay Tilak P."
+date: "2024-05-16"
+image: stm_map.svg
+bibliography: references.bib
+csl: https://raw.githubusercontent.com/citation-style-language/styles/master/ieee.csl
+toc: true
+toc-depth: 6
+toc-location: right
+number-sections: true
+format:
+  html:
+    highlight-style: github
+    code-tools: true
+    code-fold: true
+    self-contained: true
+    embed-resources: true
+    html-math-method: katex
+    fig-align: center
+    fig-width: 10
+    fig-height: 6
+    df-print: paged
+execute:
+  echo: true
+  warning: false
+  message: false
+---
+
+
+## Introduction, Data Structure & Variable Specification
+
+This report examines the spatial, hierarchical, and spatio-temporal determinants of COVID-19 infection risk across England. It addresses the research tasks at the end of **Chapter 7** (*Multilevel Modelling – Part 1*), **Chapter 8** (*Multilevel Modelling – Part 2*), **Chapter 9** (*Geographically Weighted Regression*), and **Chapter 10** (*Spatio-Temporal Analysis*) of my coursework.
+
+### Required Libraries
+
+We load the required packages for spatial data handling, multilevel mixed-effects modelling, geographically weighted regression (GWR), spatio-temporal basis-function modelling (FRK), and thematic mapping.
+
+```{r setup_packages}
+# Data manipulation and date parsing
+library(tidyverse)
+library(lubridate)
+
+# Spatial and spatio-temporal objects
+library(sf)
+library(sp)
+library(spacetime)
+
+# Multilevel modelling and diagnostics
+library(lme4)
+library(merTools)
+library(car)
+library(lmtest)
+
+# Geographically Weighted Regression
+library(spgwr)
+
+# Spatio-Temporal Fixed Rank Kriging & Count GLMs
+library(FRK)
+library(MASS)
+
+# Visualisation, mapping, correlation, and reporting tables
+library(tmap)
+library(ggplot2)
+library(gridExtra)
+library(gghighlight)
+library(viridis)
+library(RColorBrewer)
+library(corrplot)
+library(knitr)
+library(kableExtra)
+library(jtools)
+
+sf::sf_use_s2(FALSE)
+tmap_mode("plot")
+set.seed(453)
+
+# Compatibility alias for tmap v4
+if (!exists("tm_scale_bar", mode = "function") && exists("tm_scalebar", mode = "function")) {
+  tm_scale_bar <- tm_scalebar
+}
+```
+
+### England COVID-19 Dataset & Hierarchical Structure
+
+We load the England COVID-19 GeoPackage (`covid19_eng.gpkg`) from `data/data_r/stm_covid/assignment_2_covid/` and the English Region boundary shapefile (`Regions_December_2019_Boundaries_EN_BGC.shp`) from `data/data_r/stm_covid/gwr/`.
+
+```{r load_data}
+# Robust path resolution across project-level, site-level, and interactive environments
+covid_candidates <- c(
+  file.path("..", "..", "..", "data", "data_r", "stm_covid", "assignment_2_covid", "covid19_eng.gpkg"),
+  file.path("data", "data_r", "stm_covid", "assignment_2_covid", "covid19_eng.gpkg"),
+  "/Users/jay/Desktop/websiteV02/data/data_r/stm_covid/assignment_2_covid/covid19_eng.gpkg"
+)
+covid_path <- covid_candidates[file.exists(covid_candidates)][1]
+
+reg_candidates <- c(
+  file.path("..", "..", "..", "data", "data_r", "stm_covid", "gwr", "Regions_December_2019_Boundaries_EN_BGC.shp"),
+  file.path("data", "data_r", "stm_covid", "gwr", "Regions_December_2019_Boundaries_EN_BGC.shp"),
+  "/Users/jay/Desktop/websiteV02/data/data_r/stm_covid/gwr/Regions_December_2019_Boundaries_EN_BGC.shp"
+)
+reg_path <- reg_candidates[file.exists(reg_candidates)][1]
+
+sdf <- st_read(covid_path, quiet = TRUE)
+reg_shp <- st_read(reg_path, quiet = TRUE)
+
+sdf <- sf::st_make_valid(sdf)
+reg_shp <- sf::st_make_valid(reg_shp)
+```
+
+Let us inspect a selection of key administrative, demographic, deprivation, and daily COVID-19 columns across the first five Upper Tier Local Authority Districts (UTLADs).
+
+```{r preview_sdf}
+head(st_drop_geometry(sdf[1:5, c(3, 4, 9, 10, 381, 385, 386, 387, 403, 406)]))
+```
+
+**Hierarchical Geographical Scales of Analysis:**
+The dataset exhibits a strict two-level nested geographical hierarchy:
+
+- **Level-1 Units (Individual/Micro Scale)**: **$N = `r nrow(sdf)`$ Upper Tier Local Authority Districts (UTLADs)** (comprising Counties, Metropolitan Districts, Unitary Authorities, and London Boroughs, identified by `ctyua19cd` and `ctyua19nm`), projected in British National Grid (`EPSG:27700`).
+- **Level-2 Units (Group/Macro Scale)**: **$J = `r length(unique(sdf$Region))`$ Government Office Regions** (`Region`: *North East*, *North West*, *Yorkshire and The Humber*, *East Midlands*, *West Midlands*, *East of England*, *London*, *South East*, and *South West*).
+
+Let us examine the distribution of Level-1 UTLADs nested within each Level-2 Region.
+
+```{r hierarchy_summary, fig.width=8, fig.height=4, fig.cap="Figure 1.1: Number of Level-1 UTLADs Nested within Each Level-2 English Region."}
+reg_counts <- sdf %>%
+  st_drop_geometry() %>%
+  count(Region, name = "UTLAD_Count") %>%
+  arrange(UTLAD_Count)
+
+cat("Mean number of UTLADs per Region:", round(mean(reg_counts$UTLAD_Count), 2), "\n")
+
+ggplot(reg_counts, aes(x = reorder(Region, UTLAD_Count), y = UTLAD_Count)) +
+  geom_col(fill = "steelblue", width = 0.7) +
+  geom_text(aes(label = UTLAD_Count), hjust = -0.3, size = 3.5) +
+  coord_flip() +
+  ylim(0, 38) +
+  labs(
+    title = "Hierarchical Nesting: UTLADs per Region in England",
+    x = "Region (Level-2 Unit)",
+    y = "Number of UTLADs (Level-1 Units)"
+  ) +
+  theme_classic()
+```
+
+### Dependent & Explanatory Variable Specification
+
+Following the guidance in Chapter 7, we construct a consistent set of variables used across the cross-sectional models in Chapters 7, 8, and 9:
+
+1. **Dependent Variable (`covid19_r`)**: We focus on the UK's **Third Wave** (`01 December 2020` to `29 January 2021`, columns `X2020.12.01` through `X2021.01.29`), driven by the Alpha (B.1.1.7) variant. We sum daily confirmed cases over this 60-day window (`cum_covid`) and compute the cumulative COVID-19 infection risk per 1,000 residents:
+   $$
+   \text{covid19\_r}_i = \text{round}\left(\frac{\text{cum\_covid}_i}{\text{Residents}_i} \times 1000\right)
+   $$
+2. **Explanatory Variables (Compositional Proportions)**: We select four theoretically grounded socio-demographic and housing proportions capturing local vulnerability and transmission exposure:
+   - `crowded_hou` ($\text{Crowded\_housing} / \text{Households}$): Share of households living in overcrowded accommodation ($\ge 1$ person per room), which facilitates indoor household transmission.
+   - `elderly` ($(\text{Age\_65\_to\_84} + \text{Age\_85plus}) / \text{Residents}$): Share of residents aged 65 and over, capturing demographic age structure and shielding behaviour.
+   - `ethnic` ($(\text{Mixed} + \text{Indian} + \text{Pakistani} + \text{Bangladeshi} + \text{Chinese} + \text{Other\_Asian} + \text{Black} + \text{Other\_ethnicity}) / \text{Residents}$): Share of non-white ethnic minority population, reflecting structural, urban, and front-line occupational exposure disparities.
+   - `lt_illness` ($\text{Long\_term\_ill} / \text{Residents}$): Share of residents whose day-to-day activities are limited by long-term illness or disability, capturing underlying health vulnerability and socioeconomic deprivation [@patias2021].
+
+We also compute mean-centered versions of each predictor ($z_x = x - \bar{x}$) to aid interpretation of random-slope correlations in Chapter 8 [@bristol2020].
+
+```{r create_variables}
+# 1. Compute cumulative COVID-19 cases for 01/12/2020 - 29/01/2021 (Wave 3)
+cum_cases_vec <- sdf %>%
+  st_drop_geometry() %>%
+  dplyr::select("X2020.12.01":"X2021.01.29") %>%
+  rowSums(na.rm = TRUE)
+
+sdf$cum_covid <- cum_cases_vec
+
+# 2. Compute COVID-19 infection rate per 1,000 residents and compositional predictors
+sdf <- sdf %>%
+  mutate(
+    covid19_r = round((cum_covid / Residents) * 1000),
+    crowded_hou = Crowded_housing / Households,
+    elderly = (Age_65_to_84 + Age_85plus) / Residents,
+    ethnic = (Mixed + Indian + Pakistani + Bangladeshi + Chinese + Other_Asian + Black + Other_ethnicity) / Residents,
+    lt_illness = Long_term_ill / Residents,
+    imd_score = IMD...Average.score
+  ) %>%
+  mutate(
+    z_crowded_hou = crowded_hou - mean(crowded_hou, na.rm = TRUE),
+    z_elderly = elderly - mean(elderly, na.rm = TRUE),
+    z_ethnic = ethnic - mean(ethnic, na.rm = TRUE),
+    z_lt_illness = lt_illness - mean(lt_illness, na.rm = TRUE)
+  )
+
+# Create focused spatial dataframe for Chapters 7, 8, and 9
+nsdf <- sdf %>%
+  dplyr::select(
+    objectid, ctyua19cd, ctyua19nm, Region, long, lat,
+    Residents, Households, cum_covid, covid19_r,
+    crowded_hou, elderly, ethnic, lt_illness, imd_score,
+    z_crowded_hou, z_elderly, z_ethnic, z_lt_illness
+  )
+```
+
+Let us examine the summary statistics, density distribution, and spatial pattern of Third-Wave COVID-19 infection risk (`covid19_r`) across England.
+
+```{r summary_table_a2}
+a2_summary <- nsdf %>%
+  st_drop_geometry() %>%
+  dplyr::select(covid19_r, crowded_hou, elderly, ethnic, lt_illness, imd_score) %>%
+  pivot_longer(everything(), names_to = "Variable", values_to = "Value") %>%
+  group_by(Variable) %>%
+  summarise(
+    Mean = round(mean(Value, na.rm = TRUE), 3),
+    SD = round(sd(Value, na.rm = TRUE), 3),
+    Min = round(min(Value, na.rm = TRUE), 3),
+    Median = round(median(Value, na.rm = TRUE), 3),
+    IQR = round(IQR(Value, na.rm = TRUE), 3),
+    Max = round(max(Value, na.rm = TRUE), 3),
+    .groups = "drop"
+  )
+
+kable(
+  a2_summary,
+  caption = "Table 1.1: Descriptive Statistics of Wave-3 COVID-19 Infection Rate (per 1,000) and Explanatory Variables across 149 UTLADs"
+) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE)
+```
+
+```{r fig_eda_covid, fig.width=11, fig.height=5, fig.cap="Figure 1.2: Kernel Density Distribution (left) and Choropleth Map (right) of Wave-3 COVID-19 Infection Risk (Cases per 1,000 Residents) across UTLADs."}
+# Density plot
+p_dens_covid <- ggplot(data = nsdf, aes(x = covid19_r)) +
+  geom_density(alpha = 0.8, colour = "black", fill = "lightblue") +
+  geom_vline(aes(xintercept = mean(covid19_r)), colour = "red", linetype = "dashed", linewidth = 0.9) +
+  labs(
+    title = "Distribution of Wave-3 COVID-19 Risk",
+    subtitle = "Red dashed line = National UTLA mean",
+    x = "Cumulative Cases per 1,000 Residents",
+    y = "Density"
+  ) +
+  theme_classic()
+
+p_dens_covid
+```
+
+```{r fig_map_covid, fig.width=7, fig.height=6.5, fig.cap="Figure 1.3: Spatial Distribution of Wave-3 COVID-19 Cases per 1,000 Residents across English UTLADs and Regions."}
+legend_title <- expression("Cases per 1,000")
+map_utla_covid <- tm_shape(nsdf) +
+  tm_fill(col = "covid19_r", title = legend_title, palette = magma(256), style = "cont") +
+  tm_borders(col = "white", lwd = 0.1) +
+  tm_compass(type = "arrow", position = c("right", "top"), size = 3) +
+  tm_scale_bar(breaks = c(0, 50, 100), text.size = 0.6, position = c("left", "bottom")) +
+  tm_layout(
+    main.title = "Wave 3 COVID-19 Risk (Dec 2020 - Jan 2021)",
+    main.title.size = 1.1,
+    bg.color = "white"
+  )
+
+map_utla_covid +
+  tm_shape(reg_shp) +
+  tm_borders(col = "white", lwd = 0.8)
+```
+
+---
+
+## Multilevel Modelling — Part 1: Varying Intercepts (Chapter 7 Tasks)
+
+Standard OLS regression assumes observations are independent, ignoring the clustering of UTLADs within Regions and consequently underestimating standard errors [@gelman2006data]. We address this using two-level random-intercept models estimated via Restricted Maximum Likelihood (REML) in `lme4`.
+
+### Task 7.1: Varying-Intercept Null Model (`m1_mlm`)
+
+We specify a two-level varying-intercept model with no explanatory variables, partitioning total variance in $y_{ij}$ (`covid19_r` for UTLAD $i$ in Region $j$) into a national fixed intercept ($\beta_0$), a Region-level random intercept deviation ($u_{0j} \sim \mathcal{N}(0, \sigma^2_{u0})$), and a UTLAD-level residual ($e_{ij} \sim \mathcal{N}(0, \sigma^2_e)$):
+
+$$
+y_{ij} = \beta_0 + u_{0j} + e_{ij}
+$$
+
+```{r ch7_m1}
+# Baseline intercept-only OLS for reference
+m0_ols <- lm(covid19_r ~ 1, data = nsdf)
+
+# Model 1: Varying-intercept null model by Region
+m1_mlm <- lmer(covid19_r ~ 1 + (1 | Region), data = nsdf)
+summary(m1_mlm)
+```
+
+We inspect the fixed intercept (`fixef`), the Region-level random effects (`ranef`), and the 95% profile confidence intervals (`confint`).
+
+```{r ch7_m1_details}
+fixef(m1_mlm)
+ranef(m1_mlm)$Region
+confint(m1_mlm, level = 0.95)
+```
+
+### Task 7.2: Varying-Intercept Model with Explanatory Variables (`m2_mlm`)
+
+Next, we include our four UTLAD-level compositional predictors (`crowded_hou`, `elderly`, `ethnic`, `lt_illness`) while allowing the intercept to vary by `Region`:
+
+$$
+y_{ij} = (\beta_0 + u_{0j}) + \beta_1 \text{Crowded}_{ij} + \beta_2 \text{Elderly}_{ij} + \beta_3 \text{Ethnic}_{ij} + \beta_4 \text{LTIll}_{ij} + e_{ij}
+$$
+
+```{r ch7_m2}
+m2_mlm <- lmer(
+  covid19_r ~ crowded_hou + elderly + ethnic + lt_illness + (1 | Region),
+  data = nsdf
+)
+summary(m2_mlm)
+```
+
+```{r ch7_m2_details}
+fixef(m2_mlm)
+ranef(m2_mlm)$Region
+confint(m2_mlm, level = 0.95)
+```
+
+### Task 7.3: Variance Partition Coefficient (VPC)
+
+The **Variance Partition Coefficient (VPC)** measures the proportion of total unexplained variance in `covid19_r` attributable to differences *between* Regions (Level 2):
+
+$$
+\text{VPC} = \frac{\sigma^2_{u0}}{\sigma^2_{u0} + \sigma^2_e}
+$$
+
+We extract the variance components from both `m1_mlm` and `m2_mlm` to compute their exact VPCs.
+
+```{r ch7_vpc}
+vc_m1 <- as.data.frame(VarCorr(m1_mlm))
+vpc_m1 <- vc_m1$vcov[1] / sum(vc_m1$vcov)
+
+vc_m2 <- as.data.frame(VarCorr(m2_mlm))
+vpc_m2 <- vc_m2$vcov[1] / sum(vc_m2$vcov)
+
+vpc_table <- tibble(
+  Model = c("Model 1: Null Varying-Intercept", "Model 2: Varying-Intercept + 4 Predictors"),
+  `Region Variance (Level 2)` = round(c(vc_m1$vcov[1], vc_m2$vcov[1]), 3),
+  `Region SD` = round(c(vc_m1$sdcor[1], vc_m2$sdcor[1]), 3),
+  `UTLAD Residual Variance (Level 1)` = round(c(vc_m1$vcov[2], vc_m2$vcov[2]), 3),
+  `UTLAD Residual SD` = round(c(vc_m1$sdcor[2], vc_m2$sdcor[2]), 3),
+  `VPC (%)` = round(c(vpc_m1 * 100, vpc_m2 * 100), 2)
+)
+
+kable(
+  vpc_table,
+  caption = "Table 2.1: Variance Components and Variance Partition Coefficients (VPC) for Multilevel Models 1 and 2"
+) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE)
+```
+
+### Task 7.4: Caterpillar Plots & Spatial Mapping of Varying Intercepts
+
+We use `merTools::REsim()` and `plotREsim()` to generate Empirical Bayes caterpillar plots of the regional random intercepts ($u_{0j}$) for both `m1_mlm` and `m2_mlm`, and map the regional residuals across England.
+
+```{r fig_caterpillar_ch7, fig.width=11, fig.height=4.8, fig.cap="Figure 2.1: Caterpillar Plots of Region-Level Random Intercepts (u_0j) for the Null Model (left) and Covariate-Adjusted Model (right). Bold intervals do not overlap zero."}
+re_m1 <- REsim(m1_mlm, n.sims = 500)
+re_m2 <- REsim(m2_mlm, n.sims = 500)
+
+p_cat_m1 <- plotREsim(re_m1) +
+  labs(title = "Model 1: Null Varying Intercepts", subtitle = "Unconditional regional deviations")
+
+p_cat_m2 <- plotREsim(re_m2) +
+  labs(title = "Model 2: Adjusted Varying Intercepts", subtitle = "Conditioned on demographic/housing composition")
+
+grid.arrange(p_cat_m1, p_cat_m2, ncol = 2)
+```
+
+```{r fig_map_re_ch7, fig.width=10, fig.height=5.5, fig.cap="Figure 2.2: Spatial Distribution of Region-Level Random Intercepts (u_0j): Unconditional Null Model 1 (left) vs. Covariate-Adjusted Model 2 (right)."}
+# Merge regional random effects onto nsdf for mapping
+nsdf_re <- nsdf %>%
+  left_join(re_m1 %>% dplyr::select(groupID, mean_m1 = mean), by = c("Region" = "groupID")) %>%
+  left_join(re_m2 %>% dplyr::select(groupID, mean_m2 = mean), by = c("Region" = "groupID"))
+
+map_re1 <- tm_shape(nsdf_re) +
+  tm_fill(col = "mean_m1", title = "u_0j (Model 1)", palette = "RdBu", midpoint = 0, style = "cont") +
+  tm_borders(col = "white", lwd = 0.05) +
+  tm_shape(reg_shp) +
+  tm_borders(col = "black", lwd = 0.8) +
+  tm_layout(main.title = "Null Model Regional Residuals", main.title.size = 0.95, bg.color = "white")
+
+map_re2 <- tm_shape(nsdf_re) +
+  tm_fill(col = "mean_m2", title = "u_0j (Model 2)", palette = "RdBu", midpoint = 0, style = "cont") +
+  tm_borders(col = "white", lwd = 0.05) +
+  tm_shape(reg_shp) +
+  tm_borders(col = "black", lwd = 0.8) +
+  tm_layout(main.title = "Adjusted Model Regional Residuals", main.title.size = 0.95, bg.color = "white")
+
+tmap_arrange(map_re1, map_re2, ncol = 2)
+```
+
+**Analysis and Discussion (Chapter 7):**
+
+1. **Extent of Variation Across Geographical Scales**:
+   - In the unconditional null model (`m1_mlm`), the between-region variance is **`r round(vc_m1$vcov[1], 2)`** ($\text{SD} = `r round(vc_m1$sdcor[1], 2)`$) and the within-region (between-UTLAD) variance is **`r round(vc_m1$vcov[2], 2)`** ($\text{SD} = `r round(vc_m1$sdcor[2], 2)`$), yielding a **VPC of `r round(vpc_m1 * 100, 1)`%**. Thus, over **`r round(vpc_m1 * 100, 0)`%** of the total variance in Wave-3 COVID-19 infection rates across England is explained by macro-scale differences between the 9 Regions—reflecting the regionalised emergence and spread of the Alpha variant in London, the South East, and the East of England during December 2020–January 2021.
+   - Once the four UTLAD-level compositional predictors (`crowded_hou`, `elderly`, `ethnic`, `lt_illness`) are added in `m2_mlm`, both Level-2 regional variance (dropping to **`r round(vc_m2$vcov[1], 2)`**) and Level-1 UTLAD variance (dropping to **`r round(vc_m2$vcov[2], 2)`**) decrease substantially, reducing the conditional **VPC to `r round(vpc_m2 * 100, 1)`%**. This shows that roughly **`r round((1 - vc_m2$vcov[1]/vc_m1$vcov[1]) * 100, 1)`%** of the initial between-region variance was driven by regional differences in overcrowding, ethnic composition, age structure, and long-term illness. After accounting for composition, most remaining unexplained variance (**`r round((1 - vpc_m2) * 100, 1)`%**) lies at the local UTLAD scale (Level 1).
+
+2. **Interpretation of Fixed Effects and Varying Intercepts**:
+   - In `m2_mlm`, `crowded_hou` ($\hat{\beta}_1 = `r round(fixef(m2_mlm)["crowded_hou"], 2)`$), `ethnic` ($\hat{\beta}_3 = `r round(fixef(m2_mlm)["ethnic"], 2)`$), and `lt_illness` ($\hat{\beta}_4 = `r round(fixef(m2_mlm)["lt_illness"], 2)`$) are positively associated with COVID-19 infection risk, whereas `elderly` ($\hat{\beta}_2 = `r round(fixef(m2_mlm)["elderly"], 2)`$) is negatively associated after controlling for long-term illness (reflecting stricter shielding and lower workplace mobility among older cohorts).
+   - The caterpillar plots (Figure 2.1) show statistically significant regional differences (bold confidence intervals not overlapping zero): in `m1_mlm`, *London* exhibits a large positive residual above the national average ($\hat{u}_{0,\text{London}} = +`r round(ranef(m1_mlm)$Region["London", 1], 2)`$), while *South West* ($\hat{u}_{0,\text{SW}} = `r round(ranef(m1_mlm)$Region["South West", 1], 2)`$) and *Yorkshire and The Humber* ($\hat{u}_{0,\text{YH}} = `r round(ranef(m1_mlm)$Region["Yorkshire and The Humber", 1], 2)`$) lie significantly below average. Crucially, in `m2_mlm`, once London's high household overcrowding and ethnic diversity are controlled for, London's regional intercept residual shrinks dramatically toward zero ($\hat{u}_{0,\text{London}} = `r round(ranef(m2_mlm)$Region["London", 1], 2)`$), whereas the *North West*, *East of England*, and *South East* remain significantly above average and the *South West* and *Yorkshire and The Humber* remain significantly below average.
+
+---
+
+## Multilevel Modelling — Part 2: Varying Slopes (Chapter 8 Tasks)
+
+Varying-intercept models assume that the effect (slope) of each explanatory variable is constant across all Regions. In Chapter 8, we relax this assumption to test whether the relationship between local socio-demographic vulnerability and COVID-19 risk varies across Regions [@gelman2006data; @bristol2020].
+
+### Exploratory Analysis of Varying Slopes by Region
+
+We first inspect faceted scatterplots of `covid19_r` against `lt_illness` and `ethnic` across the 9 English Regions.
+
+```{r fig_ch8_exploratory_slopes, fig.width=10, fig.height=6, fig.cap="Figure 3.1: Regional Variation in the Linear Relationship between COVID-19 Infection Rate and Long-Term Illness Share across the 9 English Regions."}
+ggplot(nsdf, aes(x = lt_illness * 100, y = covid19_r)) +
+  geom_point(colour = "grey30", size = 1.8) +
+  geom_smooth(method = "lm", se = TRUE, colour = "firebrick", fill = "pink", alpha = 0.3) +
+  facet_wrap(~ Region, nrow = 3, scales = "free_x") +
+  labs(
+    title = "Varying Regional Slopes: COVID-19 Infection Risk vs. Long-Term Illness (%)",
+    x = "Long-Term Illness (% of Residents)",
+    y = "COVID-19 Cases per 1,000 Residents"
+  ) +
+  theme_classic()
+```
+
+Figure 3.1 reveals pronounced regional heterogeneity in slopes: the association between long-term illness (`lt_illness`) and COVID-19 infection rate is strongly positive in the *North West*, *North East*, *West Midlands*, and *Yorkshire and The Humber*, but flat or slightly negative in *London* and the *South West*. This motivates allowing the slope of `z_lt_illness` (mean-centered long-term illness share) to vary by `Region`.
+
+### Task 8.1: Varying-Slope Model (`m3_mlm`)
+
+First, we estimate a varying-slope model (`m3_mlm`) using our mean-centered predictors (`z_crowded_hou`, `z_elderly`, `z_ethnic`, `z_lt_illness`), where the slope of `z_lt_illness` varies across Regions (`(0 + z_lt_illness | Region)`) while the intercept is fixed:
+
+$$
+y_{ij} = \beta_0 + \beta_1 z_{\text{Crowded},ij} + \beta_2 z_{\text{Elderly},ij} + \beta_3 z_{\text{Ethnic},ij} + (\beta_4 + u_{4j}) z_{\text{LTIll},ij} + e_{ij}
+$$
+
+```{r ch8_m3}
+m3_mlm <- lmer(
+  covid19_r ~ z_crowded_hou + z_elderly + z_ethnic + z_lt_illness + (0 + z_lt_illness | Region),
+  data = nsdf
+)
+summary(m3_mlm)
+```
+
+### Task 8.2: Varying-Intercept and Varying-Slope Model (`m4_mlm`)
+
+Next, we fit the full **varying-intercept and varying-slope model (`m4_mlm`)**, allowing both the baseline intercept ($\beta_0 + u_{0j}$) and the slope of long-term illness ($\beta_4 + u_{4j}$) to vary by `Region`:
+
+$$
+y_{ij} = (\beta_0 + u_{0j}) + \beta_1 z_{\text{Crowded},ij} + \beta_2 z_{\text{Elderly},ij} + \beta_3 z_{\text{Ethnic},ij} + (\beta_4 + u_{4j}) z_{\text{LTIll},ij} + e_{ij}
+$$
+
+```{r ch8_m4}
+# Refit Model 2 with centered predictors so models are nested on identical columns
+m2_mlm_c <- lmer(
+  covid19_r ~ z_crowded_hou + z_elderly + z_ethnic + z_lt_illness + (1 | Region),
+  data = nsdf
+)
+
+# Model 4: Varying-intercept and varying-slope model
+m4_mlm <- lmer(
+  covid19_r ~ z_crowded_hou + z_elderly + z_ethnic + z_lt_illness + (1 + z_lt_illness | Region),
+  data = nsdf,
+  control = lmerControl(optimizer = "bobyqa")
+)
+summary(m4_mlm)
+```
+
+Let us inspect the fixed effects, regional random intercept and slope deviations (`ranef`), and total regional coefficients (`coef`) for `m4_mlm`, and visualise them with a caterpillar plot and choropleth map.
+
+```{r ch8_m4_ranef}
+fixef(m4_mlm)
+ranef(m4_mlm)$Region
+coef(m4_mlm)$Region
+```
+
+```{r fig_caterpillar_ch8, fig.width=10, fig.height=4.8, fig.cap="Figure 3.2: Caterpillar Plots of Region-Level Random Intercepts and Random Slopes (z_lt_illness) from Model 4."}
+re_m4 <- REsim(m4_mlm, n.sims = 500)
+plotREsim(re_m4) +
+  labs(
+    title = "Model 4: Varying Intercepts and Varying Slopes (z_lt_illness) by Region",
+    subtitle = "Empirical Bayes random-effect estimates with 95% intervals"
+  )
+```
+
+```{r fig_map_slope_ch8, fig.width=7, fig.height=6, fig.cap="Figure 3.3: Regional Random Slope Deviations (u_4j for Long-Term Illness) across England from Model 4."}
+re_m4_slope <- re_m4 %>%
+  dplyr::filter(groupFctr == "Region", term == "z_lt_illness")
+
+nsdf_slope <- nsdf %>%
+  left_join(re_m4_slope %>% dplyr::select(groupID, slope_dev = median), by = c("Region" = "groupID"))
+
+tm_shape(nsdf_slope) +
+  tm_fill(
+    col = "slope_dev",
+    title = "Slope Residual (u_4j)",
+    palette = magma(256, begin = 0.1, end = 0.95),
+    style = "cont"
+  ) +
+  tm_borders(col = "white", lwd = 0.05) +
+  tm_shape(reg_shp) +
+  tm_borders(col = "white", lwd = 0.9) +
+  tm_compass(type = "arrow", position = c("right", "top"), size = 3) +
+  tm_scale_bar(breaks = c(0, 50, 100), text.size = 0.6, position = c("left", "bottom")) +
+  tm_layout(
+    main.title = "Regional Random Slope Deviations: Long-Term Illness",
+    main.title.size = 1.0,
+    bg.color = "white"
+  )
+```
+
+### Task 8.3: Model Comparison & Discussion
+
+We formally compare our multilevel specifications (`m1_mlm` Null Varying-Intercept, `m2_mlm_c` Varying-Intercept with Predictors, `m3_mlm` Varying-Slope Only, and `m4_mlm` Varying-Intercept + Varying-Slope) using Likelihood Ratio Tests (`anova` refitted with Maximum Likelihood).
+
+```{r ch8_anova}
+anova_res <- anova(m1_mlm, m2_mlm_c, m3_mlm, m4_mlm)
+anova_res$deviance <- anova_res[["-2*log(L)"]]
+anova_res
+```
+
+**Analysis and Discussion (Chapter 8):**
+
+1. **Comparison of Varying-Slope (`m3_mlm`) vs. Varying-Intercept + Varying-Slope (`m4_mlm`)**:
+   - **Which is better and why?** The varying-intercept and varying-slope model (`m4_mlm`, or the parsimonious varying-intercept model `m2_mlm_c`) vastly outperforms the varying-slope-only model (`m3_mlm`). Specifically, `m3_mlm` yields an AIC of **`r round(anova_res["m3_mlm", "AIC"], 1)`** (deviance = **`r round(anova_res["m3_mlm", "deviance"], 1)`**), whereas adding varying regional intercepts in `m4_mlm` lowers AIC dramatically to **`r round(anova_res["m4_mlm", "AIC"], 1)`** (deviance = **`r round(anova_res["m4_mlm", "deviance"], 1)`**, $p < 0.001$). As emphasised by @gelman2006data, forcing all regions to share a single baseline intercept (`m3_mlm`) while allowing only the slope to tilt severely misspecifies the large baseline differences in regional infection waves across England.
+   - Comparing `m2_mlm_c` (varying-intercept) against `m4_mlm` (varying-intercept and varying-slope), adding the random slope and covariance parameters lowers deviance marginally, showing that while the relationship between long-term illness and COVID-19 exhibits regional heterogeneity (stronger positive slopes in northern industrial regions such as the *North West* and *Yorkshire and The Humber*), the dominant source of regional hierarchy is baseline intercept variation ($u_{0j}$).
+
+2. **Varying Slope Estimates and Intercept-Slope Correlation**:
+   - Across all UTLADs, the fixed average slope for `z_lt_illness` in `m4_mlm` is strongly positive ($\hat{\beta}_4 = `r round(fixef(m4_mlm)["z_lt_illness"], 2)`$), indicating that a 1 percentage point increase in long-term illness share is associated with roughly **`r round(fixef(m4_mlm)["z_lt_illness"] / 100, 2)`** additional COVID-19 cases per 1,000 residents on average.
+   - The correlation between regional intercept residuals ($u_{0j}$) and regional slope residuals ($u_{4j}$) in `m4_mlm` captures how baseline regional wave intensity interacts with health deprivation sensitivity: northern regions (*North West*, *North East*) exhibit steeper positive slopes (where chronic health deprivation strongly amplifies local infection risk), whereas southern regions with lower prevalence (*South West*) exhibit flatter slopes.
+
+---
+
+## Geographically Weighted Regression (Chapter 9 Tasks)
+
+Multilevel models capture spatial non-stationarity across discrete administrative containers (`Region`). However, epidemiological processes and socio-economic relationships often vary continuously across space and cut across regional boundaries [@Fotheringham_et_al_2002_book; @comber2022]. In Chapter 9, we apply **Geographically Weighted Regression (GWR)** to estimate local regression parameters for every individual UTLAD.
+
+### Global OLS Baseline, Multicollinearity (VIF) & Residual Diagnostics
+
+We first examine the pairwise Pearson correlations among our explanatory variables and fit a global OLS regression (`ols_gwr`) as a benchmark.
+
+```{r fig_correlogram_ch9, fig.width=6.5, fig.height=5.5, fig.cap="Figure 4.1: Correlogram of Wave-3 COVID-19 Infection Rate and Compositional Explanatory Variables (Crosses Indicate p > 0.05)."}
+df_corr <- nsdf %>%
+  st_drop_geometry() %>%
+  dplyr::select(covid19_r, crowded_hou, elderly, ethnic, lt_illness, imd_score)
+
+cormat <- cor(df_corr, use = "complete.obs", method = "pearson")
+sig_test <- corrplot::cor.mtest(df_corr, conf.level = 0.95)
+
+corrplot::corrplot(
+  cormat,
+  type = "lower",
+  method = "circle",
+  order = "original",
+  tl.cex = 0.85,
+  p.mat = sig_test$p,
+  sig.level = 0.05,
+  col = viridis::viridis(100, option = "plasma"),
+  diag = FALSE
+)
+```
+
+```{r ch9_global_ols}
+eq_gwr <- covid19_r ~ crowded_hou + elderly + ethnic + lt_illness
+ols_gwr <- lm(formula = eq_gwr, data = nsdf)
+summary(ols_gwr)
+
+# Check Variance Inflation Factors (VIF) for multicollinearity
+vif(ols_gwr)
+```
+
+All Variance Inflation Factors (VIFs) are well below the critical threshold of 10 [@belsley2005regression], confirming that `crowded_hou`, `elderly`, `ethnic`, and `lt_illness` can be jointly included without severe global multicollinearity. However, the global OLS model explains **`r round(summary(ols_gwr)$r.squared * 100, 1)`%** of variance ($R^2 = `r round(summary(ols_gwr)$r.squared, 3)`$), and mapping its residuals (`res_ols`) reveals strong spatial clustering (positive residuals in the South East, East of England, North West, and Cumbria; negative residuals in the South West and Yorkshire).
+
+```{r fig_ols_residuals_map, fig.width=6.5, fig.height=6, fig.cap="Figure 4.2: Spatial Distribution of Global OLS Regression Residuals across English UTLADs."}
+nsdf$res_ols <- residuals(ols_gwr)
+
+tm_shape(nsdf) +
+  tm_fill(col = "res_ols", title = "OLS Residuals", palette = magma(256), style = "cont") +
+  tm_borders(col = "white", lwd = 0.1) +
+  tm_shape(reg_shp) +
+  tm_borders(col = "white", lwd = 0.7) +
+  tm_compass(type = "arrow", position = c("right", "top"), size = 3) +
+  tm_scale_bar(breaks = c(0, 50, 100), text.size = 0.6, position = c("left", "bottom")) +
+  tm_layout(main.title = "Global OLS Model Residuals", main.title.size = 1.0, bg.color = "white")
+```
+
+### Task 9.1: GWR with Fixed vs. Adaptive Bandwidths
+
+We convert `nsdf` to a Spatial/data-frame format compatible with `spgwr` and use cross-validation (`gwr.sel`) with a Gaussian spatial kernel (`gweight = gwr.Gauss`) and spherical distances in kilometres (`longlat = TRUE`) to select the optimal **fixed bandwidth (`fbw`)** and **adaptive bandwidth (`abw`)**.
+
+```{r ch9_gwr_fit}
+nsdf_sp <- st_drop_geometry(nsdf)
+coords_mat <- cbind(nsdf_sp$long, nsdf_sp$lat)
+
+# 1. Fixed Bandwidth Selection & GWR Fit
+fbw <- gwr.sel(
+  eq_gwr,
+  data = nsdf_sp,
+  coords = coords_mat,
+  longlat = TRUE,
+  adapt = FALSE,
+  gweight = gwr.Gauss,
+  verbose = FALSE
+)
+cat("Optimal Fixed Bandwidth (km):", round(fbw, 2), "km\n")
+
+fb_gwr <- gwr(
+  eq_gwr,
+  data = nsdf_sp,
+  coords = coords_mat,
+  longlat = TRUE,
+  bandwidth = fbw,
+  gweight = gwr.Gauss,
+  hatmatrix = TRUE,
+  se.fit = TRUE
+)
+fb_gwr
+
+# 2. Adaptive Bandwidth Selection & GWR Fit
+abw <- gwr.sel(
+  eq_gwr,
+  data = nsdf_sp,
+  coords = coords_mat,
+  longlat = TRUE,
+  adapt = TRUE,
+  gweight = gwr.Gauss,
+  verbose = FALSE
+)
+cat("Optimal Adaptive Bandwidth (proportion of k-NN):", round(abw, 4),
+    "(approx.", round(abw * nrow(nsdf_sp)), "UTLADs)\n")
+
+ab_gwr <- gwr(
+  eq_gwr,
+  data = nsdf_sp,
+  coords = coords_mat,
+  longlat = TRUE,
+  adapt = abw,
+  gweight = gwr.Gauss,
+  hatmatrix = TRUE,
+  se.fit = TRUE
+)
+ab_gwr
+```
+
+We compare the global fit of OLS, Fixed-Bandwidth GWR, and Adaptive-Bandwidth GWR in `Table 4.1`, and map the Local $R^2$ surfaces side-by-side (`Figure 4.3`).
+
+```{r ch9_model_comp_table}
+fb_out <- as.data.frame(fb_gwr$SDF)
+ab_out <- as.data.frame(ab_gwr$SDF)
+
+nsdf$fmb_localR2 <- fb_out$localR2
+nsdf$amb_localR2 <- ab_out$localR2
+
+# Calculate Quasi-global R2 for GWR models: 1 - (RSS / TSS)
+tss_gwr <- sum((nsdf$covid19_r - mean(nsdf$covid19_r))^2)
+r2_fb <- 1 - (fb_gwr$results$rss / tss_gwr)
+r2_ab <- 1 - (ab_gwr$results$rss / tss_gwr)
+
+gwr_comp_tbl <- tibble(
+  Model = c(
+    "Global OLS Regression",
+    paste0("Fixed-Bandwidth GWR (bw = ", round(fbw, 1), " km)"),
+    paste0("Adaptive-Bandwidth GWR (adapt = ", round(abw, 3), " / ~", round(abw * nrow(nsdf)), " UTLADs)")
+  ),
+  `R2 / Quasi-Global R2` = round(c(summary(ols_gwr)$r.squared, r2_fb, r2_ab), 4),
+  `Residual Sum of Squares (RSS)` = round(c(sum(residuals(ols_gwr)^2), fb_gwr$results$rss, ab_gwr$results$rss), 1),
+  AIC = round(c(AIC(ols_gwr), fb_gwr$results$AICh, ab_gwr$results$AICh), 1),
+  `Min Local R2` = c("—", round(min(nsdf$fmb_localR2), 3), round(min(nsdf$amb_localR2), 3)),
+  `Median Local R2` = c("—", round(median(nsdf$fmb_localR2), 3), round(median(nsdf$amb_localR2), 3)),
+  `Max Local R2` = c("—", round(max(nsdf$fmb_localR2), 3), round(max(nsdf$amb_localR2), 3))
+)
+
+kable(
+  gwr_comp_tbl,
+  caption = "Table 4.1: Global Model Fit Comparison between OLS, Fixed-Bandwidth GWR, and Adaptive-Bandwidth GWR"
+) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE)
+```
+
+```{r fig_gwr_localR2, fig.width=11, fig.height=5.5, fig.cap="Figure 4.3: Local R-Squared Maps for Fixed-Bandwidth GWR (left) vs. Adaptive-Bandwidth GWR (right)."}
+map_fb_r2 <- tm_shape(nsdf) +
+  tm_fill(col = "fmb_localR2", title = "Fixed Local R2", palette = magma(256), style = "cont") +
+  tm_borders(col = "white", lwd = 0.1) +
+  tm_shape(reg_shp) +
+  tm_borders(col = "white", lwd = 0.6) +
+  tm_compass(type = "arrow", position = c("right", "top"), size = 2.5) +
+  tm_scale_bar(breaks = c(0, 50, 100), text.size = 0.55, position = c("left", "bottom")) +
+  tm_layout(main.title = "Fixed Kernel: Local R2", main.title.size = 0.95, bg.color = "white")
+
+map_ab_r2 <- tm_shape(nsdf) +
+  tm_fill(col = "amb_localR2", title = "Adaptive Local R2", palette = magma(256), style = "cont") +
+  tm_borders(col = "white", lwd = 0.1) +
+  tm_shape(reg_shp) +
+  tm_borders(col = "white", lwd = 0.6) +
+  tm_compass(type = "arrow", position = c("right", "top"), size = 2.5) +
+  tm_scale_bar(breaks = c(0, 50, 100), text.size = 0.55, position = c("left", "bottom")) +
+  tm_layout(main.title = "Adaptive Kernel: Local R2", main.title.size = 0.95, bg.color = "white")
+
+tmap_arrange(map_fb_r2, map_ab_r2, ncol = 2)
+```
+
+### Task 9.2: Multiple-Map Figures of Spatial Coefficient Variation & Statistical Significance
+
+Using the **Adaptive-Bandwidth GWR (`ab_gwr`)**, we extract the local parameter estimates ($\hat{\beta}_{ik}$) and their local standard errors, compute the local $t$-statistics ($t_{ik} = \hat{\beta}_{ik} / \text{SE}(\hat{\beta}_{ik})$), and classify coefficients with $|t_{ik}| > 2$ as statistically significant [@lu2014gwmodel].
+
+```{r fig_gwr_coefs, fig.width=11, fig.height=10, fig.cap="Figure 4.4: Multiple-Map Figure of Adaptive GWR Local Regression Coefficients across England for Overcrowded Housing, Elderly Share, Ethnic Minority Share, and Long-Term Illness."}
+# Attach local coefficients from Adaptive GWR
+nsdf$amb_crowded <- ab_out$crowded_hou
+nsdf$amb_elderly <- ab_out$elderly
+nsdf$amb_ethnic <- ab_out$ethnic
+nsdf$amb_lt_ill <- ab_out$lt_illness
+
+# Compute local t-statistics
+nsdf$t_crowded <- ab_out$crowded_hou / ab_out$crowded_hou_se
+nsdf$t_elderly <- ab_out$elderly / ab_out$elderly_se
+nsdf$t_ethnic <- ab_out$ethnic / ab_out$ethnic_se
+nsdf$t_lt_ill <- ab_out$lt_illness / ab_out$lt_illness_se
+
+# Classify statistical significance (|t| > 2)
+classify_t <- function(t_vec) {
+  factor(
+    ifelse(t_vec < -2, "Sig. Negative (t < -2)",
+           ifelse(t_vec > 2, "Sig. Positive (t > 2)", "Non-significant (|t| <= 2)")),
+    levels = c("Sig. Negative (t < -2)", "Non-significant (|t| <= 2)", "Sig. Positive (t > 2)")
+  )
+}
+
+nsdf$sig_crowded <- classify_t(nsdf$t_crowded)
+nsdf$sig_elderly <- classify_t(nsdf$t_elderly)
+nsdf$sig_ethnic <- classify_t(nsdf$t_ethnic)
+nsdf$sig_lt_ill <- classify_t(nsdf$t_lt_ill)
+
+# Create 4-panel map of local coefficients
+m_coef_crowd <- tm_shape(nsdf) +
+  tm_fill("amb_crowded", title = "Coef: Crowded", palette = magma(256), style = "cont") +
+  tm_borders("white", lwd = 0.1) + tm_shape(reg_shp) + tm_borders("white", lwd = 0.5) +
+  tm_layout(main.title = "(a) Local Coef: Overcrowded Housing", main.title.size = 0.9, bg.color = "white")
+
+m_coef_eld <- tm_shape(nsdf) +
+  tm_fill("amb_elderly", title = "Coef: Elderly", palette = magma(256), style = "cont") +
+  tm_borders("white", lwd = 0.1) + tm_shape(reg_shp) + tm_borders("white", lwd = 0.5) +
+  tm_layout(main.title = "(b) Local Coef: Elderly (65+)", main.title.size = 0.9, bg.color = "white")
+
+m_coef_eth <- tm_shape(nsdf) +
+  tm_fill("amb_ethnic", title = "Coef: Ethnic", palette = magma(256), style = "cont") +
+  tm_borders("white", lwd = 0.1) + tm_shape(reg_shp) + tm_borders("white", lwd = 0.5) +
+  tm_layout(main.title = "(c) Local Coef: Non-White Ethnic", main.title.size = 0.9, bg.color = "white")
+
+m_coef_lt <- tm_shape(nsdf) +
+  tm_fill("amb_lt_ill", title = "Coef: LT Illness", palette = magma(256), style = "cont") +
+  tm_borders("white", lwd = 0.1) + tm_shape(reg_shp) + tm_borders("white", lwd = 0.5) +
+  tm_layout(main.title = "(d) Local Coef: Long-Term Illness", main.title.size = 0.9, bg.color = "white")
+
+tmap_arrange(m_coef_crowd, m_coef_eld, m_coef_eth, m_coef_lt, ncol = 2, nrow = 2)
+```
+
+```{r fig_gwr_sig, fig.width=11, fig.height=10, fig.cap="Figure 4.5: Multiple-Map Figure of Local Statistical Significance (|t| > 2) for Adaptive GWR Coefficients across English UTLADs."}
+sig_pal <- c("Sig. Negative (t < -2)" = "#2b83ba",
+             "Non-significant (|t| <= 2)" = "#eeeeee",
+             "Sig. Positive (t > 2)" = "#d7191c")
+
+m_sig_crowd <- tm_shape(nsdf) +
+  tm_fill("sig_crowded", title = "Significance", palette = sig_pal, drop.levels = FALSE) +
+  tm_borders("grey60", lwd = 0.15) + tm_shape(reg_shp) + tm_borders("black", lwd = 0.6) +
+  tm_layout(main.title = "(a) t-Significance: Overcrowded Housing", main.title.size = 0.9, bg.color = "white")
+
+m_sig_eld <- tm_shape(nsdf) +
+  tm_fill("sig_elderly", title = "Significance", palette = sig_pal, drop.levels = FALSE) +
+  tm_borders("grey60", lwd = 0.15) + tm_shape(reg_shp) + tm_borders("black", lwd = 0.6) +
+  tm_layout(main.title = "(b) t-Significance: Elderly (65+)", main.title.size = 0.9, bg.color = "white")
+
+m_sig_eth <- tm_shape(nsdf) +
+  tm_fill("sig_ethnic", title = "Significance", palette = sig_pal, drop.levels = FALSE) +
+  tm_borders("grey60", lwd = 0.15) + tm_shape(reg_shp) + tm_borders("black", lwd = 0.6) +
+  tm_layout(main.title = "(c) t-Significance: Non-White Ethnic", main.title.size = 0.9, bg.color = "white")
+
+m_sig_lt <- tm_shape(nsdf) +
+  tm_fill("sig_lt_ill", title = "Significance", palette = sig_pal, drop.levels = FALSE) +
+  tm_borders("grey60", lwd = 0.15) + tm_shape(reg_shp) + tm_borders("black", lwd = 0.6) +
+  tm_layout(main.title = "(d) t-Significance: Long-Term Illness", main.title.size = 0.9, bg.color = "white")
+
+tmap_arrange(m_sig_crowd, m_sig_eld, m_sig_eth, m_sig_lt, ncol = 2, nrow = 2)
+```
+
+```{r table_gwr_sig_counts}
+sig_summary_tbl <- tibble(
+  Predictor = c("Overcrowded Housing (crowded_hou)", "Elderly 65+ (elderly)", "Non-White Ethnic (ethnic)", "Long-Term Illness (lt_illness)"),
+  `Global OLS Coef` = round(coef(ols_gwr)[-1], 2),
+  `GWR Min` = round(c(min(nsdf$amb_crowded), min(nsdf$amb_elderly), min(nsdf$amb_ethnic), min(nsdf$amb_lt_ill)), 2),
+  `GWR Median` = round(c(median(nsdf$amb_crowded), median(nsdf$amb_elderly), median(nsdf$amb_ethnic), median(nsdf$amb_lt_ill)), 2),
+  `GWR Max` = round(c(max(nsdf$amb_crowded), max(nsdf$amb_elderly), max(nsdf$amb_ethnic), max(nsdf$amb_lt_ill)), 2),
+  `Sig. Negative UTLADs (t < -2)` = c(sum(nsdf$t_crowded < -2), sum(nsdf$t_elderly < -2), sum(nsdf$t_ethnic < -2), sum(nsdf$t_lt_ill < -2)),
+  `Non-Sig. UTLADs (|t| <= 2)` = c(sum(abs(nsdf$t_crowded) <= 2), sum(abs(nsdf$t_elderly) <= 2), sum(abs(nsdf$t_ethnic) <= 2), sum(abs(nsdf$t_lt_ill) <= 2)),
+  `Sig. Positive UTLADs (t > 2)` = c(sum(nsdf$t_crowded > 2), sum(nsdf$t_elderly > 2), sum(nsdf$t_ethnic > 2), sum(nsdf$t_lt_ill > 2))
+)
+
+kable(
+  sig_summary_tbl,
+  caption = "Table 4.2: Summary of Adaptive GWR Local Coefficient Ranges and Counts of Statistically Significant UTLADs (|t| > 2)"
+) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE)
+```
+
+**Analysis and Discussion (Chapter 9):**
+
+1. **Spatial Non-Stationarity (Variation in Size, Direction, and Significance)**:
+   - Both GWR models raise the explained variance from **`r round(summary(ols_gwr)$r.squared * 100, 1)`%** (global OLS) to over **`r round(r2_ab * 100, 1)`%** (Quasi-global $R^2$), demonstrating pronounced spatial non-stationarity across England.
+   - **Long-Term Illness (`lt_illness`)**: Exhibits a stark North–South and urban–periphery divide (`Figure 4.4d` and `Figure 4.5d`), ranging from **`r round(min(nsdf$amb_lt_ill), 1)`** to **`r round(max(nsdf$amb_lt_ill), 1)`**, with **`r sum(nsdf$t_lt_ill > 2)`** UTLADs showing statistically significant positive effects ($t > 2$, concentrated across the North West, North East, Midlands, and Thames Estuary) and **`r sum(nsdf$t_lt_ill < -2)`** UTLADs showing significant negative effects.
+   - **Elderly Population (`elderly`)**: Ranges from **`r round(min(nsdf$amb_elderly), 1)`** to **`r round(max(nsdf$amb_elderly), 1)`**, with **`r sum(nsdf$t_elderly < -2)`** UTLADs displaying statistically significant negative associations ($t < -2$), indicating that areas with older demographic profiles experienced significantly lower Wave-3 transmission rates once chronic illness and overcrowding are controlled for.
+   - **Overcrowded Housing (`crowded_hou`) & Non-White Ethnic Share (`ethnic`)**: Both display strong positive local effects in specific regional clusters (`r sum(nsdf$t_crowded > 2)` and `r sum(nsdf$t_ethnic > 2)` UTLADs with $t > 2$, respectively), particularly across outer London, the South East, the Midlands, and Lancashire/Greater Manchester, while becoming statistically insignificant in rural shire counties where ethnic minority and overcrowded household shares are uniformly low.
+
+2. **Appropriate Bandwidth Selection (Fixed vs. Adaptive Kernel)**:
+   - The **Adaptive Bandwidth (`abw = `r round(abw, 3)``)** is theoretically and empirically superior to the Fixed Bandwidth (`fbw = `r round(fbw, 1)` km`) for England's UTLAD geography.
+   - **Why?** English UTLADs vary drastically in physical area and centroid spacing: London comprises 32 compact boroughs within a ~25 km radius, and metropolitan regions (*Greater Manchester*, *Merseyside*, *West Midlands*, *Tyne and Wear*) also consist of tightly packed districts, whereas rural shire counties (*Cumbria*, *Northumberland*, *Cornwall*, *Devon*, *North Yorkshire*) span vast territories. A fixed distance kernel (`r round(fbw, 1)` km) encompasses dozens of dissimilar authorities in London (over-smoothing urban heterogeneity and Increasing bias) while capturing very few neighbours in rural Cornwall or Cumbria (inflating variance and standard errors). The adaptive kernel dynamically expands in sparse rural areas and contracts in dense metropolitan cores, achieving a lower AIC (**`r round(ab_gwr$results$AICh, 1)`** vs. **`r round(fb_gwr$results$AICh, 1)`**) and higher Quasi-global $R^2$ (**`r round(r2_ab, 3)`** vs. **`r round(r2_fb, 3)`**).
+
+---
+
+## Spatio-Temporal Data Analysis & Modelling (Chapter 10 Tasks)
+
+Cross-sectional multilevel and GWR models analyse a single temporal aggregation ("snapshot") and cannot capture how the pandemic's trajectory evolved over time or how spatial and temporal dependencies interact [@wikle2019spatio; @zammit2017frk]. In Chapter 10, we reshape `covid19_eng.gpkg` into a long space-time format, construct a formal `STIDF` object, visualise space-time patterns, and fit Fixed Rank Kriging (`FRK`) basis-function regression models.
+
+### Spatio-Temporal Data Wrangling & `STIDF` Construction
+
+We reshape the daily COVID-19 columns (`X2020.12.01` to `X2021.01.29`, covering the 60 days of Wave 3 across all 149 UTLADs = $8,940$ space-time observations) from time-wide to space-time long format (`covid19_spt`), parse dates via `lubridate::ymd()`, compute daily new cases per 100,000 residents (`n_covid19_r`) and running cumulative cases per 100,000 (`c_covid19_r`), and construct a `spacetime::STIDF` object [@pebesma2012spacetime].
+
+```{r ch10_wrangling}
+# Reshape Wave-3 daily cases (2020-12-01 to 2021-01-29) from wide to long format
+covid_long <- sdf %>%
+  st_drop_geometry() %>%
+  dplyr::select(
+    objectid, ctyua19cd, ctyua19nm, Region, long, lat,
+    Residents, crowded_hou, elderly, ethnic, lt_illness, imd_score,
+    "X2020.12.01":"X2021.01.29"
+  ) %>%
+  pivot_longer(
+    cols = starts_with("X20"),
+    names_to = "raw_date",
+    values_to = "daily_cases"
+  ) %>%
+  mutate(
+    # Clean date string ("X2020.12.01" -> "2020-12-01") and parse with lubridate
+    date = ymd(str_replace_all(str_remove(raw_date, "^X"), "\\.", "-")),
+    daily_cases = pmax(0, daily_cases),
+    day = day(date),
+    week = isoweek(date),
+    month = month(date),
+    year = year(date),
+    # Continuous study day index (1 to 60)
+    time_index = as.numeric(date - min(date)) + 1
+  ) %>%
+  group_by(ctyua19cd) %>%
+  arrange(date, .by_group = TRUE) %>%
+  mutate(
+    cum_cases_wave3 = cumsum(daily_cases),
+    # Daily rate of new COVID-19 cases per 100,000 residents (non-negative integer count rate)
+    n_covid19_r = pmax(0, round((daily_cases / Residents) * 100000)),
+    # Cumulative Wave-3 cases per 100,000 residents
+    c_covid19_r = round((cum_cases_wave3 / Residents) * 100000)
+  ) %>%
+  ungroup()
+
+# Join spatial polygon geometry for spatial-temporal mapping
+covid19_spt <- nsdf %>%
+  dplyr::select(ctyua19cd, geom) %>%
+  right_join(covid_long, by = "ctyua19cd") %>%
+  st_as_sf()
+
+# Construct formal STIDF object using the spacetime package
+spat_pts <- sp::SpatialPoints(coords = as.matrix(covid_long[, c("long", "lat")]))
+covid19_stobj <- STIDF(
+  sp = spat_pts,
+  time = covid_long$date,
+  data = as.data.frame(covid_long[, c("ctyua19nm", "Region", "daily_cases", "n_covid19_r", "c_covid19_r", "time_index")])
+)
+class(covid19_stobj)
+```
+
+### Task 10.1: Spatio-Temporal Visualisations & Exploratory Dependence Analysis
+
+We produce four complementary spatio-temporal visualisations to interrogate the space-time dynamics of the outbreak:
+
+1. **Faceted Weekly Spatial Choropleth Maps (`tmap`)**: Tracking the geographic spread of weekly new COVID-19 cases per 100,000 residents across UTLADs.
+2. **Highlighted Time-Series Trajectories (`gghighlight`)**: Comparing daily and cumulative trajectories in the highest-incidence UTLADs against the national ensemble.
+3. **Hovmöller Space-Time Heatmap**: Collapsing populous UTLADs (`Residents > 260,000`) onto the vertical axis against daily time (`date`) on the horizontal axis.
+4. **Empirical Spatial/Temporal Means, Time-Series Decomposition & Temporal Autocorrelation**: Decomposing the daily aggregate series (`frequency = 7`) into trend, weekly seasonal reporting cycles, and random noise.
+
+```{r fig_ch10_weekly_maps, fig.width=12, fig.height=9, fig.cap="Figure 5.1: Spatio-Temporal Evolution of Weekly New COVID-19 Cases per 100,000 Population across English UTLADs during Wave 3."}
+# Create ordered study week label (Week 1 to Week 9 of Wave 3)
+covid19_spt <- covid19_spt %>%
+  mutate(study_week = paste0("W", ceiling(time_index / 7)))
+
+daycases_week <- covid19_spt %>%
+  group_by(study_week, ctyua19nm, ctyua19cd, Residents) %>%
+  summarise(n_daycases = sum(daily_cases, na.rm = TRUE), .groups = "drop") %>%
+  mutate(wn_covid19_r = (n_daycases / Residents) * 100000)
+
+tm_shape(daycases_week) +
+  tm_fill(
+    "wn_covid19_r",
+    title = "Weekly Cases / 100k",
+    palette = magma(256),
+    style = "cont",
+    legend.hist = FALSE,
+    legend.is.portrait = FALSE
+  ) +
+  tm_facets(by = "study_week", ncol = 3) +
+  tm_borders(col = "white", lwd = 0.1) +
+  tm_layout(
+    bg.color = "white",
+    legend.outside = TRUE,
+    legend.outside.position = "bottom",
+    panel.label.size = 1.2,
+    main.title = "Weekly New COVID-19 Cases per 100,000 across England (Dec 2020 - Jan 2021)",
+    main.title.size = 1.1
+  )
+```
+
+```{r fig_ch10_timeseries_highlight, fig.width=11, fig.height=7, fig.cap="Figure 5.2: Time-Series Trajectories of Cumulative Wave-3 COVID-19 Cases per 100,000 for Highest-Incidence UTLADs (> 5,200 per 100,000)."}
+ggplot(data = covid_long, mapping = aes(x = date, y = c_covid19_r, group = ctyua19nm)) +
+  geom_line(color = "steelblue", linewidth = 0.8) +
+  gghighlight(max(c_covid19_r) > 5200, use_direct_label = FALSE) +
+  facet_wrap(~ ctyua19nm) +
+  labs(
+    title = "Cumulative Wave-3 COVID-19 Trajectory in Hardest-Hit English UTLADs",
+    x = "Date (Dec 2020 - Jan 2021)",
+    y = "Cumulative Cases per 100,000"
+  ) +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 30, hjust = 1, size = 8))
+```
+
+```{r fig_ch10_hovmoller, fig.width=11, fig.height=10, fig.cap="Figure 5.3: Hovmöller Space-Time Heatmap of Daily New COVID-19 Cases per 100,000 for Populous UTLADs (Residents > 260,000)."}
+ggplot(
+  data = dplyr::filter(covid_long, Residents > 260000),
+  mapping = aes(x = date, y = reorder(ctyua19nm, n_covid19_r), fill = n_covid19_r)
+) +
+  geom_tile() +
+  scale_fill_viridis(name = "Daily Cases / 100k", option = "plasma", begin = 0, end = 1, direction = 1) +
+  theme_minimal() +
+  labs(
+    title = "Hovmöller Space-Time Plot of Daily COVID-19 Infection Rate",
+    subtitle = "UTLADs with Resident Population > 260,000 (Ordered by Mean Incidence)",
+    x = "Date (01 Dec 2020 - 29 Jan 2021)",
+    y = "Upper Tier Local Authority District"
+  ) +
+  theme(
+    legend.position = "bottom",
+    axis.text.y = element_text(size = 8),
+    legend.key.width = unit(2.5, "cm")
+  )
+```
+
+Next, we compute the **empirical temporal mean** across UTLADs, measure first-order **temporal autocorrelation** ($r_{t, t-1}$), and decompose the aggregate weekly time-series (`frequency = 7`).
+
+```{r fig_ch10_decomp, fig.width=10, fig.height=6, fig.cap="Figure 5.4: Additive Time-Series Decomposition (Observed, Trend, Weekly Seasonal, and Random Components) of Aggregate Daily COVID-19 Rates."}
+# Empirical temporal mean and aggregate daily count series
+tm_av <- covid_long %>%
+  group_by(date) %>%
+  summarise(
+    tm_mu_emp = mean(n_covid19_r, na.rm = TRUE),
+    new_cases = sum(n_covid19_r, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+# Temporal autocorrelation at lag t - 1
+lag_cor <- cor(tm_av$new_cases[-nrow(tm_av)], tm_av$new_cases[-1])
+cat("First-order temporal autocorrelation (t vs t-1):", round(lag_cor, 4), "\n")
+
+# Additive weekly time-series decomposition (frequency = 7 days)
+total_cases_ts <- ts(tm_av$new_cases, start = 1, frequency = 7)
+dec_ts <- decompose(total_cases_ts)
+plot(dec_ts)
+```
+
+### Task 10.2: Fitting Spatio-Temporal Models (`FRK` Basis Functions & Count GLMs)
+
+To model `n_covid19_r` across space and time while accounting for spatio-temporal autocorrelation and overdispersion [@cressie2008fixed; @zammit2017frk], we construct Gaussian spatial radial basis functions (`FRK::auto_basis` with `nres = 1`) evaluated at all UTLA coordinates (`FRK::eval_basis`).
+
+```{r ch10_frk_basis}
+# 1. Construct Gaussian radial basis functions over UTLA coordinates
+G <- auto_basis(
+  data = sp::SpatialPoints(as.matrix(covid_long[, c("long", "lat")])),
+  nres = 1,
+  type = "Gaussian"
+)
+
+# 2. Evaluate basis functions at each space-time observation
+S <- eval_basis(
+  basis = G,
+  s = as.matrix(covid_long[, c("long", "lat")])
+) %>%
+  as.matrix()
+
+colnames(S) <- paste0("B", 1:ncol(S))
+cat("Number of generated Gaussian spatial basis functions:", ncol(S), "\n")
+
+# 3. Combine covariates and basis functions into the regression dataframe
+reg_df <- cbind(covid_long, S) %>%
+  dplyr::select(
+    ctyua19nm, n_covid19_r, long, lat, time_index,
+    crowded_hou, elderly, ethnic, lt_illness,
+    starts_with("B")
+  )
+```
+
+We now estimate five progressive spatio-temporal regression specifications:
+
+1. **`lm_m` (OLS Linear Trend-Surface + Basis Functions)**: Assumes Gaussian errors.
+2. **`poisson_m1` (Poisson GLM with Log Link)**: Models count rates via $y_{it} \sim \text{Poisson}(\exp(X_{it}\beta))$ and tests for overdispersion ($\text{Deviance} / \text{df}_{\text{residual}}$).
+3. **`qpoisson_m1` (Quasi-Poisson GLM)**: Adjusts standard errors for overdispersion ($\text{Var}(Y) = \phi \mu$).
+4. **`nb_m1` (Negative Binomial GLM)**: Relaxes the mean-variance equality via `MASS::glm.nb`.
+5. **`nb_m2` (Negative Binomial GLM with Space-Time Interactions)**: Incorporates two-way interactions between longitude, latitude, and time (`(long + lat + time_index)^2`) alongside all contextual predictors and spatial basis functions.
+
+```{r ch10_fit_st_models}
+# Base equation: spatial trend + temporal trend + 4 contextual covariates + basis functions
+eq_st1 <- n_covid19_r ~ long + lat + time_index + crowded_hou + elderly + ethnic + lt_illness + .
+reg_data_clean <- dplyr::select(reg_df, -ctyua19nm)
+
+# 1. Linear Regression (OLS)
+lm_m <- lm(formula = eq_st1, data = reg_data_clean)
+summary(lm_m)
+
+# 2. Poisson GLM
+poisson_m1 <- glm(formula = eq_st1, family = poisson("log"), data = reg_data_clean)
+disp_ratio <- poisson_m1$deviance / poisson_m1$df.residual
+cat("Poisson Overdispersion Ratio (Deviance / df.residual):", round(disp_ratio, 2), "\n")
+
+# 3. Quasi-Poisson GLM
+qpoisson_m1 <- glm(formula = eq_st1, family = quasipoisson("log"), data = reg_data_clean)
+
+# 4. Negative Binomial GLM (Main Effects)
+nb_m1 <- MASS::glm.nb(formula = eq_st1, data = reg_data_clean)
+summary(nb_m1)
+
+# 5. Negative Binomial GLM with Space-Time Interactions: (long + lat + time_index)^2
+eq_st2 <- n_covid19_r ~ (long + lat + time_index)^2 + crowded_hou + elderly + ethnic + lt_illness + .
+nb_m2 <- MASS::glm.nb(formula = eq_st2, data = reg_data_clean)
+summary(nb_m2)
+```
+
+Let us compare the parameter estimates, deviance, and AIC across our spatio-temporal models (`Table 5.1`) and evaluate predictive performance via the correlation between observed and predicted values (`Figure 5.5`).
+
+```{r table_ch10_models}
+extract_st_row <- function(m, term_name) {
+  cf <- summary(m)$coefficients
+  if (!(term_name %in% rownames(cf))) return("—")
+  est <- cf[term_name, 1]
+  se <- cf[term_name, 2]
+  pval <- cf[term_name, 4]
+  stars <- ifelse(pval < 0.001, "***", ifelse(pval < 0.01, "**", ifelse(pval < 0.05, "*", "")))
+  sprintf("%.3f (%.3f)%s", est, se, stars)
+}
+
+terms_to_show <- c(
+  "(Intercept)", "long", "lat", "time_index",
+  "crowded_hou", "elderly", "ethnic", "lt_illness",
+  "long:lat", "long:time_index", "lat:time_index"
+)
+
+st_comp_tbl <- tibble(
+  Term = c(terms_to_show, "Residual Deviance", "AIC"),
+  `1. OLS (lm_m)` = c(
+    sapply(terms_to_show, function(t) extract_st_row(lm_m, t)),
+    sprintf("%.1f", deviance(lm_m)),
+    sprintf("%.1f", AIC(lm_m))
+  ),
+  `2. Poisson (poisson_m1)` = c(
+    sapply(terms_to_show, function(t) extract_st_row(poisson_m1, t)),
+    sprintf("%.1f", poisson_m1$deviance),
+    sprintf("%.1f", AIC(poisson_m1))
+  ),
+  `3. Quasi-Poisson (qpoisson_m1)` = c(
+    sapply(terms_to_show, function(t) extract_st_row(qpoisson_m1, t)),
+    sprintf("%.1f", qpoisson_m1$deviance),
+    "—"
+  ),
+  `4. Neg. Binomial (nb_m1)` = c(
+    sapply(terms_to_show, function(t) extract_st_row(nb_m1, t)),
+    sprintf("%.1f", nb_m1$deviance),
+    sprintf("%.1f", AIC(nb_m1))
+  ),
+  `5. NB + Interactions (nb_m2)` = c(
+    sapply(terms_to_show, function(t) extract_st_row(nb_m2, t)),
+    sprintf("%.1f", nb_m2$deviance),
+    sprintf("%.1f", AIC(nb_m2))
+  )
+)
+
+kable(
+  st_comp_tbl,
+  caption = "Table 5.1: Comparison of Spatio-Temporal Regression Models for Daily COVID-19 Cases per 100,000 (Including FRK Gaussian Basis Functions B1-B9; *** p < 0.001, ** p < 0.01, * p < 0.05)"
+) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE)
+```
+
+```{r fig_ch10_pred_corr, fig.width=6.5, fig.height=6, fig.cap="Figure 5.5: Correlogram Comparing Observed Daily COVID-19 Rates (n_covid19_r) and Model Predictions across OLS, Poisson, and Negative Binomial ST Specifications."}
+reg_df_preds <- reg_df %>%
+  mutate(
+    lm_cnt = predict(lm_m, type = "response"),
+    poisson_cnt = predict(poisson_m1, type = "response"),
+    nb1_cnt = predict(nb_m1, type = "response"),
+    nb2_cnt = predict(nb_m2, type = "response")
+  )
+
+cormat_st <- cor(
+  reg_df_preds[, c("n_covid19_r", "lm_cnt", "poisson_cnt", "nb1_cnt", "nb2_cnt")],
+  use = "complete.obs",
+  method = "pearson"
+)
+
+corrplot::corrplot.mixed(
+  cormat_st,
+  number.cex = 0.95,
+  tl.pos = "d",
+  tl.cex = 0.85
+)
+```
+
+### Analysis and Discussion (Chapter 10)
+
+1. **Comparison of GWR and Spatio-Temporal (ST) Model Results Across Space**:
+   - **Consistency of Contextual Effects**: Once space-time trends and FRK Gaussian basis functions (`B1`–`B9`) are controlled for in the Negative Binomial models (`nb_m1` and `nb_m2`), the global contextual predictors align closely with the dominant local patterns identified by GWR in Chapter 9: `crowded_hou`, `ethnic`, and `lt_illness` exhibit positive and statistically significant associations with COVID-19 infection risk ($p < 0.001$), whereas `elderly` displays a statistically significant negative coefficient ($p < 0.001$).
+   - **How GWR and ST Capture Spatial Variation Differently**: GWR (Chapter 9) models spatial non-stationarity by allowing the slopes of `crowded_hou`, `elderly`, `ethnic`, and `lt_illness` to vary locally across the 149 UTLADs within a single cross-sectional time window. By contrast, the FRK Spatio-Temporal model (Chapter 10) estimates global partial effects for the demographic covariates while decomposing continuous spatial variation and spatial dependence into a linear combination of radial basis functions (`B1`–`B9`, nearly all of which are highly statistically significant at $p < 0.001$ in `nb_m1` and `nb_m2`) alongside explicit coordinate trends (`long`, `lat`) and space-time interactions.
+   - Furthermore, the Poisson model exhibits severe overdispersion ($\text{Deviance}/\text{df} = `r round(disp_ratio, 1)` \gg 1$), which causes standard Poisson standard errors to be artificially small. Moving to the **Negative Binomial (`nb_m1` and `nb_m2`)** reduces residual deviance from **`r round(poisson_m1$deviance, 0)`** to **`r round(nb_m2$deviance, 0)`**, providing much more reliable statistical inference.
+
+2. **Significant Variations Over Time and Space-Time Interactions**:
+   - **Temporal Autocorrelation and Trend**: The exploratory analysis demonstrates strong positive first-order temporal autocorrelation ($r_{t, t-1} = `r round(lag_cor, 3)`$) and a clear 7-day seasonal reporting cycle (Figure 5.4), alongside an inverted-U wave trajectory that surged through December 2020 and peaked in early January 2021 before declining under national lockdown.
+   - **Space-Time Interaction Terms (`nb_m2`)**: In `nb_m1`, the main effect of `time_index` is positive and highly statistically significant ($\hat{\beta}_{\text{time}} = `r round(coef(nb_m1)["time_index"], 4)`$, $p < 0.001$), confirming a significant upward temporal trend across the Wave-3 window. Even more revealingly, in `nb_m2`, the space-time interaction terms **`long:time_index`** and **`lat:time_index`** (as well as **`long:lat`**) are highly statistically significant:
+     - The significant **`lat:time_index`** interaction captures the south-to-north diffusion of the Alpha variant during Wave 3: whereas early December 2020 cases were heavily concentrated in Kent, London, and the South East (lower latitude, higher longitude), infection rates accelerated northward and westward (`long:time_index` and `lat:time_index`) into the Midlands, North West, and Cumbria as time progressed through January 2021 (as visually confirmed by the weekly maps in Figure 5.1 and the Hovmöller diagram in Figure 5.3).
+
+---
+
+## References

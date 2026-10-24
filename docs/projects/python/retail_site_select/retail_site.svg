@@ -1,0 +1,262 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 1200" width="100%" height="100%">
+  <defs>
+    <!-- Light Base & Canvas Gradients -->
+    <linearGradient id="lightBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="50%" stop-color="#f8fafc"/>
+      <stop offset="100%" stop-color="#edf2f7"/>
+    </linearGradient>
+
+    <!-- Clean Marine / Estuary Gradient -->
+    <linearGradient id="merseyLight" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#e0f2fe"/>
+      <stop offset="60%" stop-color="#bae6fd"/>
+      <stop offset="100%" stop-color="#93c5fd"/>
+    </linearGradient>
+
+    <!-- Isochrone Catchment Fills (Light-Mode Translucent) -->
+    <radialGradient id="isoInnerLight" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#0d9488" stop-opacity="0.28"/>
+      <stop offset="100%" stop-color="#14b8a6" stop-opacity="0.14"/>
+    </radialGradient>
+    <radialGradient id="isoMidLight" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#2563eb" stop-opacity="0.20"/>
+      <stop offset="100%" stop-color="#3b82f6" stop-opacity="0.08"/>
+    </radialGradient>
+    <radialGradient id="isoOuterLight" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#7c3aed" stop-opacity="0.14"/>
+      <stop offset="100%" stop-color="#a855f7" stop-opacity="0.04"/>
+    </radialGradient>
+
+    <!-- Site Reticle Accent Glow -->
+    <radialGradient id="siteAura" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#0f766e" stop-opacity="0.25"/>
+      <stop offset="70%" stop-color="#0d9488" stop-opacity="0.08"/>
+      <stop offset="100%" stop-color="#0d9488" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- Publication-Grade Drop Shadow for Markers -->
+    <filter id="cleanShadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.18"/>
+    </filter>
+    <filter id="hubShadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feDropShadow dx="0" dy="3" stdDeviation="6" flood-color="#0f172a" flood-opacity="0.25"/>
+    </filter>
+  </defs>
+
+  <!-- Base Paper / Canvas Layer -->
+  <rect width="1200" height="1200" fill="url(#lightBg)"/>
+
+  <!-- Subtle Cartographic Coordinate Grid Lines (Text-Free) -->
+  <g stroke="#cbd5e1" stroke-width="0.85" stroke-dasharray="4,6" opacity="0.6">
+    <line x1="100" y1="0" x2="100" y2="1200"/>
+    <line x1="250" y1="0" x2="250" y2="1200"/>
+    <line x1="400" y1="0" x2="400" y2="1200"/>
+    <line x1="550" y1="0" x2="550" y2="1200"/>
+    <line x1="700" y1="0" x2="700" y2="1200"/>
+    <line x1="850" y1="0" x2="850" y2="1200"/>
+    <line x1="1000" y1="0" x2="1000" y2="1200"/>
+
+    <line x1="0" y1="100" x2="1200" y2="100"/>
+    <line x1="0" y1="250" x2="1200" y2="250"/>
+    <line x1="0" y1="400" x2="1200" y2="400"/>
+    <line x1="0" y1="550" x2="1200" y2="550"/>
+    <line x1="0" y1="700" x2="1200" y2="700"/>
+    <line x1="0" y1="850" x2="1200" y2="850"/>
+    <line x1="0" y1="1000" x2="1200" y2="1000"/>
+  </g>
+
+  <!-- River Mersey & Coastal Estuary Geometry -->
+  <path d="M 0,-10 L 220,-10 C 260,140 210,260 270,390 C 330,510 390,580 370,720 C 340,840 260,940 310,1070 C 330,1130 310,1180 300,1210 L -10,1210 Z" 
+        fill="url(#merseyLight)" stroke="#7dd3fc" stroke-width="2.5"/>
+
+  <!-- Bathymetric / Tidal Coastline Contours -->
+  <path d="M 235,-10 C 275,140 225,260 285,390 C 345,510 405,580 385,720 C 355,840 275,940 325,1070" 
+        fill="none" stroke="#60a5fa" stroke-width="1.2" stroke-dasharray="5,6" opacity="0.45"/>
+  <path d="M 250,-10 C 290,140 240,260 300,390 C 360,510 420,580 400,720 C 370,840 290,940 340,1070" 
+        fill="none" stroke="#93c5fd" stroke-width="1" opacity="0.4"/>
+
+  <!-- LSOA / Spatial Multi-Criteria Demand Parcels (Light Academic Choropleth) -->
+  <g stroke="#ffffff" stroke-width="2" stroke-linejoin="round" opacity="0.92">
+    <!-- Northern Liverpool Parcels (Muted Teal & Pale Sage) -->
+    <polygon points="320,120 410,100 460,170 380,210 300,180" fill="#e2e8f0"/>
+    <polygon points="410,100 520,80 570,160 460,170" fill="#cbd5e1"/>
+    <polygon points="520,80 640,90 660,180 570,160" fill="#e2e8f0"/>
+    <polygon points="640,90 750,70 780,160 660,180" fill="#d1fae5"/>
+    <polygon points="750,70 870,110 860,200 780,160" fill="#e2e8f0"/>
+    <polygon points="870,110 980,130 960,230 860,200" fill="#f1f5f9"/>
+
+    <polygon points="300,180 380,210 390,300 290,290" fill="#ccfbf1"/>
+    <polygon points="380,210 460,170 490,270 390,300" fill="#99f6e4"/>
+    <polygon points="460,170 570,160 590,260 490,270" fill="#a7f3d0"/>
+    <polygon points="570,160 660,180 670,270 590,260" fill="#6ee7b7"/>
+    <polygon points="660,180 780,160 760,260 670,270" fill="#a7f3d0"/>
+    <polygon points="780,160 860,200 870,290 760,260" fill="#e2e8f0"/>
+    <polygon points="860,200 960,230 940,320 870,290" fill="#f1f5f9"/>
+
+    <!-- Central Commuter & Demand Core (Vibrant Warm & Green Gradient) -->
+    <polygon points="290,290 390,300 400,390 320,400" fill="#99f6e4"/>
+    <polygon points="390,300 490,270 510,380 400,390" fill="#5eead4"/>
+    <polygon points="490,270 590,260 610,370 510,380" fill="#34d399"/>
+    <polygon points="590,260 670,270 690,380 610,370" fill="#fed7aa"/>
+    <polygon points="670,270 760,260 780,370 690,380" fill="#fde68a"/>
+    <polygon points="760,260 870,290 850,380 780,370" fill="#cbd5e1"/>
+    <polygon points="870,290 940,320 930,410 850,380" fill="#e2e8f0"/>
+
+    <!-- Prime Catchment Opportunity Area (Warm Terracotta / Coral Heat) -->
+    <polygon points="320,400 400,390 420,500 340,510" fill="#5eead4"/>
+    <polygon points="400,390 510,380 520,490 420,500" fill="#6ee7b7"/>
+    <polygon points="510,380 610,370 630,480 520,490" fill="#fcd34d"/>
+    <polygon points="610,370 690,380 700,490 630,480" fill="#fb923c"/>
+    <polygon points="690,380 780,370 800,480 700,490" fill="#f87171"/>
+    <polygon points="780,370 850,380 870,490 800,480" fill="#fca5a5"/>
+    <polygon points="850,380 930,410 920,510 870,490" fill="#fbcfe8"/>
+
+    <!-- Mid-South Urban Core -->
+    <polygon points="340,510 420,500 430,620 370,630" fill="#99f6e4"/>
+    <polygon points="420,500 520,490 530,610 430,620" fill="#fde68a"/>
+    <polygon points="520,490 630,480 620,600 530,610" fill="#fb923c"/>
+    <polygon points="630,480 700,490 710,610 620,600" fill="#ea580c"/>
+    <polygon points="700,490 800,480 790,600 710,610" fill="#ef4444"/>
+    <polygon points="800,480 870,490 860,610 790,600" fill="#e879f9"/>
+    <polygon points="870,490 920,510 930,620 860,610" fill="#d8b4fe"/>
+
+    <!-- South Liverpool Suburbs & Periphery -->
+    <polygon points="370,630 430,620 460,740 380,750" fill="#a7f3d0"/>
+    <polygon points="430,620 530,610 540,730 460,740" fill="#fef08a"/>
+    <polygon points="530,610 620,600 640,720 540,730" fill="#fdba74"/>
+    <polygon points="620,600 710,610 720,730 640,720" fill="#f87171"/>
+    <polygon points="710,610 790,600 810,720 720,730" fill="#c084fc"/>
+    <polygon points="790,600 860,610 850,730 810,720" fill="#e9d5ff"/>
+    <polygon points="860,610 930,620 910,740 850,730" fill="#f3e8ff"/>
+
+    <polygon points="380,750 460,740 480,860 360,860" fill="#cbd5e1"/>
+    <polygon points="460,740 540,730 550,850 480,860" fill="#d1fae5"/>
+    <polygon points="540,730 640,720 630,850 550,850" fill="#fde68a"/>
+    <polygon points="640,720 720,730 730,850 630,850" fill="#fed7aa"/>
+    <polygon points="720,730 810,720 800,850 730,850" fill="#ddd6fe"/>
+    <polygon points="810,720 850,730 860,860 800,850" fill="#f1f5f9"/>
+
+    <polygon points="360,860 480,860 470,980 320,970" fill="#e2e8f0"/>
+    <polygon points="480,860 550,850 560,980 470,980" fill="#cbd5e1"/>
+    <polygon points="550,850 630,850 640,990 560,980" fill="#e2e8f0"/>
+    <polygon points="630,850 730,850 710,990 640,990" fill="#cbd5e1"/>
+    <polygon points="730,850 800,850 790,990 710,990" fill="#e2e8f0"/>
+    <polygon points="800,850 860,860 840,1000 790,990" fill="#f1f5f9"/>
+  </g>
+
+  <!-- Drive-Distance Isochrones (Network Analyst Catchments) -->
+  <!-- 15-Minute Drive Isochrone (Outer Contour) -->
+  <path d="M 620,290 C 760,300 860,360 880,500 C 890,620 850,740 760,790 C 660,830 530,820 450,730 C 370,650 360,530 430,420 C 490,330 540,290 620,290 Z" 
+        fill="url(#isoOuterLight)" stroke="#7c3aed" stroke-width="2.6" stroke-dasharray="9,6"/>
+
+  <!-- 10-Minute Drive Isochrone (Mid Contour) -->
+  <path d="M 610,360 C 700,370 780,420 790,520 C 800,600 760,690 690,720 C 610,750 510,720 480,640 C 440,560 470,460 520,400 C 560,360 580,360 610,360 Z" 
+        fill="url(#isoMidLight)" stroke="#2563eb" stroke-width="2.8" stroke-dasharray="6,4"/>
+
+  <!-- 5-Minute Drive Isochrone (Primary Catchment) -->
+  <path d="M 610,430 C 670,440 710,470 710,540 C 710,590 670,640 620,650 C 560,660 520,620 510,560 C 500,500 540,440 610,430 Z" 
+        fill="url(#isoInnerLight)" stroke="#0d9488" stroke-width="3.2"/>
+
+  <!-- Road & Transit Hierarchy -->
+  <!-- Secondary Connecting Streets -->
+  <g stroke="#94a3b8" stroke-width="1.3" opacity="0.6" fill="none">
+    <path d="M 280,390 L 980,430"/>
+    <path d="M 330,510 L 950,550"/>
+    <path d="M 370,630 L 920,670"/>
+    <path d="M 460,170 L 520,990"/>
+    <path d="M 660,180 L 640,990"/>
+    <path d="M 780,160 L 730,990"/>
+    <path d="M 390,300 Q 600,450 850,730"/>
+    <path d="M 460,740 Q 650,600 870,290"/>
+  </g>
+
+  <!-- Major Arterial Thoroughfares (High-Contrast Slate Lines) -->
+  <g stroke="#334155" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity="0.85" fill="none">
+    <path d="M 250,220 C 380,280 490,340 600,530 C 700,700 790,830 880,950"/>
+    <path d="M 350,750 C 460,680 540,610 600,530 C 660,450 740,320 820,180"/>
+    <path d="M 220,400 Q 430,480 600,530 Q 770,580 960,620"/>
+  </g>
+
+  <!-- Click & Collect Demand Spider Lines (Centroids to Selected Hub) -->
+  <g stroke="#b45309" stroke-width="1.6" stroke-dasharray="4,5" opacity="0.7">
+    <line x1="600" y1="530" x2="480" y2="390"/>
+    <line x1="600" y1="530" x2="520" y2="440"/>
+    <line x1="600" y1="530" x2="690" y2="420"/>
+    <line x1="600" y1="530" x2="720" y2="510"/>
+    <line x1="600" y1="530" x2="690" y2="630"/>
+    <line x1="600" y1="530" x2="580" y2="650"/>
+    <line x1="600" y1="530" x2="490" y2="590"/>
+    <line x1="600" y1="530" x2="430" y2="520"/>
+  </g>
+
+  <!-- Competitor Stores & Cannibalisation Assessment Nodes -->
+  <g filter="url(#cleanShadow)">
+    <!-- Competitor Supermarket/C-Store Nodes (Red Triangles) -->
+    <polygon points="460,330 473,354 447,354" fill="#e11d48" stroke="#ffffff" stroke-width="1.6"/>
+    <polygon points="760,340 773,364 747,364" fill="#e11d48" stroke="#ffffff" stroke-width="1.6"/>
+    <polygon points="780,640 793,664 767,664" fill="#e11d48" stroke="#ffffff" stroke-width="1.6"/>
+    <polygon points="440,680 453,704 427,704" fill="#e11d48" stroke="#ffffff" stroke-width="1.6"/>
+    <polygon points="860,500 873,524 847,524" fill="#e11d48" stroke="#ffffff" stroke-width="1.6"/>
+
+    <!-- Existing Brand Stores (Amber Diamond Nodes) -->
+    <rect x="522" y="292" width="16" height="16" rx="2" transform="rotate(45 530 300)" fill="#f59e0b" stroke="#ffffff" stroke-width="1.6"/>
+    <rect x="742" y="742" width="16" height="16" rx="2" transform="rotate(45 750 750)" fill="#f59e0b" stroke="#ffffff" stroke-width="1.6"/>
+    <rect x="372" y="552" width="16" height="16" rx="2" transform="rotate(45 380 560)" fill="#f59e0b" stroke="#ffffff" stroke-width="1.6"/>
+  </g>
+
+  <!-- OPTIMAL NEW SITE LOCATION: M&S Convenience + Click & Collect -->
+  <!-- Target Concentric Spatial Rings -->
+  <circle cx="600" cy="530" r="110" fill="url(#siteAura)"/>
+  <circle cx="600" cy="530" r="70" fill="none" stroke="#0d9488" stroke-width="1.6" stroke-dasharray="5,5" opacity="0.85"/>
+  <circle cx="600" cy="530" r="44" fill="none" stroke="#0f766e" stroke-width="2.2" opacity="0.9"/>
+
+  <!-- High-Precision Center Marker -->
+  <g filter="url(#hubShadow)">
+    <circle cx="600" cy="530" r="24" fill="#0f766e" stroke="#ffffff" stroke-width="3"/>
+    
+    <!-- Precision Crosshair (Symbolic) -->
+    <line x1="600" y1="500" x2="600" y2="517" stroke="#ffffff" stroke-width="2.4" stroke-linecap="round"/>
+    <line x1="600" y1="543" x2="600" y2="560" stroke="#ffffff" stroke-width="2.4" stroke-linecap="round"/>
+    <line x1="570" y1="530" x2="587" y2="530" stroke="#ffffff" stroke-width="2.4" stroke-linecap="round"/>
+    <line x1="613" y1="530" x2="630" y2="530" stroke="#ffffff" stroke-width="2.4" stroke-linecap="round"/>
+    
+    <circle cx="600" cy="530" r="5" fill="#ffffff"/>
+  </g>
+
+  <!-- Clean Cartographic Compass Rose (Abstract, Light-Theme, Zero Text) -->
+  <g transform="translate(1110, 90)" filter="url(#cleanShadow)">
+    <circle cx="0" cy="0" r="36" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5"/>
+    <polygon points="0,-30 6,-8 0,0" fill="#0f766e"/>
+    <polygon points="0,-30 -6,-8 0,0" fill="#0d9488"/>
+    <polygon points="0,30 6,8 0,0" fill="#cbd5e1"/>
+    <polygon points="0,30 -6,8 0,0" fill="#94a3b8"/>
+    <polygon points="30,0 8,6 0,0" fill="#cbd5e1"/>
+    <polygon points="30,0 8,-6 0,0" fill="#94a3b8"/>
+    <polygon points="-30,0 -8,6 0,0" fill="#cbd5e1"/>
+    <polygon points="-30,0 -8,-6 0,0" fill="#94a3b8"/>
+    <circle cx="0" cy="0" r="3" fill="#0f172a"/>
+  </g>
+
+  <!-- Graphic Multi-Step Ratio Scale & Legend Bar (Text-Free) -->
+  <g transform="translate(60, 1120)" filter="url(#cleanShadow)">
+    <rect x="-10" y="-8" width="480" height="42" rx="6" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.2"/>
+    
+    <!-- Scale Bar Alternating Blocks -->
+    <rect x="10" y="10" width="50" height="7" fill="#0f172a"/>
+    <rect x="60" y="10" width="50" height="7" fill="#e2e8f0"/>
+    <rect x="110" y="10" width="50" height="7" fill="#0f172a"/>
+    <rect x="160" y="10" width="50" height="7" fill="#e2e8f0"/>
+    <line x1="10" y1="5" x2="10" y2="22" stroke="#0f172a" stroke-width="1.6"/>
+    <line x1="110" y1="5" x2="110" y2="22" stroke="#0f172a" stroke-width="1.6"/>
+    <line x1="210" y1="5" x2="210" y2="22" stroke="#0f172a" stroke-width="1.6"/>
+
+    <!-- Choropleth Continuous Spectrum Indicator -->
+    <rect x="250" y="10" width="180" height="8" rx="4" fill="url(#isoInnerLight)"/>
+    <rect x="250" y="10" width="180" height="8" rx="4" stroke="#0d9488" stroke-width="1" fill="none"/>
+  </g>
+
+  <!-- Precision Framing Borders -->
+  <rect x="16" y="16" width="1168" height="1168" rx="10" fill="none" stroke="#cbd5e1" stroke-width="1.8"/>
+  <rect x="24" y="24" width="1152" height="1152" rx="6" fill="none" stroke="#e2e8f0" stroke-width="1"/>
+</svg>

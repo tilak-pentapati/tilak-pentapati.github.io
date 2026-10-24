@@ -4,7 +4,49 @@ listing:
   contents: 
     - "projects/python/*/index.qmd"
     - "projects/r/*/index.qmd"
+    - path: "https://tilak-pentapati.github.io/Low-Gravity_Rotary-Percussive_Bite-Drilling_System/"
+      image: "data/drill_mbse.svg"
+      title: "Design Showcase: a Rotary-Percussive Bite Drill for the Moon and Mars"
+      author: "Jay Tilak P."
+      date: "2022-09-07"
+      categories:
+        - "Space Systems"
+        - "Robotics"
+        - "Mechanical Design"
+      description: "How a 45 kg lander takes 1 m ice-bearing samples with no drilling fluid. Physics-based design, digital twin, and trade studies."
   type: grid
   categories: true
   sort: "date desc"
 ---
+
+```{=html}
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  function setAllTargetsBlank() {
+    document.querySelectorAll('a.quarto-grid-link').forEach(function(link) {
+      link.setAttribute('target', '_blank');
+      link.setAttribute('rel', 'noopener noreferrer');
+    });
+  }
+  setAllTargetsBlank();
+
+  // Handle dynamic re-renders when filtering categories or sorting
+  const observer = new MutationObserver(function() {
+    setAllTargetsBlank();
+  });
+  const listingEl = document.getElementById('listing-listing');
+  if (listingEl) {
+    observer.observe(listingEl, { childList: true, subtree: true });
+  }
+
+  // Delegated click handler to guarantee target="_blank"
+  document.addEventListener("click", function(e) {
+    const link = e.target.closest('a.quarto-grid-link');
+    if (link) {
+      link.setAttribute('target', '_blank');
+      link.setAttribute('rel', 'noopener noreferrer');
+    }
+  });
+});
+</script>
+```

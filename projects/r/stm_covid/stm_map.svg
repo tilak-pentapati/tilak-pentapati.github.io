@@ -1,0 +1,126 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 650" width="100%" height="100%" style="background-color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+  <defs>
+    <!-- Gradients -->
+    <linearGradient id="heatGradient" x1="0%" y1="100%" x2="0%" y2="0%">
+      <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.25" />
+      <stop offset="50%" stop-color="#f59e0b" stop-opacity="0.4" />
+      <stop offset="100%" stop-color="#ef4444" stop-opacity="0.6" />
+    </linearGradient>
+    <radialGradient id="gwrKernel" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#2563eb" stop-opacity="0.35"/>
+      <stop offset="60%" stop-color="#3b82f6" stop-opacity="0.15"/>
+      <stop offset="100%" stop-color="#3b82f6" stop-opacity="0"/>
+    </radialGradient>
+    <!-- Dot Grid Pattern -->
+    <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
+      <circle cx="2" cy="2" r="1" fill="#cbd5e1" />
+    </pattern>
+  </defs>
+
+  <!-- Coordinate Grid Background -->
+  <rect width="1000" height="650" fill="url(#grid)" />
+
+  <!-- Latitude/Longitude Axis Markings -->
+  <g stroke="#94a3b8" stroke-width="0.5" stroke-dasharray="4 4" opacity="0.6">
+    <line x1="120" y1="80" x2="880" y2="80" />
+    <line x1="120" y1="220" x2="880" y2="220" />
+    <line x1="120" y1="360" x2="880" y2="360" />
+    <line x1="120" y1="500" x2="880" y2="500" />
+    <line x1="280" y1="50" x2="280" y2="580" />
+    <line x1="460" y1="50" x2="460" y2="580" />
+    <line x1="640" y1="50" x2="640" y2="580" />
+    <line x1="820" y1="50" x2="820" y2="580" />
+  </g>
+
+  <!-- Coordinate Labels -->
+  <g font-size="9" fill="#94a3b8" font-mono="true">
+    <text x="830" y="85">55°N</text>
+    <text x="830" y="225">53°N</text>
+    <text x="830" y="365">52°N</text>
+    <text x="830" y="505">51°N</text>
+    <text x="285" y="595">3°W</text>
+    <text x="465" y="595">1°W</text>
+    <text x="645" y="595">1°E</text>
+  </g>
+
+  <!-- England Stylized Choropleth & Boundary -->
+  <g transform="translate(180, 20)">
+    <!-- Main England Regional Silhouette Geometry -->
+    <path d="M 330,60 
+             L 370,120 L 360,170 L 400,210 L 410,250 
+             L 450,270 L 470,320 L 430,360 L 400,410 
+             L 420,440 L 390,470 L 340,460 L 310,480 
+             L 240,490 L 190,480 L 140,510 L 110,490 
+             L 160,460 L 210,440 L 250,420 L 240,380 
+             L 280,330 L 270,270 L 260,220 L 290,170 
+             L 270,110 Z" 
+          fill="#f1f5f9" stroke="#64748b" stroke-width="1.8" />
+
+    <!-- Sub-regional Hex / Polygon Choropleth Cells (COVID-19 Variance) -->
+    <!-- North -->
+    <polygon points="330,80 350,110 330,130 300,110" fill="#fed7aa" stroke="#cbd5e1" stroke-width="0.8" opacity="0.8"/>
+    <polygon points="350,110 365,150 340,165 330,130" fill="#fdba74" stroke="#cbd5e1" stroke-width="0.8" opacity="0.8"/>
+    <!-- North West & Yorkshire -->
+    <polygon points="290,170 330,165 340,200 300,210" fill="#fca5a5" stroke="#cbd5e1" stroke-width="0.8" opacity="0.85"/>
+    <polygon points="340,165 385,180 395,220 340,200" fill="#ef4444" stroke="#cbd5e1" stroke-width="0.8" opacity="0.85"/>
+    <polygon points="280,210 325,215 320,260 270,250" fill="#fb923c" stroke="#cbd5e1" stroke-width="0.8" opacity="0.85"/>
+    <!-- Midlands -->
+    <polygon points="325,215 370,225 365,270 320,260" fill="#f87171" stroke="#cbd5e1" stroke-width="0.8" opacity="0.9"/>
+    <polygon points="370,225 420,245 405,285 365,270" fill="#fde047" stroke="#cbd5e1" stroke-width="0.8" opacity="0.8"/>
+    <!-- East Anglia -->
+    <polygon points="405,285 450,280 445,335 395,330" fill="#93c5fd" stroke="#cbd5e1" stroke-width="0.8" opacity="0.7"/>
+    <!-- South & London Hotspot -->
+    <polygon points="345,310 395,315 390,360 340,350" fill="#ef4444" stroke="#cbd5e1" stroke-width="0.8" opacity="0.9"/>
+    <polygon points="395,315 425,335 410,370 375,360" fill="#dc2626" stroke="#ffffff" stroke-width="1.2" opacity="0.95"/>
+    <!-- South West -->
+    <polygon points="240,430 280,420 270,455 230,460" fill="#bfdbfe" stroke="#cbd5e1" stroke-width="0.8" opacity="0.8"/>
+    <polygon points="170,470 215,455 205,485 160,490" fill="#dbeafe" stroke="#cbd5e1" stroke-width="0.8" opacity="0.8"/>
+
+    <!-- GWR (Geographically Weighted Regression) Adaptive Bandwidth Kernels -->
+    <circle cx="375" cy="340" r="65" fill="url(#gwrKernel)" stroke="#2563eb" stroke-width="1" stroke-dasharray="3 3"/>
+    <circle cx="375" cy="340" r="3" fill="#1d4ed8"/>
+    <circle cx="340" cy="210" r="50" fill="url(#gwrKernel)" stroke="#2563eb" stroke-width="1" stroke-dasharray="3 3"/>
+    <circle cx="340" cy="210" r="3" fill="#1d4ed8"/>
+
+    <!-- Spatio-temporal Wave Contours -->
+    <path d="M 350,320 C 370,300 410,310 420,350" fill="none" stroke="#dc2626" stroke-width="1.2" opacity="0.7"/>
+    <path d="M 330,300 C 370,270 430,290 440,360" fill="none" stroke="#ea580c" stroke-width="1.2" stroke-dasharray="2 2" opacity="0.7"/>
+    <path d="M 310,280 C 370,240 450,270 460,370" fill="none" stroke="#f59e0b" stroke-width="1" stroke-dasharray="4 2" opacity="0.6"/>
+
+    <!-- Multilevel Hierarchy Pins -->
+    <g transform="translate(378, 340)">
+      <line x1="0" y1="0" x2="35" y2="-40" stroke="#0f172a" stroke-width="1" />
+      <circle cx="35" cy="-40" r="3.5" fill="#0f172a" />
+      <text x="45" y="-36" font-size="10" font-weight="600" fill="#0f172a">Level 2 (UTLA)</text>
+      <text x="45" y="-24" font-size="8.5" fill="#64748b">Level 1 (LTLA / MSOA)</text>
+    </g>
+  </g>
+
+  <!-- Clean Title Block (Minimal Wording) -->
+  <g transform="translate(50, 80)">
+    <rect x="0" y="0" width="4" height="48" fill="#2563eb" rx="2" />
+    <text x="16" y="22" font-size="19" font-weight="700" fill="#0f172a" letter-spacing="-0.5">COVID-19 SPATIAL MODELLING</text>
+    <text x="16" y="42" font-size="12" font-weight="500" fill="#64748b" letter-spacing="0.5">ENGLAND • GWR &amp; SPATIO-TEMPORAL DYNAMICS</text>
+  </g>
+
+  <!-- Legend: Spatial Risk Scale -->
+  <g transform="translate(50, 520)">
+    <text x="0" y="-12" font-size="10" font-weight="600" fill="#475569">RELATIVE INFECTION RISK (β)</text>
+    <rect x="0" y="0" width="160" height="8" rx="4" fill="url(#heatGradient)" />
+    <text x="0" y="22" font-size="9" fill="#94a3b8">Low</text>
+    <text x="75" y="22" font-size="9" fill="#94a3b8">Mean</text>
+    <text x="145" y="22" font-size="9" fill="#94a3b8">High</text>
+  </g>
+
+  <!-- Map Scale & North Arrow -->
+  <g transform="translate(870, 520)">
+    <!-- North Arrow -->
+    <path d="M 20,0 L 25,18 L 20,14 L 15,18 Z" fill="#334155" />
+    <text x="17" y="-5" font-size="11" font-weight="700" fill="#334155">N</text>
+    <!-- Scale Bar -->
+    <line x1="-30" y1="35" x2="30" y2="35" stroke="#334155" stroke-width="2" />
+    <line x1="-30" y1="30" x2="-30" y2="35" stroke="#334155" stroke-width="1.5" />
+    <line x1="30" y1="30" x2="30" y2="35" stroke="#334155" stroke-width="1.5" />
+    <text x="-15" y="48" font-size="9" fill="#64748b">100 km</text>
+  </g>
+</svg>

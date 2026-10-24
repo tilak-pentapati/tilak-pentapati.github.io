@@ -1,41 +1,36 @@
 ---
-title: "Analysing active satellites overhead for each country"
+title: "Real-Time Orbital Tracking and Country-Level Satellite Density Analysis"
 
-author: "Jay T. Pentapati"
-date: "04 March, 2024"
+author: "Jay Tilak P."
+date: "2024-03-04"
 image: satellite.jpg
 
-description: "Interactive Map and RestFUL API"
+description: "An automated geoinformatics workflow and interactive Folium web map evaluating global satellite distributions overhead through RESTful API ingestion, Skyfield astrodynamics and spatial polygon intersections."
 categories:
   - Python
   - Spatial Analysis
-  - Geopandas
-  - CelesTrak
-  - Data Cleaning
-  - RESTFul API
+number-sections: true
 toc: true
-format: 
+toc-depth: 6
+toc-location: right
+toc-expand: 1
+
+format:
   html:
-    theme:
-      light: flatly
-      dark: darkly
-    
-editor: visual
+    highlight-style: github
+    code-tools: true
+    code-fold: true
+    html-math-method: katex
+    fig-align: center
+    fig-width: 10
+    fig-height: 6
+    df-print: paged
+
+
 execute: 
   warning: false
 engine: jupyter
 ---
-
-::: {style="margin-bottom: 40px;"}
-:::
-
-::: callout-tip
-## Note:
-
-Please click 'Go Back' Button for Central Page
-:::
-
-# **Installing Libaries**
 
 ```{python}
 # code for installing libaries
@@ -63,9 +58,9 @@ for package in required_packages:
 # below message is differently coded output
 ```
 
-# **Introduction**
+# Introduction
 
-## **Analysis of Spatial Datasets through APIs**
+## Analysis of Spatial Datasets through APIs
 
 In the rapidly evolving field of Geoinforamtics to address complex scientific questions, the ability to access, analyze, and inference from spatial datasets stands as a cornerstone of research and development. Scientists around the world, trying to gain deeper understanding of many complex geographical phenomena, the dependence on accurate, latest and real-time spatial data has never been more critical. This Assignment uses richness of APIs (Application Programming Interfaces) to access different spatial datasets, offering opportunity to explore satellites/ objects patterns over geographic area.
 
@@ -75,7 +70,7 @@ RESTful APIs means APIs which adheres to principles and constraints of REST, sta
 
 **Finally, This assignment aims to analyze active satellites overhead for each country, same methodology can be implemented to track space objects overhead. It also outlines methodology used in accessing and utilizing various spatial datasets for analysis through APIs.**
 
-## **Datasets**
+## Datasets
 
 Opendatasoft’s Explore API was used to get geographical boundaries of all countries in GeoJSON format. It has limit of getting boundaries of 100 countries in one API Call. This dataset is called World Administrative Boundaries - Countries and Territories in Opendatasoft’s catalog (). Then, Active Satellites information is collected using API developed by Celes Trak ([CelesTrak](https://celestrak.org/NORAD/elements/), 2024), This is also the data providers for TLE API which is one of the NASA APIs that provides two line element set data for earth orbiting objects in JSON format ([NASA Open APIs](https://api.nasa.gov/), 2024).
 
@@ -101,7 +96,7 @@ import matplotlib.font_manager as fm
 import seaborn as sns
 ```
 
-# **TLE or rarely known as Two-Line Element Set**
+# TLE or rarely known as Two-Line Element Set
 
 Three-Line Element Set (TLE) data is a type of format used to store orbital parameters of Earth-orbiting objects, commonly used by the satellite tracking and astronomy discipline. It is Developed by NORAD and NASA, a TLE consists of two lines of alphanumerical data that represent a satellite’s orbital parameters at a specific point in time, enabling the prediction of its future positions. Each line contains crucial information such as the satellite’s inclination, right ascension of the ascending node, eccentricity, argument of perigee, mean anomaly, mean motion, and the epoch of the element set ([Space-Track.org](https://www.space-track.org/documentation#/tle), 2024). This format is instrumental for satellite tracking software to calculate satellite positions and velocities in the orbits of Earth. TLE data is widely used for various applications, including satellite communication, navigation, space debris tracking, and amateur satellite observation, making it a fundamental resource for understanding and monitoring man-made objects in Earth orbit.
 
@@ -161,7 +156,7 @@ satellites_df.head()
 
 ```
 
-# **Satellite Coordinates using Skyfield Library**
+# Satellite Coordinates using Skyfield Library
 
 Skyfield library provides precise astronomical calculations for users, offering a interface to compute positions of planets, stars, and satellites within the solar system and beyond. Leveraging state-of-the-art algorithms and astronomical theories, Skyfield translates complex celestial mechanics into straightforward Python code, enabling the calculation of celestial events, satellite orbits (using TLE data), and astrophotography planning with high accuracy. This library is Ideal for our case, as we need to calculate satellites coordinates in given point in time, then it is possible to estimate **satellites overhead** per country at that instance.
 
@@ -233,11 +228,11 @@ positions_df.head()
 
 <!-- Completed Code transfer till before  'World Admin Boundaries' section -->
 
-## **Rationale for CRS**
+## Rationale for CRS
 
 As this assignment covered, satellites overhead per country, which involves calculating coordinates of satellites i.e. Latitude and Longitude. We are going to use *EPSG:4326-WGS84* as CRS for our spatial analyses, also for its compatibility with global positioning systems (GPS) and web mapping services. WGS84 is cordinate reference system for GPS satellites ([GISGeography, 2023](https://gisgeography.com/wgs84-world-geodetic-system/)).
 
-# **World Administrative Boundaries**
+# World Administrative Boundaries
 
 OpenDataSoft is a comprehensive website designed to ease the process of publishing, sharing, and utilization of data by organizations and governments. It facilitates users to have access to a wide range of datasets across various domains, enhancing innovation, and collaboration. This API provided by OpenDataSoft, offers access to detailed geographic boundaries of countries and administrative regions around the globe ().
 
@@ -331,7 +326,7 @@ countries_gdf['geometry'] = countries_gdf['geometry'].apply(ensure_multipolygon)
 
 ```
 
-## **Map Projection Problem**
+## Map Projection Problem
 
 The issue of map projections where geography of countries extending into the International Date Line presents a challenge in plotting latitude and longitude on 2D maps, particularly for areas like east russia near the 180-degree meridian. This problem arises due to the representation of the Earth’s surface on a two-dimensional plane which requires distortions, and the International Date Line acts as a discontinuity for spatial datasets. As a result, geographical features that span across this meridian may appear fragmented or inaccurately placed on either side of the map. Below code rectifies this issue and adds geometry back to Geo dataframe(countries_gdf).
 
@@ -389,7 +384,7 @@ plt.show()
 
 ```
 
-# **Estimation of Satellites Overhead**
+# Estimation of Satellites Overhead
 
 In this assignment, I am interested to analyze the spatial distribution of satellite positions over time and their intersection with various countries around the globe. The core of below process involves iterating over a series of timestamps, each representing a distinct snapshot of satellite positions. For each timestamp, we extracted corresponding satellite position data and transformed it into a GeoDataFrame. This transformation allowed to perform a spatial join with a pre-existing GeoDataFrame of country boundaries, effectively determining which satellites were located within the boundaries of each country at any given moment.
 
@@ -441,9 +436,7 @@ temporal_satellite_cm = pd.merge(countries_gdf_copy, counts_df_reset, how='left'
 temporal_satellite_cm.head()
 ```
 
-## **Data Classifications**
-
-## 
+## Data Classifications
 
 ```{python}
 def plot_classifications(df, col):
@@ -560,11 +553,14 @@ plt.show()
 # Interactive Map
 
 ```{python}
+#| echo: false
+# Provide a Mapbox token for the map (hidden from HTML)
+mapbox_access_token = 'YOUR_MAPBOX_TOKEN'
+```
+
+```{python}
 # Create Time-averaged column for the popup
 temporal_satellite_cm['Time-averaged'] = temporal_satellite_cm[times].mean(axis=1).round(2)
-
-# Provide a default Mapbox token for testing if one isn't defined
-mapbox_access_token = 'YOUR_MAPBOX_TOKEN'
 
 # below map use mapbbox basemap
 
@@ -605,7 +601,7 @@ i_map
 
 Please click on the geometry of each country to see - No. of satellites at exactly *2024-03-04T00:00:00Z* and Averaged Count over 24 hrs for every country.
 
-# **References**
+# References
 
 1.  Fielding, R (2000). *Architectural Styles and the Design of Network-based Software Architectures*. Doctoral dissertation, University of California, Irvine. Available at: <https://ics.uci.edu/~fielding/pubs/dissertation/top.htm> (Accessed: 06 March 2024).
 
@@ -616,3 +612,64 @@ Please click on the geometry of each country to see - No. of satellites at exac
 4.  CelesTrak (2024) *CelesTrak: Current GP Element Sets*. Available at: <https://celestrak.org/NORAD/elements/> (Accessed: 06 March 2024).
 
 5.  GISGeography (2023) *World Geodetic System (WGS84) - GIS Geography*. Available at: <https://gisgeography.com/wgs84-world-geodetic-system/> (Accessed: 06 March 2024).
+
+```{=html}
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  const toc = document.getElementById("TOC");
+  if (!toc) return;
+
+  const links = Array.from(toc.querySelectorAll('a[data-scroll-target]'));
+  if (!links.length) return;
+
+  const targets = links.map(link => {
+    const id = link.getAttribute('data-scroll-target');
+    try {
+      return document.querySelector(id);
+    } catch(e) {
+      return null;
+    }
+  });
+
+  function onScroll() {
+    const scrollPos = window.pageYOffset || document.documentElement.scrollTop;
+    let currentIdx = 0;
+
+    for (let i = 0; i < targets.length; i++) {
+      if (targets[i]) {
+        const top = targets[i].getBoundingClientRect().top + scrollPos;
+        if (scrollPos >= top - 180) {
+          currentIdx = i;
+        }
+      }
+    }
+
+    links.forEach((l, idx) => {
+      if (idx === currentIdx) {
+        l.classList.add("active");
+      } else {
+        l.classList.remove("active");
+      }
+    });
+
+    // Expand active subsection, collapse others
+    const subUls = toc.querySelectorAll("ul ul");
+    subUls.forEach(ul => {
+      const parentLi = ul.closest("li");
+      const hasActiveChild = ul.querySelector("a.active") !== null;
+      const isParentActive = parentLi && parentLi.querySelector(":scope > a.active") !== null;
+      if (hasActiveChild || isParentActive) {
+        ul.classList.remove("collapse");
+        ul.style.display = "block";
+      } else {
+        ul.classList.add("collapse");
+        ul.style.display = "none";
+      }
+    });
+  }
+
+  window.addEventListener("scroll", onScroll, { passive: true });
+  setTimeout(onScroll, 100);
+});
+</script>
+```

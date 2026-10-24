@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" width="100%" height="100%">
+  <!-- Light Clean Background -->
+  <rect width="1200" height="800" fill="#F8FAFC"/>
+
+  <!-- Subtle Blueprint Grid Pattern -->
+  <defs>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#E2E8F0" stroke-width="0.8" opacity="0.65"/>
+    </pattern>
+    <linearGradient id="flowGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3B82F6"/>
+      <stop offset="100%" stop-color="#0D9488"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="800" fill="url(#grid)"/>
+
+  <!-- ================= LEFT: MAP OF ENGLAND & MOBILITY FLOWS ================= -->
+  <g transform="translate(10, 0)">
+    <!-- Stylized England & Wales Silhouette -->
+    <path d="M 280,180 
+             L 315,190 L 325,230 L 345,290 L 330,320 L 375,360 L 415,390 
+             L 410,430 L 385,465 L 415,505 L 370,520 L 310,515 L 240,545 
+             L 165,585 L 180,550 L 225,500 L 255,475 L 205,435 L 195,380 
+             L 245,355 L 255,310 L 240,250 L 280,180 Z" 
+          fill="#EEF2F6" stroke="#CBD5E1" stroke-width="2" stroke-linejoin="round"/>
+
+    <!-- Key Regional Nodes -->
+    <!-- North / Liverpool Region -->
+    <circle cx="260" cy="340" r="6" fill="#2563EB"/>
+    <circle cx="260" cy="340" r="14" fill="none" stroke="#2563EB" stroke-width="1.5" stroke-opacity="0.3"/>
+    
+    <!-- London / South East Region -->
+    <circle cx="370" cy="485" r="7" fill="#0D9488"/>
+    <circle cx="370" cy="485" r="18" fill="none" stroke="#0D9488" stroke-width="1.5" stroke-opacity="0.3"/>
+
+    <!-- Migration / Mobility Vector Arcs -->
+    <path d="M 260,340 Q 340,380 370,485" fill="none" stroke="url(#flowGrad)" stroke-width="3" stroke-dasharray="6,4"/>
+    <path d="M 260,340 Q 230,420 310,515" fill="none" stroke="#93C5FD" stroke-width="2" stroke-dasharray="4,4"/>
+    <path d="M 325,230 Q 330,360 370,485" fill="none" stroke="#60A5FA" stroke-width="2" stroke-dasharray="4,4"/>
+    
+    <!-- Node Coordinate Markers -->
+    <circle cx="325" cy="230" r="4" fill="#64748B"/>
+    <circle cx="310" cy="515" r="4" fill="#64748B"/>
+  </g>
+
+  <!-- ================= RIGHT: DIAGRAMS & ANALYTICAL CHARTS ================= -->
+  <!-- Diagram 1: Skill vs Duration Matrix -->
+  <g transform="translate(560, 190)">
+    <!-- Axes -->
+    <line x1="60" y1="200" x2="480" y2="200" stroke="#94A3B8" stroke-width="2"/>
+    <line x1="60" y1="200" x2="60" y2="30" stroke="#94A3B8" stroke-width="2"/>
+    
+    <!-- Grid Reference Lines -->
+    <line x1="60" y1="150" x2="480" y2="150" stroke="#E2E8F0" stroke-width="1" stroke-dasharray="4"/>
+    <line x1="60" y1="100" x2="480" y2="100" stroke="#E2E8F0" stroke-width="1" stroke-dasharray="4"/>
+    <line x1="60" y1="50"  x2="480" y2="50"  stroke="#E2E8F0" stroke-width="1" stroke-dasharray="4"/>
+
+    <!-- Empirical Correlation Curves -->
+    <!-- Low-Skill / High Duration Curve -->
+    <path d="M 70,60 C 180,75 320,135 460,175" fill="none" stroke="#0D9488" stroke-width="3.5"/>
+    <!-- High-Skill Mobility Curve -->
+    <path d="M 70,175 C 180,150 320,90 460,50" fill="none" stroke="#2563EB" stroke-width="3.5"/>
+
+    <!-- Data Distribution Bars (SOC Groups) -->
+    <rect x="120" y="110" width="28" height="90" rx="4" fill="#DBEAFE"/>
+    <rect x="200" y="80"  width="28" height="120" rx="4" fill="#BFDBFE"/>
+    <rect x="280" y="130" width="28" height="70" rx="4" fill="#CCFBF1"/>
+    <rect x="360" y="95"  width="28" height="105" rx="4" fill="#99F6E4"/>
+  </g>
+
+  <!-- Diagram 2: Secondary Flow Matrix -->
+  <g transform="translate(560, 440)">
+    <rect x="60" y="10" width="420" height="90" rx="8" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1.5"/>
+    <circle cx="110" cy="55" r="16" fill="#EFF6FF" stroke="#3B82F6" stroke-width="2"/>
+    <line x1="135" y1="55" x2="210" y2="55" stroke="#94A3B8" stroke-width="2" stroke-dasharray="4"/>
+    <circle cx="235" cy="55" r="16" fill="#F0FDFA" stroke="#0D9488" stroke-width="2"/>
+    <line x1="260" y1="55" x2="335" y2="55" stroke="#94A3B8" stroke-width="2" stroke-dasharray="4"/>
+    <circle cx="360" cy="55" r="16" fill="#EEF2F6" stroke="#64748B" stroke-width="2"/>
+  </g>
+
+  <!-- ================= ONLY 4 WORDS ================= -->
+  <text x="600" y="650" text-anchor="middle" 
+        font-family="-apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif" 
+        font-size="44" font-weight="800" fill="#0F172A" letter-spacing="-0.8">
+    Occupation &amp; Residential Mobility
+  </text>
+</svg>

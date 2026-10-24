@@ -1,0 +1,140 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 800" width="100%" height="100%">
+  <defs>
+    <!-- House icon symbol representing the home emojis -->
+    <g id="home-marker">
+      <circle cx="0" cy="0" r="14" fill="#FF5A5F" opacity="0.9" />
+      <circle cx="0" cy="0" r="18" fill="#FF5A5F" opacity="0.25" />
+      <!-- House shape silhouette -->
+      <path d="M -6,1 L -6,6 C -6,6.6 -5.6,7 -5,7 L -2,7 L -2,3 C -2,2.5 -1.5,2 -1,2 L 1,2 C 1.5,2 2,2.5 2,3 L 2,7 L 5,7 C 5.6,7 6,6.6 6,6 L 6,1 Z" fill="#ffffff" />
+      <polygon points="0,-6 -8,1 -6,1 0,-4 6,1 8,1" fill="#ffffff" />
+      <rect x="3" y="-5" width="1.5" height="2.5" fill="#ffffff" />
+    </g>
+    <!-- Secondary density markers -->
+    <g id="home-marker-sm">
+      <circle cx="0" cy="0" r="10" fill="#FF5A5F" opacity="0.85" />
+      <path d="M -4,0.5 L -4,4 C -4,4.4 -3.7,4.7 -3.3,4.7 L -1.3,4.7 L -1.3,2 L 1.3,2 L 1.3,4.7 L 3.3,4.7 C 3.7,4.7 4,4.4 4,4 L 4,0.5 Z" fill="#ffffff" />
+      <polygon points="0,-4 -5,0.5 -3.8,0.5 0,-2.6 3.8,0.5 5,0.5" fill="#ffffff" />
+    </g>
+  </defs>
+
+  <!-- Light Clean Background -->
+  <rect width="1000" height="800" fill="#F8FAFC" />
+
+  <!-- Urban Landmass Tone -->
+  <path d="M 0,0 L 1000,0 L 1000,800 L 0,800 Z" fill="#F1F5F9" />
+
+  <!-- River Mersey (Estuary & Bay curve characteristic of Liverpool) -->
+  <path d="M 0,180 
+           C 150,220 220,280 250,380 
+           C 280,480 320,600 480,720 
+           C 540,760 620,800 700,800 
+           L 0,800 Z" 
+        fill="#E2E8F0" />
+  
+  <!-- Ocean/Irish Sea opening -->
+  <path d="M 0,0 L 120,0 C 90,80 40,140 0,180 Z" fill="#E2E8F0" />
+
+  <!-- Liverpool Docks / Water basins -->
+  <rect x="252" y="320" width="14" height="60" rx="3" fill="#CBD5E1" transform="rotate(-15, 252, 320)" />
+  <rect x="272" y="380" width="12" height="70" rx="3" fill="#CBD5E1" transform="rotate(-25, 272, 380)" />
+  <rect x="312" y="460" width="12" height="50" rx="3" fill="#CBD5E1" transform="rotate(-35, 312, 460)" />
+
+  <!-- Green Parks (Sefton Park, Stanley Park, Princes Park) -->
+  <ellipse cx="620" cy="220" rx="45" ry="35" fill="#E2EED8" /> <!-- Stanley Park area -->
+  <ellipse cx="580" cy="560" rx="55" ry="40" fill="#E2EED8" transform="rotate(30, 580, 560)" /> <!-- Sefton Park area -->
+  <ellipse cx="500" cy="510" rx="25" ry="20" fill="#E2EED8" /> <!-- Princes Park area -->
+
+  <!-- Street Network / Grid Layout -->
+  <!-- Major Arteries -->
+  <path d="M 280,340 Q 450,320 700,200" stroke="#FFFFFF" stroke-width="8" fill="none" />
+  <path d="M 300,380 Q 550,380 850,350" stroke="#FFFFFF" stroke-width="8" fill="none" />
+  <path d="M 320,440 Q 520,480 820,520" stroke="#FFFFFF" stroke-width="8" fill="none" />
+  <path d="M 380,520 Q 580,620 800,700" stroke="#FFFFFF" stroke-width="7" fill="none" />
+  
+  <!-- Outer Ring Road Curve (Queens Drive style) -->
+  <path d="M 680,100 C 780,260 760,520 620,700" stroke="#FFFFFF" stroke-width="9" fill="none" />
+
+  <!-- Connecting Streets -->
+  <g stroke="#FFFFFF" stroke-width="4" stroke-linecap="round">
+    <line x1="380" y1="260" x2="480" y2="450" />
+    <line x1="440" y1="220" x2="560" y2="440" />
+    <line x1="520" y1="300" x2="620" y2="520" />
+    <line x1="350" y1="380" x2="420" y2="560" />
+    <line x1="420" y1="420" x2="500" y2="640" />
+    
+    <line x1="280" y1="300" x2="600" y2="150" />
+    <line x1="320" y1="330" x2="650" y2="240" />
+    <line x1="340" y1="420" x2="720" y2="300" />
+    <line x1="360" y1="460" x2="700" y2="420" />
+    <line x1="420" y1="520" x2="750" y2="460" />
+    <line x1="480" y1="580" x2="720" y2="600" />
+
+    <!-- Local residential grid lanes -->
+    <line x1="360" y1="330" x2="440" y2="310" stroke-width="2.5" />
+    <line x1="370" y1="350" x2="450" y2="330" stroke-width="2.5" />
+    <line x1="390" y1="370" x2="470" y2="350" stroke-width="2.5" />
+    <line x1="430" y1="390" x2="510" y2="370" stroke-width="2.5" />
+    <line x1="440" y1="410" x2="520" y2="390" stroke-width="2.5" />
+    <line x1="480" y1="470" x2="560" y2="450" stroke-width="2.5" />
+    <line x1="510" y1="500" x2="590" y2="480" stroke-width="2.5" />
+    <line x1="530" y1="530" x2="610" y2="510" stroke-width="2.5" />
+    <line x1="550" y1="560" x2="630" y2="540" stroke-width="2.5" />
+  </g>
+
+  <!-- Point Pattern Data Points: Home Emojis / Property Markers -->
+  <!-- Dense City Centre & Baltic Triangle Cluster -->
+  <use href="#home-marker" x="330" y="360" />
+  <use href="#home-marker" x="350" y="380" />
+  <use href="#home-marker" x="320" y="390" />
+  <use href="#home-marker" x="360" y="340" />
+  <use href="#home-marker" x="380" y="370" />
+  <use href="#home-marker" x="340" y="420" />
+  <use href="#home-marker" x="370" y="405" />
+  <use href="#home-marker" x="395" y="350" />
+  <use href="#home-marker-sm" x="315" y="365" />
+  <use href="#home-marker-sm" x="345" y="350" />
+  <use href="#home-marker-sm" x="365" y="375" />
+  <use href="#home-marker-sm" x="355" y="400" />
+  <use href="#home-marker-sm" x="385" y="390" />
+
+  <!-- Georgian Quarter / Knowledge Quarter -->
+  <use href="#home-marker" x="420" y="380" />
+  <use href="#home-marker" x="440" y="360" />
+  <use href="#home-marker" x="430" y="410" />
+  <use href="#home-marker" x="460" y="390" />
+  <use href="#home-marker-sm" x="410" y="360" />
+  <use href="#home-marker-sm" x="450" y="420" />
+  <use href="#home-marker-sm" x="470" y="370" />
+
+  <!-- South Liverpool Cluster (Toxteth, Aigburth, Sefton Park surrounding) -->
+  <use href="#home-marker" x="510" y="480" />
+  <use href="#home-marker" x="540" y="510" />
+  <use href="#home-marker" x="530" y="550" />
+  <use href="#home-marker" x="620" y="510" />
+  <use href="#home-marker" x="640" y="570" />
+  <use href="#home-marker" x="570" y="620" />
+  <use href="#home-marker-sm" x="490" y="460" />
+  <use href="#home-marker-sm" x="520" y="530" />
+  <use href="#home-marker-sm" x="560" y="500" />
+  <use href="#home-marker-sm" x="600" y="550" />
+  <use href="#home-marker-sm" x="630" y="610" />
+  <use href="#home-marker-sm" x="540" y="590" />
+
+  <!-- North Liverpool / Anfield / Everton Cluster -->
+  <use href="#home-marker" x="520" y="240" />
+  <use href="#home-marker" x="560" y="270" />
+  <use href="#home-marker" x="490" y="280" />
+  <use href="#home-marker-sm" x="580" y="210" />
+  <use href="#home-marker-sm" x="510" y="210" />
+  <use href="#home-marker-sm" x="540" y="300" />
+
+  <!-- East Suburbs (Edge Hill / Wavertree / Allerton) -->
+  <use href="#home-marker" x="570" y="410" />
+  <use href="#home-marker" x="630" y="390" />
+  <use href="#home-marker" x="680" y="430" />
+  <use href="#home-marker" x="660" y="490" />
+  <use href="#home-marker-sm" x="610" y="430" />
+  <use href="#home-marker-sm" x="700" y="370" />
+  <use href="#home-marker-sm" x="670" y="540" />
+  <use href="#home-marker-sm" x="720" y="470" />
+</svg>

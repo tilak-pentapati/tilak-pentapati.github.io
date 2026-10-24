@@ -1,0 +1,364 @@
+---
+title: "Big Data Trajectory Analysis: Microsoft GeoLife GPS Dataset"
+author: "Jay Tilak P."
+date: "2023-11-21"
+
+image: bd_gps.svg
+categories:
+  - Python
+  - PySpark
+  - Big Data Analytics
+  - Spatial Analysis
+description: "Distributed processing and spatiotemporal trajectory analysis of Microsoft GeoLife GPS logs using Apache Spark (PySpark)."
+jupyter: python3
+toc: true
+toc-depth: 6
+toc-location: right
+number-sections: true
+format:
+  html:
+    highlight-style: github
+    code-tools: true
+    code-fold: true
+    self-contained: true
+    embed-resources: true
+    html-math-method: katex
+    fig-align: center
+    fig-width: 10
+    fig-height: 6
+    df-print: paged
+execute:
+  eval: true
+  echo: true
+  warning: false
+  cache: true
+---
+
+## Project Overview
+
+This project analyzes a sample of the **Microsoft GeoLife GPS Trajectory Dataset** (originally completed for the *Big Data Analytics COMP 336/529* module at the University of Liverpool)[cite: 1, 8]. Using **Apache Spark (`PySpark`)**, the pipeline cleans raw trajectory logs, performs timezone standardization, and executes distributed window and aggregation operations to extract user mobility metrics—including activity frequency, spatial extremes, altitude spans, geodesic travel distances, and peak velocities[cite: 2, 3, 4, 5, 6, 7, 9].
+
+---
+
+## Environment Setup & Schema Definition
+
+To optimize ingestion performance and ensure strict type safety across the cluster, an explicit schema (`StructType`) is defined prior to loading the raw CSV logs[cite: 9, 10]. A User-Defined Function (`distance_udf`) leveraging `geopy.distance.geodesic` is also registered to compute point-to-point ellipsoidal distances in kilometers.
+
+```{python}
+import os
+import sys
+import glob
+
+# Locate Java runtime dynamically
+java_bin = None
+search_patterns = [
+    os.path.join(sys.prefix, "bin", "java"),
+    os.path.join(sys.prefix, "jre", "bin", "java"),
+    os.path.join(sys.prefix, "Home", "bin", "java"),
+    *glob.glob(f"{sys.prefix}/**/bin/java", recursive=True),
+    *glob.glob("/Library/Java/JavaVirtualMachines/**/Contents/Home/bin/java", recursive=True),
+    "/opt/homebrew/opt/openjdk/bin/java",
+    "/opt/homebrew/bin/java",
+    "/usr/local/opt/openjdk/bin/java",
+    "/usr/local/bin/java",
+    *glob.glob(os.path.expanduser("~/anaconda3/**/bin/java"), recursive=True),
+]
+
+for path in search_patterns:
+    if os.path.isfile(path) and os.access(path, os.X_OK):
+        java_bin = path
+        break
+
+conda_bin = os.path.dirname(sys.executable)
+if java_bin:
+    bin_dir = os.path.dirname(java_bin)
+    os.environ["JAVA_HOME"] = os.path.dirname(bin_dir)
+    os.environ["PATH"] = f"{conda_bin}:{bin_dir}:" + os.environ.get("PATH", "")
+else:
+    os.environ["PATH"] = f"{conda_bin}:" + os.environ.get("PATH", "")
+
+# Ensure PySpark workers and driver use the active Python environment
+os.environ["PYSPARK_PYTHON"] = sys.executable
+os.environ["PYSPARK_DRIVER_PYTHON"] = sys.executable
+
+from pyspark.sql import SparkSession
+# Stop any stale Spark context from previous failed sessions
+try:
+    _active = SparkSession.getActiveSession()
+    if _active:
+        _active.stop()
+except Exception:
+    pass
+from geopy.distance import geodesic
+from pyspark.sql.functions import (
+    col, max as _max, min as _min, first, sum as _sum,
+    lag, to_date, datediff, to_timestamp, concat_ws, from_unixtime,
+    unix_timestamp, row_number, expr, udf, rank, round, coalesce, count,
+    weekofyear, year, lit, when
+)
+from pyspark.sql.types import (
+    StructType, StructField, IntegerType, DoubleType,
+    DateType, StringType, TimestampType
+)
+from pyspark.sql.window import Window
+
+# Initialize Spark session
+spark = (
+    SparkSession.builder.appName("Assignment1")
+    .config("spark.pyspark.python", sys.executable)
+    .config("spark.pyspark.driver.python", sys.executable)
+    .config("spark.executorEnv.PYTHONPATH", ":".join(sys.path))
+    .getOrCreate()
+)
+spark.conf.set("spark.sql.ansi.enabled", "false")
+
+# Define function to calculate geodesic distance between two coordinates in km
+def calculate_distance(lat1, lon1, lat2, lon2):
+    if None in [lat1, lon1, lat2, lon2]:
+        return 0.0
+    from geopy.distance import geodesic
+    coord_1 = (lat1, lon1)
+    coord_2 = (lat2, lon2)
+    return geodesic(coord_1, coord_2).km
+
+# Register User-Defined Function (UDF)
+distance_udf = udf(calculate_distance, DoubleType())
+
+# Define explicit schema for the dataset
+structure = StructType([
+    StructField("UserID", IntegerType(), True),
+    StructField("Latitude", DoubleType(), True),
+    StructField("Longitude", DoubleType(), True),
+    StructField("AllZero", IntegerType(), True),
+    StructField("Altitude", DoubleType(), True),
+    StructField("Timestamp", DoubleType(), True),
+    StructField("Date", DateType(), True),
+    StructField("Time", StringType(), True)
+])
+
+# Update this path to where data.txt is located in your websitev02 folder
+data = spark.read.csv("/Users/jay/Desktop/websiteV02/data/data_python/bd_gps/data.txt", header=True, schema=structure)
+data.show(2)
+```
+
+---
+
+## Part 1: Data Cleaning & Timezone Conversion (GMT to GMT+8)
+
+1. **Precision Formatting:** `Latitude` and `Longitude` are rounded to 4 decimal places, while `Altitude` and `Timestamp` (`DelphiDate`) are rounded to 9–10 decimal places[cite: 2, 10, 11].
+2. **Delphi Timestamp Conversion:** The raw `Timestamp` represents the number of days passed since `1899-12-30 00:00:00 GMT`[cite: 2]. To shift from GMT to China Standard Time ($\text{GMT}+8$), we add $\frac{8\text{ hours}}{24\text{ hours}} = \frac{1}{3}\text{ day}$ to each record, storing the result as `DelphiDateChina`[cite: 2, 11].
+3. **Calendar Date & Time Conversion:** The `Date` and `Time` columns are concatenated into a unified timestamp (`OgTimeStamp`), converted to Unix epoch seconds, shifted forward by $28,800\text{ seconds}$ ($8\text{ hours}$), and converted back into `ChinaTimestamp` and `ChinaDate`[cite: 2, 11, 12].
+
+```{python}
+# Standardize coordinate and metric precision
+data = data.withColumn("Longitude", round(col("Longitude"), 4))
+data = data.withColumn("Latitude", round(col("Latitude"), 4))
+data = data.withColumn("Altitude", round(col("Altitude"), 9))
+data = data.withColumn("Timestamp", round(col("Timestamp"), 9))
+
+# Shift DelphiDate (+1/3 day) and Unix Timestamp (+8 hours) to GMT+8
+data = data.withColumn("DelphiDate", col("Timestamp"))
+data = data.withColumn("combinedDate", concat_ws(" ", col("Date"), col("Time")))
+data = data.withColumn("OgTimeStamp", col("combinedDate").cast("timestamp"))
+data = data.withColumn("ChinaTimestamp", from_unixtime(unix_timestamp("OgTimeStamp") + (8 * 60 * 60)))
+data = data.withColumn("DelphiDateChina", round(col("DelphiDate") + (1 / 3), 10))
+
+# Drop intermediate columns
+data = data.drop("combinedDate", "Timestamp", "OgTimeStamp", "DelphiDate")
+data.show(5)
+```
+
+---
+
+## Part 2: User Consistency (Days with $\ge 5$ Data Points)
+
+We extract `ChinaDate` from `ChinaTimestamp` and group by `UserID` and `ChinaDate` to count daily records (`DataPointsPerEachDay`)[cite: 3, 12]. After filtering for days with at least 5 records, we count the qualifying days per user and output the Top 5 users, breaking ties by preferring smaller `UserID` values[cite: 3, 12, 13, 14].
+
+```{python}
+data = data.withColumn("ChinaDate", to_date(col("ChinaTimestamp")))
+
+User_Daily_Activity = data.groupBy("UserID", "ChinaDate").agg(
+    count("ChinaDate").alias("DataPointsPerEachDay")
+)
+
+Day_at_least_five_points = User_Daily_Activity.filter(col("DataPointsPerEachDay") >= 5)
+
+user_DayCounts_AtleastFive = Day_at_least_five_points.groupBy("UserID").agg(
+    count("ChinaDate").alias("DaysWithAtleastFivePerUser")
+)
+
+Top_Five_users = user_DayCounts_AtleastFive.orderBy(
+    col("DaysWithAtleastFivePerUser").desc(), col("UserID")
+).limit(5)
+
+Top_Five_users.show()
+```
+
+---
+
+## Part 3: Weekly Tracking Volume ($> 100$ Data Points per Week)
+
+Using `year()` and `weekofyear()` on `ChinaDate`, we group by `UserID`, `Year`, and `WeekNo` so identical week numbers across different calendar years remain distinct[cite: 4, 13]. We filter for high-volume weeks exceeding 100 data points and aggregate the total number of qualifying weeks per user[cite: 4, 13].
+
+```{python}
+data = data.withColumn("Year", year(col("ChinaDate")))
+data = data.withColumn("WeekNo", weekofyear(col("ChinaDate")))
+
+weekly_Activity_No = data.groupBy("UserID", "Year", "WeekNo").agg(
+    count("WeekNo").alias("DataPointsPerWeek")
+)
+
+More_than_hundred = weekly_Activity_No.filter(col("DataPointsPerWeek") > 100)
+
+user_week_counts = More_than_hundred.groupBy("UserID").agg(
+    count("WeekNo").alias("No.of.WeeksWithMoreThan100")
+)
+
+user_week_counts.show()
+```
+
+---
+
+## Part 4: Southernmost Reach (Minimum Latitude per User)
+
+To find the southernmost point reached by each user and the earliest date it occurred, we aggregate `min("Latitude")` per user and join the result back to the main dataset[cite: 5, 14]. A Window specification partitioned by `UserID` and `Latitude` ordered chronologically by `ChinaDate` extracts the first date (`first("ChinaDate")`) in the event of ties[cite: 5, 14].
+
+```{python}
+min_latitude = data.groupBy("UserID").agg(_min("Latitude").alias("MinLatitude"))
+
+dataset_with_min_latitude = data.join(min_latitude, "UserID").filter(
+    col("Latitude") == col("MinLatitude")
+)
+
+windowSpec = Window.partitionBy("UserID", "Latitude").orderBy("ChinaDate")
+
+dataset_with_min_latitude = dataset_with_min_latitude.withColumn(
+    "DayOrFirstDayAtMinLatitude", first("ChinaDate").over(windowSpec)
+)
+
+output = dataset_with_min_latitude.select(
+    "UserID", "Latitude", "DayOrFirstDayAtMinLatitude"
+).distinct()
+
+output.orderBy("Latitude").show()
+```
+
+---
+
+## Part 5: Maximum Daily Altitude Span
+
+For every user and date, we compute the vertical elevation span:
+$$\text{DailyAltitudeSpan} = \max(\text{Altitude}) - \min(\text{Altitude})$$
+We then aggregate by `UserID` to find each user's maximum single-day elevation change and rank the Top 5 users[cite: 6, 15, 16].
+
+```{python}
+daily_altitude_span = data.groupBy("UserID", "ChinaDate").agg(
+    (_max("Altitude") - _min("Altitude")).alias("DailyAltitudeSpan")
+)
+
+max_altitude_span = daily_altitude_span.groupBy("UserID").agg(
+    _max("DailyAltitudeSpan").alias("MaxAltitudeSpan")
+)
+
+top_users_altitude = max_altitude_span.orderBy(col("MaxAltitudeSpan").desc()).limit(5)
+top_users_altitude.show()
+```
+
+---
+
+## Part 6: Geodesic Distance Traveled (Daily Peak & Cumulative Total)
+
+Using a Window partitioned by `UserID` and ordered by `ChinaTimestamp`, we lag `Latitude` and `Longitude` to pair each observation with its preceding coordinate[cite: 6, 16]. Initial `NULL` values per user are coalesced with the current coordinate so the starting point distance evaluates to `0.0 km`[cite: 9, 16]. Segment distances are computed via `distance_udf`, summed by day, and aggregated to identify each user's highest-mileage day alongside the cumulative distance across all users[cite: 7, 17].
+
+```{python}
+windowAbstract = Window.partitionBy("UserID").orderBy("ChinaTimestamp")
+
+data = data.withColumn(
+    "prevLatitude", coalesce(lag("Latitude").over(windowAbstract), col("Latitude"))
+)
+data = data.withColumn(
+    "prevLongitude", coalesce(lag("Longitude").over(windowAbstract), col("Longitude"))
+)
+
+# Calculate point-to-point geodesic distance in km
+data = data.withColumn(
+    "Distance", distance_udf("prevLatitude", "prevLongitude", "Latitude", "Longitude")
+)
+
+# Daily total distance per user
+daily_distances = data.groupBy("UserID", "ChinaDate").agg(
+    _sum("Distance").alias("DailyTotalDistancesPerUser")
+)
+
+# Maximum single-day distance per user
+max_distances = daily_distances.groupBy("UserID").agg(
+    _max("DailyTotalDistancesPerUser").alias("MaxDistanceForEachUser")
+)
+
+max_distance_day = daily_distances.join(max_distances, "UserID").filter(
+    col("DailyTotalDistancesPerUser") == col("MaxDistanceForEachUser")
+)
+
+max_distance_output = max_distance_day.select(
+    "UserID", "ChinaDate", "MaxDistanceForEachUser"
+)
+max_distance_output.show()
+
+# Total distance traveled across all users and days
+total_distance = daily_distances.agg(
+    _sum("DailyTotalDistancesPerUser").alias("TotalDistanceByAllUsers")
+)
+total_distance.show()
+```
+
+---
+
+## Part 7: Peak Travel Speed ($km/hr$) & Earliest Occurrence
+
+To compute segment velocities, `ChinaTimestamp` is lagged across the user-ordered window (`prevChinaTimestamp`), with initial nulls defaulted to `2001-01-15 00:00:00` to prevent division-by-zero errors[cite: 7, 8, 18]. Elapsed time in seconds (`TimeDiffSecs`) is converted to hours, and speed is calculated as:
+$$\text{SpeedKmHour} = \frac{\text{Distance}}{\text{TimeDiffSecs} / 3600}$$
+After joining each user's maximum speed back to the main DataFrame, `row_number()` over a `ChinaDate`-ordered window isolates the earliest date (`rank == 1`) that peak speed was achieved[cite: 8, 19].
+
+```{python}
+null_timestamp = to_timestamp(lit("2001-01-15 00:00:00"))
+windowAbstractN = Window.partitionBy("UserID").orderBy("ChinaTimestamp")
+
+data = data.withColumn(
+    "prevChinaTimestamp",
+    coalesce(lag("ChinaTimestamp").over(windowAbstractN), null_timestamp)
+)
+
+data = data.withColumn(
+    "TimeDiffSecs",
+    unix_timestamp("ChinaTimestamp") - unix_timestamp("prevChinaTimestamp")
+)
+
+data = data.withColumn(
+    "SpeedKmHour",
+    when(col("TimeDiffSecs") > 0, col("Distance") / (col("TimeDiffSecs") / 3600)).otherwise(0.0)
+)
+
+max_speeds = data.groupBy("UserID").agg(
+    _max("SpeedKmHour").alias("MaxSpeedKmHour")
+)
+
+max_speed_day = data.join(max_speeds, "UserID").filter(
+    col("SpeedKmHour") == col("MaxSpeedKmHour")
+)
+
+# Rank by ChinaDate to extract the earliest date in case of ties
+windowAbstractNew = Window.partitionBy("UserID").orderBy("ChinaDate")
+max_speed_day = max_speed_day.withColumn("rank", row_number().over(windowAbstractNew))
+
+max_speed_day = max_speed_day.filter(col("rank") == 1).select(
+    "UserID", "MaxSpeedKmHour", "ChinaDate"
+)
+
+max_speed_day.show()
+```
+
+---
+
+## References
+
+* Spark SQL Working with Unix Timestamp - *Spark By {Examples}* (2023). Available at: [https://sparkbyexamples.com/spark/spark-sql-unix-timestamp/](https://sparkbyexamples.com/spark/spark-sql-unix-timestamp/)[cite: 8].

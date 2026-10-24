@@ -1,0 +1,992 @@
+---
+title: "Ordinary Least Squares Regression for modelling Green Central Heating in Census 2021"
+description: "Multivariate regression analysis of Census 2021 data revealing how dwelling morphology, off-gas-grid infrastructure and housing tenure affect residential green heating uptake across England and Wales."
+categories:
+  - R
+  - Spatial Econometrics
+  - OLS Regression
+
+author: "Jay Tilak P."
+date: "2024-01-08"
+image: greenCH.svg
+toc: true
+toc-depth: 6
+toc-location: right
+number-sections: true
+format:
+  html:
+    highlight-style: github
+    code-tools: true
+    code-fold: true
+    self-contained: true
+    embed-resources: true
+    html-math-method: katex
+    fig-align: center
+    fig-width: 10
+    fig-height: 6
+    df-print: paged
+execute:
+  echo: true
+  warning: false
+  message: false
+---
+
+## Introduction
+
+The focal point of this report centres around the research question: **"What are the key determinants impacting the implementation of green central heating in the districts of the UK?"** This question is highly relevant in the context of rising environmental awareness, residential decarbonisation targets, and the transition toward a sustainable energy future. Domestic heating accounts for a substantial share of national greenhouse gas emissions, meaning that the adoption of green central heating systems—such as heat pumps, biomass boilers, solar thermal, and district or communal heat networks—stands as a crucial pillar in reducing residential carbon footprints and promoting energy-efficient practices.
+
+Understanding the socio-economic, demographic, and housing-stock factors that shape the uptake of green central heating technologies provides actionable insight for both public policymakers and private-sector energy markets. Effective decarbonisation policy requires more than technological availability; it requires identifying how lifestyle patterns, housing tenure, dwelling structure, and local heating infrastructure interact across different local authorities.
+
+This report is systematically organised to follow the end-to-end statistical modelling workflow required by my coursework:
+
+1. **Literature Review and Variables Selection Rationale** summarises existing empirical research on sustainable household technology adoption and motivates our candidate predictors.
+2. **Methodology & Setup** introduces the **2021 Census** district-level dataset ($N = 331$ local authority districts across $55$ variables) and outlines the quantitative modelling strategy.
+3. **Univariate Description of Outcome Variable** examines the distribution, skewness, central tendency, and dispersion of `Green_Central_Heating`.
+4. **Correlation Analysis of Outcome Variable** screens bivariate associations between `Green_Central_Heating` and all other continuous and categorical variables in the dataset (excluding the identifier `District`) using rank-based correlation (**Table 1**).
+5. **Selection of Predictor Variables** justifies the five chosen candidate predictors (four continuous and one newly constructed binary categorical variable, `Age_Profile`).
+6. **Regression Model Fitting Strategy & Initial 'Best' Model Identification** applies the **Narrative approach** across three sequential Ordinary Least Squares (OLS) models (`model1`, `model2`, `model3`) to assess confounding ("explained away" effects) and identify the initial 'best' main-effects specification (**Tables 2 & 3**).
+7. **Interaction Effect Evaluation** tests all two-way multiplicative interactions among the main predictors (`model2i_first`, **Table 4**) and uses backwards elimination to retain statistically significant interactions (`model2i`, **Table 5** and **Figures 1–3**).
+8. **Enhancing the 'Best' Model (Polynomials)** evaluates non-linear quadratic terms across the continuous predictors (**Table 6**) to arrive at the final preferred model (`M2`, **Table 7**).
+9. **Assessment of the Final Model** conducts regression diagnostics—residual normality (**Figure 4**), homoscedasticity (**Figure 5**), multicollinearity ($\text{VIF}$), and error independence (Durbin-Watson)—evaluates the relative importance of predictors via **Adequacy** (**Figure 6**), and synthesises what the model reveals about the UK housing landscape.
+
+---
+
+## Literature Review and Variables Selection Rationale
+
+Recent studies in environmental sciences and energy socio-economics have investigated the drivers behind household adoption of sustainable technologies such as green central heating. Empirical research demonstrates that residential technology adoption is not merely a function of technological availability, but is strongly conditioned by socio-economic and demographic characteristics (Hooks *et al.*, 2022). Educational attainment, economic activity, housing type, tenure, and environmental awareness play central roles in the uptake of green energy technologies, as highlighted by Bruckmann, Willibald and Blanco (2021) in their regional study of sustainable technology diffusion without strong policy mandates.
+
+Drawing on this literature, potential district-level determinants include economic activity and employment structure (`Full_Time_Employee`), dwelling morphology (`Detached`), household tenure (`Owned`), demographic age structure (`Age_Profile`), and existing heating infrastructure (`No_Central_Heating`). In particular, examining the proportion of households with no central heating (`No_Central_Heating`) allows us to test whether off-grid districts lacking conventional mains-gas central heating are more inclined to adopt alternative green central heating options, or whether a lack of central heating instead reflects urban deprivation and lower capacity for capital-intensive energy retrofits.
+
+---
+
+## Methodology & Setup
+
+### Dataset Description
+
+The data analysed in this report come from the **2021 Census** collected by the Office for National Statistics (ONS) in March 2021 (Office for National Statistics, 2023). The course dataset (`Census_2021.Rdata`) is aggregated to the local authority district level across England and Wales and contains **$N = 331$ districts** (rows) and **$55$ variables** (columns):
+
+- **$49$ continuous numeric variables**, mostly expressed as percentages of households, residents, or workers in each district (plus district-level summary measures such as `Mean_Age` and population `Density`).
+- **$6$ categorical factor variables** capturing administrative geography (`District`, `County`, `Region`, `Super_Region`, `South_East`, and `Country`).
+
+### Environment Setup and Package Loading
+
+The R chunk below checks that all required packages are installed in the active R environment, loads them in the appropriate order (loading `ENVS450` after `tidyverse` so course helper functions like `skew()`, `cor.results()`, `coeffs()`, and `regress.compare()` are available while preserving `dplyr::select()` over `MASS::select()`), loads `Census_2021.Rdata` from `data/data_r/gch_dataNfunc/`, and sources the course helper script `Session_10_functions.R` (which provides `adequacy_lm()`).
+
+```{r}
+#| label: setup-packages-data
+#| code-summary: "Check/install required packages, load libraries, and load Census 2021 data"
+
+cran_pkgs <- c(
+  "MASS",       # Supports backwards elimination and regression utilities
+  "car",        # Regression diagnostics: vif(), spreadLevelPlot(), ncvTest(), durbinWatsonTest()
+  "tidyverse",  # Data wrangling (dplyr, tidyr, forcats) and plotting (ggplot2)
+  "broom",      # Tidy model summaries: tidy(), glance(), augment()
+  "leaps",      # All-subsets regression support
+  "scales",     # Axis formatting for ggplot2
+  "sjPlot",     # Marginal effect interaction plots: plot_model()
+  "gridExtra",  # Side-by-side plot arrangement: grid.arrange()
+  "knitr"       # Formatted markdown/HTML tables: kable()
+)
+
+missing_pkgs <- cran_pkgs[!vapply(cran_pkgs, requireNamespace, logical(1), quietly = TRUE)]
+if (length(missing_pkgs) > 0) {
+  install.packages(missing_pkgs, repos = "https://cloud.r-project.org")
+}
+
+library(MASS)
+library(car)
+library(tidyverse)
+library(ENVS450)
+library(broom)
+library(leaps)
+library(scales)
+library(sjPlot)
+library(gridExtra)
+library(knitr)
+
+select <- dplyr::select
+
+# Robust path resolution across project-level, site-level, and interactive environments
+data_candidates <- c(
+  file.path("..", "..", "..", "data", "data_r", "gch_dataNfunc", "Census_2021.Rdata"),
+  file.path("data", "data_r", "gch_dataNfunc", "Census_2021.Rdata"),
+  "/Users/jay/Desktop/websiteV02/data/data_r/gch_dataNfunc/Census_2021.Rdata"
+)
+data_path <- data_candidates[file.exists(data_candidates)][1]
+load(data_path)
+
+func_candidates <- c(
+  file.path("..", "..", "..", "data", "data_r", "gch_dataNfunc", "Session_10_functions.R"),
+  file.path("data", "data_r", "gch_dataNfunc", "Session_10_functions.R"),
+  "/Users/jay/Desktop/websiteV02/data/data_r/gch_dataNfunc/Session_10_functions.R"
+)
+func_path <- func_candidates[file.exists(func_candidates)][1]
+source(func_path)
+```
+
+Let us verify the dimensions and variable types of the `census` data frame:
+
+```{r}
+#| label: inspect-dataset
+#| code-summary: "Verify dimensions and variable classes of the Census 2021 dataset"
+
+tibble(
+  Metric = c(
+    "Number of districts (rows)",
+    "Total variables (columns)",
+    "Continuous (numeric) variables",
+    "Categorical (factor) variables"
+  ),
+  Value = c(
+    nrow(census),
+    ncol(census),
+    sum(vapply(census, is.numeric, logical(1))),
+    sum(vapply(census, is.factor, logical(1)))
+  )
+) %>%
+  kable(caption = "Summary of the Census 2021 District-Level Dataset (`census`)")
+```
+
+### Analytical Workflow
+
+Our modelling workflow proceeds in five stages:
+
+1. **Univariate exploration** of the continuous outcome variable `Green_Central_Heating` to assess its distributional shape and select appropriate summary statistics.
+2. **Bivariate correlation screening** across all candidate variables in the dataset (excluding the identifier `District`), alongside the creation of a recoded binary demographic factor `Age_Profile` (dichotomising `Age_65_plus` at its median into `"Youthful"` vs. `"Ageing"` districts).
+3. **Narrative regression modelling** starting from a single focal predictor (`Full_Time_Employee` in `model1`), adding housing and heating controls (`Detached`, `No_Central_Heating`, `Owned` in `model2`), and testing the demographic factor (`Age_Profile` in `model3`) to identify our initial 'best' model.
+4. **Refinement via interactions and polynomials**, first testing all $\binom{4}{2} = 6$ two-way interactions (`model2i_first`) and eliminating non-significant terms to obtain `model2i` (`Model 2 IS`), then testing quadratic polynomial terms (`M1`–`M4`) to arrive at the final model `M2`.
+5. **Model diagnostics and predictor adequacy**, evaluating residual normality, constant error variance, multicollinearity, autocorrelation, and single-predictor $R^2$ adequacy (`adequacy_lm()`).
+
+---
+
+## Univariate Description of Outcome Variable
+
+Our outcome variable of interest is **`Green_Central_Heating`**, a continuous variable measuring the **percentage of households in a local authority district that use one or more 'green' forms of central heating** (defined in the Census 2021 data dictionary as renewable energy systems such as heat pumps or biomass, district/communal heat networks, or tank/bottled gas).
+
+### Skewness, Central Tendency, and Dispersion
+
+Before summarising a continuous variable, we examine its **skewness**, which measures the asymmetry of its distribution around its mean $\bar{Y}$:
+
+$$\text{Skewness} = \frac{\frac{1}{n}\sum_{i=1}^{n}(Y_i - \bar{Y})^3}{\left[\frac{1}{n}\sum_{i=1}^{n}(Y_i - \bar{Y})^2\right]^{3/2}}$$
+
+A symmetric normal distribution has $\text{Skewness} \approx 0$, whereas distributions with $|\text{Skewness}| > 1$ are substantially skewed. When a continuous variable has $\text{Skewness} > 1$, the arithmetic mean and standard deviation are distorted by extreme values in the right tail. We therefore use the **Median** ($50\text{th}$ percentile, $Q_2$) to measure central tendency and the **Inter-Quartile Range ($\text{IQR} = Q_3 - Q_1$)** to measure dispersion across the middle $50\%$ of districts.
+
+```{r}
+#| label: univariate-outcome
+#| code-summary: "Compute skewness, median, and IQR for Green_Central_Heating"
+
+gch_skew   <- skew(census$Green_Central_Heating)
+gch_median <- median(census$Green_Central_Heating, na.rm = TRUE)
+gch_iqr    <- IQR(census$Green_Central_Heating, na.rm = TRUE)
+
+cat("skew(census$Green_Central_Heating):  ", gch_skew, " (rounded:", round(gch_skew, 2), ")\n")
+cat("median(census$Green_Central_Heating):", gch_median, " (rounded:", round(gch_median, 2), ")\n")
+cat("IQR(census$Green_Central_Heating):   ", gch_iqr, " (rounded:", round(gch_iqr, 2), ")\n")
+```
+
+```{r}
+#| label: fig-univariate-density
+#| fig-cap: "Distribution of Green Central Heating (%) across UK Local Authority Districts (N = 331), showing positive skewness (skew = 1.73) and the median (8.73%)."
+#| code-summary: "Plot histogram and kernel density of Green_Central_Heating"
+
+ggplot(data = census, aes(x = Green_Central_Heating)) +
+  geom_histogram(aes(y = after_stat(density)), bins = 30, fill = "steelblue", colour = "white", alpha = 0.7) +
+  geom_density(colour = "navy", linewidth = 1) +
+  geom_vline(xintercept = gch_median, colour = "firebrick", linetype = "dashed", linewidth = 1) +
+  annotate(
+    "text",
+    x = gch_median + 1.2, y = 0.22,
+    label = paste0("Median = ", round(gch_median, 2), "%\nIQR = ", round(gch_iqr, 2), "%\nSkew = ", round(gch_skew, 2)),
+    hjust = 0, colour = "firebrick", fontface = "bold"
+  ) +
+  xlab("Green Central Heating (% of households)") +
+  ylab("Density") +
+  theme_classic()
+```
+
+### Interpretation
+
+`Green_Central_Heating` has a skewness of **`1.731356`** (**`1.73`**). Because $\text{skew} > 1$, the variable is **positively skewed**, with a long right tail representing rural and off-grid districts with high green/alternative heating uptake. Accordingly, the appropriate summary statistics are:
+
+- **Median:** **`8.726839%`** (**`8.73%`**)
+- **Inter-Quartile Range (IQR):** **`1.776986%`** (**`1.78%`**)
+
+---
+
+## Correlation Analysis of Outcome Variable
+
+To satisfy **Instruction #5** (*"Examine how strongly correlated your outcome variable is with ALL of the other variables in the dataset"*) and prepare a categorical demographic predictor for **Instruction #6**, we create a working copy of the dataset (`census_copy`) and construct a binary categorical variable, **`Age_Profile`**, by splitting districts at the median percentage of residents aged 65 and over (`Age_65_plus`):
+
+- Districts with `Age_65_plus < median(Age_65_plus)` are classified as **`"Youthful"`**.
+- Districts with `Age_65_plus >= median(Age_65_plus)` are classified as **`"Ageing"`**.
+
+### Choice of Correlation Measure and Treatment of Variable Types
+
+Following the course correlation guidelines (`Assignment-2--correlations.html`):
+
+1. **Exclusion of Identifier Variables:** `District` is a unique nominal identifier for each local authority (`1` to `331` in alphabetical order) rather than a substantive characteristic, so it is excluded from the correlation analysis (`ID_variables <- "District"`).
+2. **Continuous Predictors ($48$ variables):** Because the continuous outcome `Green_Central_Heating` is positively skewed ($\text{skew} = 1.73$) and several continuous predictors also exhibit skewness, **Spearman's rank correlation ($\rho$, `method = "spearman"`)** is the primary non-parametric measure of monotonic association, supplemented alongside **Pearson's linear correlation ($r$, `method = "pearson"`)**:
+   $$r_{xy} = \frac{\sum_{i=1}^{n}(x_i - \bar{x})(y_i - \bar{y})}{\sqrt{\sum_{i=1}^{n}(x_i - \bar{x})^2 \sum_{i=1}^{n}(y_i - \bar{y})^2}}$$
+3. **Categorical / Nominal Predictors ($6$ variables: `County`, `Region`, `Super_Region`, `South_East`, `Country`, and `Age_Profile`):** Because the outcome variable is continuous, Cramér's $V$ cannot be computed. Converting factor variables to numeric codes (`as.numeric`) allows Spearman's $\rho$ (and Pearson's $r$) to be calculated via `cor.results()`. For binary variables (`South_East` and `Age_Profile`), the magnitude of the correlation is invariant to category order; for multi-category nominal variables (`County`, `Region`, `Super_Region`, `Country`), the coefficient depends on factor category ordering and serves only as a rough guide.
+
+```{r}
+#| label: correlation-analysis-table1
+#| code-summary: "Create Age_Profile and compute Table 1 (Spearman and Pearson correlations with all continuous and categorical predictors, excluding District)"
+
+# Create census_copy and recode Age_65_plus into binary factor Age_Profile
+census_copy <- census %>%
+  mutate(
+    Age_Profile = ifelse(
+      census$Age_65_plus < median(census$Age_65_plus),
+      "Youthful",
+      "Ageing"
+    ),
+    Age_Profile = factor(Age_Profile)
+  )
+
+# Exclude the ID variable District
+ID_variables <- "District"
+
+# Part A: Continuous variables (48 predictors)
+cont_vars <- census_copy %>%
+  select(-all_of(ID_variables)) %>%
+  select_if(is.numeric)
+
+cor_mat_spearman <- cor(cont_vars, method = "spearman", use = "pairwise.complete.obs")
+cor_mat_pearson  <- cor(cont_vars, method = "pearson", use = "pairwise.complete.obs")
+
+res_cont_spearman <- cor.results(
+  cor_mat_spearman,
+  data = cont_vars,
+  var.name = "Green_Central_Heating",
+  sort.by = "abs.r"
+)
+
+res_cont_pearson <- cor.results(
+  cor_mat_pearson,
+  data = cont_vars,
+  var.name = "Green_Central_Heating",
+  sort.by = "abs.r"
+)
+
+table1_cont <- res_cont_spearman %>%
+  transmute(
+    Variable = y,
+    Type = "Continuous",
+    `Spearman rho` = round(r, 4),
+    `Spearman p` = round(p.value, 2),
+    `Spearman sig.` = sig.,
+    `95% CI lb` = round(`95pct.ci.lb`, 3),
+    `95% CI ub` = round(`95pct.ci.ub`, 3)
+  ) %>%
+  left_join(
+    res_cont_pearson %>%
+      transmute(
+        Variable = y,
+        `Pearson r` = round(r, 4),
+        `Pearson sig.` = sig.
+      ),
+    by = "Variable"
+  )
+
+# Part B: Categorical variables (excluding District)
+cat_var_names <- census_copy %>%
+  select(-all_of(ID_variables)) %>%
+  select_if(~ is.factor(.) & !is.ordered(.)) %>%
+  names()
+
+census_nominal <- census_copy %>%
+  select(all_of(c("Green_Central_Heating", cat_var_names))) %>%
+  mutate(across(everything(), as.numeric))
+
+cor_nom_spearman <- cor(census_nominal, method = "spearman", use = "pairwise.complete.obs")
+cor_nom_pearson  <- cor(census_nominal, method = "pearson", use = "pairwise.complete.obs")
+
+res_nom_spearman <- cor.results(
+  cor_nom_spearman,
+  data = census_nominal,
+  var.name = "Green_Central_Heating",
+  sort.by = "abs.r"
+)
+
+res_nom_pearson <- cor.results(
+  cor_nom_pearson,
+  data = census_nominal,
+  var.name = "Green_Central_Heating",
+  sort.by = "abs.r"
+)
+
+table1_cat <- res_nom_spearman %>%
+  transmute(
+    Variable = y,
+    Type = ifelse(y %in% c("Age_Profile", "South_East"), "Categorical (Binary)", "Categorical (Nominal)"),
+    `Spearman rho` = round(r, 4),
+    `Spearman p` = round(p.value, 2),
+    `Spearman sig.` = sig.,
+    `95% CI lb` = round(`95pct.ci.lb`, 3),
+    `95% CI ub` = round(`95pct.ci.ub`, 3)
+  ) %>%
+  left_join(
+    res_nom_pearson %>%
+      transmute(
+        Variable = y,
+        `Pearson r` = round(r, 4),
+        `Pearson sig.` = sig.
+      ),
+    by = "Variable"
+  )
+
+table1_combined <- bind_rows(table1_cont, table1_cat)
+
+kable(
+  table1_combined,
+  align = c("l", "l", "r", "r", "c", "r", "r", "r", "c"),
+  caption = "Table 1 – Correlation of Green Central Heating with All Candidate Variables (Excluding ID Variable District; * Significant at 0.05 level, ** Significant at 0.01 level. Source: Calculations Based on Census 2021 Dataset)"
+)
+```
+
+### Interpretation of Table 1
+
+- **Strongest positive associations:** Under both Spearman's $\rho$ and Pearson's $r$, `Extractive_Job` ($\rho = 0.733^{**}, r = 0.868^{**}$), `Age_65_plus` ($\rho = 0.566^{**}, r = 0.577^{**}$), `Mean_Age` ($\rho = 0.556^{**}, r = 0.567^{**}$), and `Detached` ($\rho = 0.525^{**}, r = 0.519^{**}$) show strong positive associations with `Green_Central_Heating`. Districts characterised by agricultural/extractive activity, older age profiles, and detached housing stock have higher shares of green central heating.
+- **Strongest negative associations:** `Full_Time_Employee` ($\rho = -0.371^{**}, r = -0.475^{**}$) and `Age_0_to_19` ($\rho = -0.506^{**}, r = -0.467^{**}$) are strongly negatively correlated with `Green_Central_Heating`, alongside urban high-density indicators such as `Flats` ($\rho = -0.527^{**}, r = -0.303^{**}$) and `Density` ($\rho = -0.489^{**}, r = -0.322^{**}$).
+- **Other selected predictors:** `No_Central_Heating` ($\rho = 0.140^{*}, r = 0.261^{**}$) and `Owned` ($\rho = 0.200^{**}, r = 0.191^{**}$) are positively associated with `Green_Central_Heating`, while the binary categorical factor `Age_Profile` (`"Youthful"` vs. `"Ageing"`) exhibits a strong negative correlation ($\rho = -0.526^{**}, r = -0.493^{**}$), confirming that youthful districts have significantly lower green central heating uptake than ageing districts.
+
+---
+
+## Selection of Predictor Variables
+
+Following **Instruction #6** (*"Based on your preliminary data exploration, and on your review of previous literature, select FIVE potential predictor variables. The selection must include at least ONE categorical and ONE continuous predictor variable"*), we select four continuous predictors and one binary categorical predictor:
+
+| Variable Label | Variable Name in R | Type | Census 2021 Definition | Spearman $\rho$ | Pearson $r$ |
+| :--- | :--- | :--- | :--- | :---: | :---: |
+| **Variable 1** | `Full_Time_Employee` | Continuous | % of working residents aged 16+ working full-time ($> 30\text{ hours/week}$) | $-0.371^{**}$ | $-0.475^{**}$ |
+| **Variable 2** | `No_Central_Heating` | Continuous | % of households with no central heating | $+0.140^{*}$ | $+0.261^{**}$ |
+| **Variable 3** | `Detached` | Continuous | % of households living in a detached house or bungalow | $+0.525^{**}$ | $+0.519^{**}$ |
+| **Variable 4** | `Owned` | Continuous | % of households owning their accommodation (outright, mortgage, or shared ownership) | $+0.200^{**}$ | $+0.191^{**}$ |
+| **Variable 5** | `Age_Profile` | Categorical (Binary) | Recoded from `Age_65_plus`: `"Ageing"` (reference `0`) vs. `"Youthful"` (coded `1`) | $-0.526^{**}$ | $-0.493^{**}$ |
+
+### Rationale for Predictor Selection
+
+1. **`Full_Time_Employee` (Continuous):** Measures the percentage of working residents in full-time employment ($>30$ hours/week), capturing district-level economic activity and urban labour-market concentration. (Note: while higher education attainment, `Degree_plus`, was initially considered based on the technology-adoption literature, it showed a weak bivariate correlation with `Green_Central_Heating` in Table 1 [$r = -0.077, p = 0.16$], whereas `Full_Time_Employee` showed a strong significant relationship [$r = -0.475, p < 0.01$].)
+2. **`No_Central_Heating` (Continuous):** Captures the percentage of households without central heating, testing whether off-gas-grid districts lacking conventional heating infrastructure are more likely to adopt alternative green central heating systems.
+3. **`Detached` (Continuous):** Represents housing morphology (% detached houses/bungalows), which directly governs the physical space and structural suitability for installing heat pumps, biomass boilers, or tank/bottled gas systems.
+4. **`Owned` (Continuous):** Represents household tenure (% owner-occupied), reflecting the financial autonomy and long-term incentive of homeowners to invest in heating upgrades compared with renters.
+5. **`Age_Profile` (Categorical — `"Ageing"` vs. `"Youthful"`):** Serves as a binary demographic proxy for population age structure and rural-urban demographic sorting.
+
+---
+
+## Regression Model Fitting Strategy & Initial 'Best' Model Identification
+
+### OLS Multiple Regression and Model-Fitting Strategy
+
+For our continuous outcome variable $Y_i$ (`Green_Central_Heating`), an Ordinary Least Squares (OLS) multiple linear regression model with $k$ predictors takes the form:
+
+$$Y_i = \beta_0 + \beta_1 X_{1i} + \beta_2 X_{2i} + \dots + \beta_k X_{ki} + \varepsilon_i, \quad \varepsilon_i \sim \mathcal{N}(0, \sigma^2)$$
+
+where $\beta_0$ is the intercept, each partial regression coefficient $\beta_j$ measures the expected change in $Y$ for a one-unit increase in $X_j$ holding all other predictors constant, and $\varepsilon_i = Y_i - \hat{Y}_i$ is the residual error. We evaluate model fit using the **Coefficient of Determination ($R^2 = 1 - \text{SSR}/\text{SST}$)**, **Adjusted $R^2$**, and the **Akaike Information Criterion ($\text{AIC} = 2p - 2\ln\hat{L}$)**, where lower $\text{AIC}$ values indicate a superior balance between goodness of fit and model parsimony.
+
+Among the four regression model-fitting strategies covered in **ENVS450** (*Narrative*, *Backwards elimination*, *Backward stepwise*, and *All subsets*), we explicitly adopt the **Narrative approach**. Starting with a baseline model containing our focal socio-economic predictor `Full_Time_Employee` (**Model 1**), we sequentially introduce housing and heating infrastructure controls—`Detached`, `No_Central_Heating`, and `Owned` (**Model 2**)—followed by the demographic factor `Age_Profile` (**Model 3**). This allows us to test how much of the initial bivariate effect of `Full_Time_Employee` is **"explained away"** by confounding housing and demographic differences across districts, stopping when adding further predictors yields negligible substantive gain in explanatory power ($R^2$) relative to added model complexity.
+
+### Fitting Models 1, 2, and 3 (Tables 2 & 3)
+
+```{r}
+#| label: fit-narrative-models
+#| code-summary: "Fit Model 1, Model 2, and Model 3 following the Narrative approach"
+
+# Model 1: Focal socio-economic predictor of interest
+model1 <- lm(Green_Central_Heating ~ Full_Time_Employee, data = census_copy)
+
+# Model 2: Add housing structure, heating infrastructure, and tenure controls
+model2 <- lm(
+  Green_Central_Heating ~ Full_Time_Employee + Detached + No_Central_Heating + Owned,
+  data = census_copy
+)
+
+# Model 3: Add demographic age structure (binary categorical variable Age_Profile)
+# Reference category (0) = "Ageing"; Comparison category (1) = "Youthful"
+model3 <- lm(
+  Green_Central_Heating ~ Full_Time_Employee + Detached + No_Central_Heating + Owned + Age_Profile,
+  data = census_copy
+)
+
+stars_fn <- function(p) {
+  case_when(
+    is.na(p) ~ "",
+    p < 0.01 ~ " **",
+    p < 0.05 ~ " *",
+    TRUE     ~ ""
+  )
+}
+
+fmt_coef <- function(model) {
+  tidy(model) %>%
+    transmute(
+      Term = term,
+      val = paste0(sprintf("%.2f", estimate), stars_fn(p.value))
+    )
+}
+
+t2_terms <- fmt_coef(model1) %>% rename(`Model 1` = val) %>%
+  full_join(fmt_coef(model2) %>% rename(`Model 2` = val), by = "Term") %>%
+  full_join(fmt_coef(model3) %>% rename(`Model 3` = val), by = "Term") %>%
+  mutate(across(c(`Model 1`, `Model 2`, `Model 3`), ~ replace_na(.x, "")))
+
+t2_fit <- tibble(
+  Term = c("R-squared (%)", "Adjusted R-squared (%)", "AIC"),
+  `Model 1` = c(
+    sprintf("%.2f", glance(model1)$r.squared * 100),
+    sprintf("%.2f", glance(model1)$adj.r.squared * 100),
+    sprintf("%.2f", glance(model1)$AIC)
+  ),
+  `Model 2` = c(
+    sprintf("%.2f", glance(model2)$r.squared * 100),
+    sprintf("%.2f", glance(model2)$adj.r.squared * 100),
+    sprintf("%.2f", glance(model2)$AIC)
+  ),
+  `Model 3` = c(
+    sprintf("%.2f", glance(model3)$r.squared * 100),
+    sprintf("%.2f", glance(model3)$adj.r.squared * 100),
+    sprintf("%.2f", glance(model3)$AIC)
+  )
+)
+
+table2_clean <- bind_rows(t2_terms, t2_fit)
+
+kable(
+  table2_clean,
+  align = c("l", "r", "r", "r"),
+  caption = "Table 2 – Narrative Approach for Initial 'Best' Model (** Significant at 0.01 level. Source: Calculations based on Census 2021 Dataset)"
+)
+```
+
+Let us also inspect the nested $F$-tests (`anova`) and exact `AIC` comparison across the three models:
+
+```{r}
+#| label: narrative-anova-tidy
+#| code-summary: "Inspect nested F-tests (anova) and AIC for Models 1-3"
+
+anova(model1, model2, model3)
+AIC(model1, model2, model3)
+```
+
+```{r}
+#| label: table3-initial-best-model
+#| code-summary: "Display Table 3: Initial 'Best' Model (Model 2)"
+
+table3_clean <- fmt_coef(model2) %>%
+  rename(`Model 2` = val) %>%
+  bind_rows(
+    tibble(
+      Term = c("R-squared (%)", "Adjusted R-squared (%)", "AIC"),
+      `Model 2` = c(
+        sprintf("%.2f", glance(model2)$r.squared * 100),
+        sprintf("%.2f", glance(model2)$adj.r.squared * 100),
+        sprintf("%.2f", glance(model2)$AIC)
+      )
+    )
+  )
+
+kable(
+  table3_clean,
+  align = c("l", "r"),
+  caption = "Table 3 – Initial Best Model (Model 2) (** Significant at 0.01 level. Source: Calculations based on Census 2021 Dataset)"
+)
+```
+
+### Interpretation of Narrative Models (Tables 2 & 3)
+
+- **Model 1 (`Green_Central_Heating ~ Full_Time_Employee`):** Shows a statistically significant negative slope of **$-0.21^{**}$** (exact: $-0.2097, p < 0.001$), explaining **$R^2 = 22.54\%$** of the variance in green central heating with $\text{AIC} = 1255.30$.
+- **Model 2 (`+ Detached + No_Central_Heating + Owned`):** Adding housing morphology, lack of central heating, and homeownership reduces the magnitude of the `Full_Time_Employee` slope from $-0.2097$ to **$-0.1283$** (**$-0.13^{**}$**)—a reduction of **$38.8\%$**. Thus, nearly two-fifths of the initial apparent effect of `Full_Time_Employee` in Model 1 is **"explained away"** once we account for the fact that urban districts with high full-time employment also have fewer detached homes (`Detached` $\beta = +0.11^{**}$) and fewer off-grid properties (`No_Central_Heating` $\beta = +0.44^{**}$). Controlling for these housing factors more than doubles model fit from $R^2 = 22.54\%$ to **$53.08\%$** (Adjusted $R^2 = 52.51\%$) and reduces $\text{AIC}$ by $159.93$ points to **$1095.37$**.
+- **Model 3 (`+ Age_Profile`):** In Model 3, `Age_Profile` is entered as a dummy variable where `"Ageing"` is the reference category (`0`) and `"Youthful"` is coded `1`. The coefficient `Age_ProfileYouthful = -0.54 **` (exact: $-0.5419, p = 0.00444$) indicates that holding the other four predictors constant, youthful districts have on average $0.54$ percentage points lower green central heating than ageing districts, and the `Full_Time_Employee` slope shrinks further to **$-0.11^{**}$** (exact: $-0.1066$, a $49.2\%$ reduction relative to Model 1). However, although `Age_ProfileYouthful` is statistically significant ($F = 8.21, p = 0.0044, \Delta\text{AIC} = -6.26$), its **substantive contribution to overall model fit is very modest**, increasing $R^2$ by only **$1.16$ percentage points** (from $53.08\%$ to $54.24\%$) and altering the `Full_Time_Employee` slope by just $0.02$. Therefore, on grounds of **model parsimony and practical interpretability**, **Model 2** is selected as the **Initial 'Best' Model** (**Table 3**):
+
+$$\begin{aligned}
+\widehat{\text{Green\_Central\_Heating}} &= 13.73 - 0.13(\text{Full\_Time\_Employee}) + 0.11(\text{Detached}) \\
+&\quad + 0.44(\text{No\_Central\_Heating}) - 0.06(\text{Owned})
+\end{aligned}$$
+
+---
+
+## Interaction Effect Evaluation
+
+### Multiplicative Interaction Effects
+
+In an additive linear model (`Model 2`), the partial slope of each predictor $X_1$ is assumed to be constant across all levels of the other predictors. Adding a two-way multiplicative interaction term $\beta_{12}(X_1 \cdot X_2)$ allows the marginal effect of $X_1$ on $\hat{Y}$ to depend linearly on the moderator $X_2$:
+
+$$\frac{\partial \hat{Y}}{\partial X_1} = \beta_1 + \beta_{12} X_2$$
+
+Here, the main-effect coefficient $\beta_1$ represents the conditional slope of $X_1$ specifically when $X_2 = 0$, while $\beta_{12}$ measures how much the slope of $X_1$ changes for each one-unit increase in $X_2$.
+
+### Step 1: Full Two-Way Interactions Model (`Model 2 I` / `model2i_first`, Table 4)
+
+Starting from the four continuous predictors in `model2`, we first fit `model2i_first` (**`Model 2 I`**) containing all four main effects plus all $\binom{4}{2} = 6$ possible two-way interaction terms:
+
+```{r}
+#| label: fit-interaction-models
+#| code-summary: "Fit full 6-interaction model (model2i_first) and reduced 3-interaction model (model2i)"
+
+# Model 2 I (model2i_first): All 4 main effects + all 6 two-way interactions
+model2i_first <- lm(
+  Green_Central_Heating ~ Full_Time_Employee + Detached + No_Central_Heating + Owned +
+    Full_Time_Employee:Detached +
+    Detached:No_Central_Heating +
+    No_Central_Heating:Owned +
+    Owned:Full_Time_Employee +
+    Detached:Owned +
+    Full_Time_Employee:No_Central_Heating,
+  data = census_copy
+)
+
+# Model 2 IS (model2i): Backwards elimination retaining the 3 significant interactions
+model2i <- lm(
+  Green_Central_Heating ~ Full_Time_Employee + Detached + No_Central_Heating + Owned +
+    Detached:No_Central_Heating +
+    No_Central_Heating:Owned +
+    Detached:Owned,
+  data = census_copy
+)
+
+# Produce Table 4 (Full Two-Way Interactions Model: Model 2 I)
+t4_tidy <- tidy(model2i_first)
+
+table4_clean <- t4_tidy %>%
+  transmute(
+    Term = term,
+    `Model 2 I Estimate` = paste0(sprintf("%.4f", estimate), stars_fn(p.value)),
+    `Std. Error` = sprintf("%.4f", std.error),
+    `t-statistic` = sprintf("%.2f", statistic),
+    `p-value` = sprintf("%.4f", p.value)
+  ) %>%
+  bind_rows(
+    tibble(
+      Term = c("R-squared (%)", "Adjusted R-squared (%)", "AIC"),
+      `Model 2 I Estimate` = c(
+        sprintf("%.2f", glance(model2i_first)$r.squared * 100),
+        sprintf("%.2f", glance(model2i_first)$adj.r.squared * 100),
+        sprintf("%.2f", glance(model2i_first)$AIC)
+      ),
+      `Std. Error` = "",
+      `t-statistic` = "",
+      `p-value` = ""
+    )
+  )
+
+kable(
+  table4_clean,
+  align = c("l", "r", "r", "r", "r"),
+  caption = "Table 4 – Two-Way Interactions Model (Model 2 I) (* Significant at 0.05 level, ** Significant at 0.01 level. Source: Calculations Based on Census 2021 Dataset)"
+)
+```
+
+### Step 2: Backwards Elimination to Obtain `Model 2 IS` (`model2i`, Table 5)
+
+In **Table 4** (`Model 2 I`), including all six two-way interactions simultaneously introduces collinearity among the product terms, rendering all four main-effect $t$-tests and all three interaction terms involving `Full_Time_Employee` (`Full_Time_Employee:Detached` $p = 0.0861$, `Full_Time_Employee:Owned` $p = 0.7904$, `Full_Time_Employee:No_Central_Heating` $p = 0.7948$) statistically non-significant ($p > 0.05$). By contrast, the three housing/heating interactions (`Detached:No_Central_Heating` $p = 0.0017^{**}$, `No_Central_Heating:Owned` $p = 0.0038^{**}$, and `Detached:Owned` $p = 0.0091^{**}$) are all significant at the $1\%$ level.
+
+Applying backwards elimination to remove the three non-significant `Full_Time_Employee` interactions yields **`Model 2 IS` (`model2i`)**, shown alongside `Model 2 I` in **Table 5**:
+
+```{r}
+#| label: table5-aligned-comparison
+#| code-summary: "Produce Table 5: Properly aligned comparison of Model 2 I (model2i_first) and Model 2 IS (model2i)"
+
+t5_m2i_first <- tidy(model2i_first) %>%
+  transmute(
+    Term = term,
+    `Model 2 I` = paste0(sprintf("%.4f", estimate), stars_fn(p.value))
+  )
+
+t5_m2i <- tidy(model2i) %>%
+  transmute(
+    Term = term,
+    `Model 2 IS` = paste0(sprintf("%.4f", estimate), stars_fn(p.value))
+  )
+
+table5_clean <- full_join(t5_m2i_first, t5_m2i, by = "Term") %>%
+  mutate(`Model 2 IS` = replace_na(`Model 2 IS`, "—")) %>%
+  bind_rows(
+    tibble(
+      Term = c("R-squared (%)", "Adjusted R-squared (%)", "AIC"),
+      `Model 2 I` = c(
+        sprintf("%.4f", glance(model2i_first)$r.squared * 100),
+        sprintf("%.4f", glance(model2i_first)$adj.r.squared * 100),
+        sprintf("%.4f", glance(model2i_first)$AIC)
+      ),
+      `Model 2 IS` = c(
+        sprintf("%.4f", glance(model2i)$r.squared * 100),
+        sprintf("%.4f", glance(model2i)$adj.r.squared * 100),
+        sprintf("%.4f", glance(model2i)$AIC)
+      )
+    )
+  )
+
+kable(
+  table5_clean,
+  align = c("l", "r", "r"),
+  caption = "Table 5 – Model 2 I vs Model 2 IS (* Significant at 0.05 level, ** Significant at 0.01 level. Source: Calculations Based on Census 2021 Dataset)"
+)
+```
+
+### Interpretation of `Model 2 IS` (`model2i`)
+
+In **`Model 2 IS`** (**Table 5**), all four main effects and all three retained interaction terms are statistically significant at the $1\%$ level ($p < 0.01$), with **$R^2 = 57.9982\%$** (Adjusted $R^2 = 57.0879\%$) and **$\text{AIC} = 1064.7252$** (improving upon `Model 2` by $+4.92$ percentage points in $R^2$ and $-30.64$ points in $\text{AIC}$):
+
+$$\begin{aligned}
+\widehat{\text{Green\_Central\_Heating}} &= 21.8933 - 0.0798(\text{Full\_Time\_Employee}) - 0.2024(\text{Detached}) \\
+&\quad - 2.7318(\text{No\_Central\_Heating}) - 0.1879(\text{Owned}) \\
+&\quad + 0.0458(\text{Detached} \times \text{No\_Central\_Heating}) \\
+&\quad + 0.0353(\text{No\_Central\_Heating} \times \text{Owned}) \\
+&\quad + 0.0037(\text{Detached} \times \text{Owned})
+\end{aligned}$$
+
+- **Intercept (`21.8933 **`):** The predicted usage of green central heating is $21.89\%$ when all predictors equal zero.
+- **Conditional Main Effects vs. Positive Interactions:** When `Detached = 0` and `Owned = 0`, a $1$ percentage point increase in `No_Central_Heating` changes predicted `Green_Central_Heating` by $-2.7318$ percentage points. However, because both `Detached:No_Central_Heating` ($+0.0458^{**}$) and `No_Central_Heating:Owned` ($+0.0353^{**}$) are positive, the marginal effect of `No_Central_Heating`:
+  $$\frac{\partial \widehat{\text{GCH}}}{\partial \text{No\_Central\_Heating}} = -2.7318 + 0.0458(\text{Detached}) + 0.0353(\text{Owned})$$
+  becomes strongly **positive** in districts with typical or high shares of detached and owner-occupied housing. We visualise these marginal effects across the observed ranges of the predictors in **Figures 1–3**.
+
+### Visualising Interaction Effects (Figures 1, 2, and 3)
+
+```{r}
+#| label: fig-interaction-1
+#| fig-cap: "Figure 1 – Green Central Heating vs Detached (Owned Constant), showing the crossover point at (36.5, 10.2)."
+#| code-summary: "Plot Figure 1: Marginal effect of Detached across levels of Owned (mean +/- SD)"
+
+plot_model(model2i, type = "pred", terms = c("Detached", "Owned")) +
+  ggtitle("") +
+  ylab("Green Central Heating ") +
+  theme_classic() +
+  annotate("text", x = 36, y = 11, label = "(36.5, 10.2)", hjust = 1, vjust = 1, color = "black") +
+  annotate("point", x = 36.5, y = 10.2, color = "yellow", size = 4)
+```
+
+**Interpretation of Figure 1 (`Detached` $\times$ `Owned`):**
+Because the interaction `Detached:Owned` is positive ($\beta = +0.0037^{**}$), the positive slope of `Green_Central_Heating` with respect to `Detached` is steeper in districts with a high proportion of owner-occupied homes (`Owned = 74.82%`, green line) than in districts with lower homeownership (`Owned = 54.64%`, red line). Above the crossover threshold of **`36.5%` detached households** (where predicted green central heating is **`10.2%`**), high-ownership districts exhibit the highest predicted adoption of green central heating.
+
+```{r}
+#| label: fig-interaction-2
+#| fig-cap: "Figure 2 – Green Central Heating vs No Central Heating (Detached Constant)."
+#| code-summary: "Plot Figure 2: Marginal effect of No_Central_Heating across levels of Detached"
+
+plot_model(model2i, type = "pred", terms = c("No_Central_Heating", "Detached")) +
+  ggtitle("") +
+  xlab("No Central Heating") +
+  ylab("Green Central Heating") +
+  theme_classic()
+```
+
+**Interpretation of Figure 2 (`No_Central_Heating` $\times$ `Detached`):**
+In districts with a low percentage of detached houses (`Detached = 13.43%`, red line), predicted green central heating remains almost flat ($\sim 8\%–10\%$) as `No_Central_Heating` increases. Conversely, in districts with a high percentage of detached houses (`Detached = 38.76%`, green line), an increase in `No_Central_Heating` is associated with a steep rise in `Green_Central_Heating` (reaching over $35\%$). This demonstrates that off-grid heating deprivation in dense urban areas does not translate into green central heating, whereas off-gas-grid rural districts with detached properties rely heavily on green/alternative central heating.
+
+```{r}
+#| label: fig-interaction-3
+#| fig-cap: "Figure 3 – Green Central Heating vs Full Time Employee (Owned Constant)."
+#| code-summary: "Plot Figure 3: Marginal effect of Full_Time_Employee across levels of Owned"
+
+plot_model(model2i, type = "pred", terms = c("Full_Time_Employee", "Owned")) +
+  ggtitle("") +
+  ylab("Green Central Heating") +
+  xlab("Full Time Employee") +
+  theme_classic()
+```
+
+**Interpretation of Figure 3 (`Full_Time_Employee` across `Owned`):**
+Because `Full_Time_Employee` does not interact significantly with `Owned`, the three lines are parallel with a negative slope ($\beta = -0.0798^{**}$). Usage of green central heating decreases as the percentage of full-time employees in a district increases, regardless of the level of homeownership.
+
+---
+
+## Enhancing the 'Best' Model (Polynomials)
+
+### Rationale for Choosing Polynomial Predictors
+
+To evaluate whether non-linear effects can further enhance `Model 2 IS` (**Instruction #10**), we consider the three techniques taught in the module: *data transformation*, *polynomial regression*, and *piecewise regression*. We choose **polynomial regression**—adding a quadratic term $\beta_2 X^2$ via `I(X^2)`—because it captures smooth non-linear curvature within an OLS framework while keeping the outcome variable `Green_Central_Heating` in its natural, directly interpretable percentage units.
+
+### Exploratory Bivariate Linear vs. Quadratic Fit
+
+Before adding quadratic terms to the full interaction model, we can visually compare a bivariate linear fit (`~ Owned`) against a quadratic term (`~ I(Owned^2)`):
+
+```{r}
+#| label: fig-polynomial-exploration
+#| fig-cap: "Exploratory comparison of a linear fit (left) vs. quadratic term I(Owned^2) (right) for Green Central Heating against Owned."
+#| code-summary: "Compare linear vs quadratic bivariate fits using grid.arrange"
+
+m1_exp <- lm(Green_Central_Heating ~ Owned, data = census_copy)
+census_copy$predicted_gch_linear <- predict(m1_exp)
+
+g1 <- ggplot(data = census_copy) +
+  geom_point(aes(y = Green_Central_Heating, x = Owned), colour = "red", alpha = 0.7) +
+  geom_line(aes(y = predicted_gch_linear, x = Owned), colour = "blue", linetype = "dashed", linewidth = 0.9) +
+  ggtitle("Linear: ~ Owned") +
+  xlab("Owned (%)") +
+  ylab("Green Central Heating (%)") +
+  theme_classic()
+
+m2_exp <- lm(Green_Central_Heating ~ I(Owned^2), data = census_copy)
+census_copy$predicted_gch_quad <- predict(m2_exp)
+
+g2 <- ggplot(data = census_copy) +
+  geom_point(aes(y = Green_Central_Heating, x = Owned), colour = "red", alpha = 0.7) +
+  geom_line(aes(y = predicted_gch_quad, x = Owned), colour = "blue", linetype = "dashed", linewidth = 0.9) +
+  ggtitle("Quadratic: ~ I(Owned^2)") +
+  xlab("Owned (%)") +
+  ylab("Green Central Heating (%)") +
+  theme_classic()
+
+grid.arrange(g1, g2, ncol = 2)
+```
+
+### Evaluating Candidate Polynomial Models (`M1`–`M4`, Table 6 & Table 7)
+
+We test adding a quadratic term `+ I(X^2)` to `Model 2 IS` (`model2i`) for each of the four continuous predictors in turn:
+
+- **`M1`:** `model2i` + `I(Owned^2)`
+- **`M2`:** `model2i` + `I(Detached^2)`
+- **`M3`:** `model2i` + `I(Full_Time_Employee^2)`
+- **`M4`:** `model2i` + `I(No_Central_Heating^2)`
+
+```{r}
+#| label: table6-polynomial-models
+#| code-summary: "Fit candidate polynomial models M1-M4 and produce Table 6"
+
+M1 <- update(model2i, . ~ . + I(Owned^2))
+
+# Final 'Best' Model M2 using clean + Detached + I(Detached^2) specification
+M2 <- lm(
+  Green_Central_Heating ~ Full_Time_Employee + Detached + I(Detached^2) +
+    No_Central_Heating + Owned +
+    Detached:No_Central_Heating + No_Central_Heating:Owned + Detached:Owned,
+  data = census_copy
+)
+
+M3 <- update(model2i, . ~ . + I(Full_Time_Employee^2))
+M4 <- update(model2i, . ~ . + I(No_Central_Heating^2))
+
+table6_clean <- tibble(
+  Metric = c("R-Squared (%)", "Adjusted R-Squared (%)", "AIC", "Quadratic Term p-value"),
+  `Model 2 IS` = c(
+    sprintf("%.2f", glance(model2i)$r.squared * 100),
+    sprintf("%.2f", glance(model2i)$adj.r.squared * 100),
+    sprintf("%.2f", AIC(model2i)),
+    "—"
+  ),
+  `M 1 (Owned^2)` = c(
+    sprintf("%.2f", glance(M1)$r.squared * 100),
+    sprintf("%.2f", glance(M1)$adj.r.squared * 100),
+    sprintf("%.2f", AIC(M1)),
+    sprintf("%.4f", tidy(M1) %>% filter(term == "I(Owned^2)") %>% pull(p.value))
+  ),
+  `M 2 (Detached^2)` = c(
+    sprintf("%.2f", glance(M2)$r.squared * 100),
+    sprintf("%.2f", glance(M2)$adj.r.squared * 100),
+    sprintf("%.2f", AIC(M2)),
+    sprintf("%.4f *", tidy(M2) %>% filter(term == "I(Detached^2)") %>% pull(p.value))
+  ),
+  `M 3 (Full_Time_Employee^2)` = c(
+    sprintf("%.2f", glance(M3)$r.squared * 100),
+    sprintf("%.2f", glance(M3)$adj.r.squared * 100),
+    sprintf("%.2f", AIC(M3)),
+    sprintf("%.4f", tidy(M3) %>% filter(term == "I(Full_Time_Employee^2)") %>% pull(p.value))
+  ),
+  `M 4 (No_Central_Heating^2)` = c(
+    sprintf("%.2f", glance(M4)$r.squared * 100),
+    sprintf("%.2f", glance(M4)$adj.r.squared * 100),
+    sprintf("%.2f", AIC(M4)),
+    sprintf("%.4f", tidy(M4) %>% filter(term == "I(No_Central_Heating^2)") %>% pull(p.value))
+  )
+)
+
+kable(
+  table6_clean,
+  align = c("l", "r", "r", "r", "r", "r"),
+  caption = "Table 6 – Polynomial Predictor Models (* Significant at 0.05 level. Source: Calculations Based on Census 2021 Dataset)"
+)
+```
+
+As shown in **Table 6**, **`M2`** (`Model 2 IS` + `I(Detached^2)`) is the only polynomial model where the quadratic term is statistically significant ($p = 0.0455 < 0.05$), increasing **$R^2$ to $58.52\%$** (Adjusted $R^2 = 57.49\%$) and lowering **$\text{AIC}$ from $1064.73$ to $1062.61$**. In `M1`, `M3`, and `M4`, the quadratic terms are statistically non-significant ($p > 0.28$) and increase $\text{AIC}$ relative to `Model 2 IS`. Therefore, **`M2` is selected as our Final 'Best' Model** (**Table 7**):
+
+```{r}
+#| label: table7-final-best-model
+#| code-summary: "Display Table 7: Final 'Best' Model (M2)"
+
+m2_tidy <- tidy(M2)
+
+table7_clean <- m2_tidy %>%
+  transmute(
+    Term = term,
+    `M 2 Estimate` = paste0(sprintf("%.4f", estimate), stars_fn(p.value)),
+    `Std. Error` = sprintf("%.4f", std.error),
+    `t-statistic` = sprintf("%.2f", statistic),
+    `p-value` = sprintf("%.5f", p.value)
+  ) %>%
+  bind_rows(
+    tibble(
+      Term = c("R-squared (%)", "Adjusted R-squared (%)", "AIC"),
+      `M 2 Estimate` = c(
+        sprintf("%.2f", glance(M2)$r.squared * 100),
+        sprintf("%.2f", glance(M2)$adj.r.squared * 100),
+        sprintf("%.2f", glance(M2)$AIC)
+      ),
+      `Std. Error` = "",
+      `t-statistic` = "",
+      `p-value` = ""
+    )
+  )
+
+kable(
+  table7_clean,
+  align = c("l", "r", "r", "r", "r"),
+  caption = "Table 7 – Final 'Best' Model (M 2) (* Significant at 0.05 level, ** Significant at 0.01 level. Source: Calculations Based on Census 2021 Dataset)"
+)
+```
+
+The final fitted equation (`M2`) is:
+
+$$\begin{aligned}
+\widehat{\text{Green\_Central\_Heating}} &= 20.8355 - 0.0806(\text{Full\_Time\_Employee}) - 0.2110(\text{Detached}) + 0.0013(\text{Detached}^2) \\
+&\quad - 2.5940(\text{No\_Central\_Heating}) - 0.1525(\text{Owned}) \\
+&\quad + 0.0479(\text{Detached} \times \text{No\_Central\_Heating}) \\
+&\quad + 0.0308(\text{No\_Central\_Heating} \times \text{Owned}) \\
+&\quad + 0.0026(\text{Detached} \times \text{Owned})
+\end{aligned}$$
+
+---
+
+## Assessment of the Final Model
+
+In accordance with **Instruction #12(a)–(d)**, we assess our final preferred model (`M2`) across four diagnostic and interpretive dimensions:
+
+1. **Normality of Residuals (`skew` and density plot)**
+2. **Homoscedasticity (`spreadLevelPlot` and Breusch-Pagan `ncvTest`)**
+3. **Multicollinearity ($\text{VIF}$) and Independence of Errors (`durbinWatsonTest`)**
+4. **Relative Importance of Predictors (`adequacy_lm`) and Real-World Interpretation**
+
+### 10.1 Model Errors Distribution (Normality of Residuals — Figure 4)
+
+```{r}
+#| label: fig-residuals-density
+#| fig-cap: "Figure 4 – Model Errors (.resid) vs Density for Final Model M2."
+#| code-summary: "Compute residual skewness and plot residual density (Figure 4) for M2"
+
+skew_M2_resid <- skew(M2$residuals)
+cat("skew(M2$residuals):", skew_M2_resid, "\n")
+
+ggplot(data = M2) +
+  geom_density(aes(x = .resid), fill = "black") +
+  xlab("Model Errors (.resid)") +
+  ylab("Density") +
+  theme_classic()
+```
+
+**Interpretation of Figure 4:**
+Model residuals ($e_i = Y_i - \hat{Y}_i$) are centred near zero with a skewness of **`0.9542924`**. Because $|\text{skew}(e_i)| < 1$, the residual distribution satisfies the course threshold for approximate normality, substantially reducing the raw outcome skewness of $1.73$. A mild positive tail remains on the right, indicating that a few extreme rural districts have higher green central heating than predicted by the model.
+
+### 10.2 Homoscedasticity (Constant Error Variance — Figure 5 & `ncvTest`)
+
+We test the assumption of constant error variance ($\text{Var}(\varepsilon_i) = \sigma^2$) visually via `car::spreadLevelPlot(M2)` (**Figure 5**) and formally via the Breusch-Pagan / Cook-Weisberg Non-Constant Variance Score Test (`car::ncvTest(M2)`), where the **null hypothesis ($H_0$)** is **constant error variance (homoscedasticity)** and the alternative hypothesis ($H_1$) is that error variance changes systematically with the fitted values (**heteroscedasticity**):
+
+```{r}
+#| label: fig-spread-level-plot
+#| fig-cap: "Figure 5 – Constant Error Variance vs Fitted values (Spread-Level Plot for Final Model M2)."
+#| code-summary: "Plot Figure 5: spreadLevelPlot(M2) and run ncvTest(M2)"
+
+spreadLevelPlot(M2)
+```
+
+```{r}
+#| label: ncv-test-m2
+#| code-summary: "Run Non-Constant Variance Score Test ncvTest(M2)"
+
+ncvTest(M2)
+```
+
+**Interpretation of Figure 5 and `ncvTest(M2)`:**
+In **Figure 5**, the dashed reference line slopes upward from left to right and the solid magenta smoother curves across the left and middle of the plot, indicating that the spread of the studentized residuals increases as the predicted values of `Green_Central_Heating` increase. Formally, `ncvTest(M2)` yields $\chi^2 = 38.16122$ ($\text{df} = 1$) with **$p = 6.5134 \times 10^{-10} \ll 0.05$**. Because $p < 0.05$, we **reject the null hypothesis of constant error variance** and conclude that the model exhibits statistically significant **heteroscedasticity** (error variance is larger in high-adoption rural districts than in low-adoption urban districts).
+
+**How this breach of homoscedasticity can be addressed (Instruction #12b):**
+
+1. **Power / Box-Cox Transformation of the Outcome Variable:** `spreadLevelPlot(M2)` suggests a stabilising power transformation of $\lambda = -1.066471$ (approximately an inverse transformation $Y^{-1}$, or a logarithmic transformation $\log(Y)$) to compress the right tail and stabilise error variance.
+2. **Heteroscedasticity-Consistent (HC3) Robust Standard Errors:** Computing White's heteroscedasticity-robust standard errors (`car::hccm(M2)`) provides valid $t$-tests and confidence intervals without altering the original percentage scale of `Green_Central_Heating`.
+3. **Weighted Least Squares (WLS):** Weighting districts inversely to their estimated error variance.
+
+### 10.3 Multicollinearity ($\text{VIF}$) & Independence of Errors (Durbin-Watson)
+
+We evaluate multicollinearity among the four core continuous predictors using the Variance Inflation Factor ($\text{VIF}_j = \frac{1}{1 - R_j^2}$) on `model2`, and test for residual autocorrelation using `durbinWatsonTest(M2)`:
+
+```{r}
+#| label: diagnostics-vif-dw
+#| code-summary: "Check Variance Inflation Factors (vif) on model2 and Durbin-Watson autocorrelation on M2"
+
+vif_values <- vif(model2) %>% round(2)
+vif_mean   <- mean(vif(model2)) %>% round(1)
+
+cat("VIF for each main predictor in model2:\n")
+print(vif_values)
+cat("\nMean VIF:", vif_mean, "\n\n")
+
+set.seed(123)
+durbinWatsonTest(M2)
+```
+
+**Interpretation of Multicollinearity and Independence Diagnostics:**
+
+- **Multicollinearity (`vif(model2)`):** All individual Variance Inflation Factors are well below the warning threshold of $5$ (`Full_Time_Employee = 1.13`, `No_Central_Heating = 1.31`, `Detached = 2.61`, `Owned = 2.90`), with a mean $\text{VIF}$ of **`2.0`**, confirming no problematic multicollinearity among the four main predictors.
+- **Independence of Errors (`durbinWatsonTest(M2)`):** The Durbin-Watson statistic is **`1.444645`** with a lag-1 residual autocorrelation of **`0.2771037`** ($p = 0.000 < 0.05$). Rejecting $H_0: \rho = 0$ indicates positive autocorrelation among adjacent districts in the dataset, reflecting geographic clustering across regions. This breach could be remedied by incorporating **regional fixed effects** (e.g., `Region` or `Super_Region`) or estimating a **spatial / multilevel regression model**.
+
+### 10.4 Relative Importance of Predictors (Adequacy — Figure 6)
+
+To evaluate the relative importance of the predictors in our final model (`Instruction #12c`), we use `adequacy_lm(M2)` from `Session_10_functions.R`. In OLS regression, **Adequacy** is defined as the $R^2$ of a single-predictor model divided by the $R^2$ of the full model ($58.52\%$), measuring the percentage of the full model's explanatory power captured by each main or polynomial predictor on its own (noting that `adequacy_lm()` evaluates main and polynomial terms individually and excludes multiplicative interaction terms):
+
+$$\text{Adequacy}_j (\%) = \left( \frac{R^2_{\text{single predictor } j}}{R^2_{\text{full model}}} \right) \times 100$$
+
+```{r}
+#| label: tbl-adequacy-ols
+#| code-summary: "Compute adequacy_lm(M2) and display adequacy table"
+
+variable_adequacy_OLS <- adequacy_lm(M2)
+
+variable_adequacy_OLS %>%
+  mutate(across(where(is.numeric), ~ round(.x, 2))) %>%
+  kable(
+    col.names = c("Model / Predictor", "Single-Predictor R-squared (%)", "Adequacy (% of Full Model R-squared)"),
+    caption = "Relative Importance of Predictors in Final Model M2 (adequacy_lm; Source: Calculations Based on Census 2021 Dataset)"
+  )
+```
+
+```{r}
+#| label: fig-adequacy-bar
+#| fig-cap: "Figure 6 – Adequacy (%) vs Variables for Final Model M2."
+#| code-summary: "Plot Figure 6: Bar chart of predictor adequacy (%)"
+
+ggplot(data = slice(variable_adequacy_OLS, -c(1))) +
+  geom_col(aes(
+    x = fct_reorder(model, desc(adequacy)),
+    y = adequacy
+  )) +
+  xlab("Variable") +
+  ylab("Adequacy (%)") +
+  theme(axis.text.x = element_text(angle = 335, hjust = 0))
+```
+
+**Interpretation of Figure 6:**
+
+1. **`I(Detached^2)` ($54.03\%$ adequacy, single-predictor $R^2 = 31.62\%$)** and **`Detached` ($46.03\%$ adequacy, single-predictor $R^2 = 26.94\%$)** are by far the most powerful individual predictors of green central heating adoption—the quadratic detached-housing term alone accounts for more than half ($54\%$) of the explanatory power of the full model.
+2. **`Full_Time_Employee` ($38.52\%$ adequacy, single-predictor $R^2 = 22.54\%$)** is the next most important standalone predictor.
+3. **`No_Central_Heating` ($11.67\%$ adequacy, $R^2 = 6.83\%$)** and **`Owned` ($6.24\%$ adequacy, $R^2 = 3.65\%$)** have smaller standalone adequacy values because their primary explanatory contribution operates conditionally through their strong multiplicative interactions with `Detached` and with each other.
+
+### 10.5 Real-World Interpretation: What the Model Reveals About the UK (Instruction #12d)
+
+Our final model (`M2`, explaining **$58.52\%$** of the district-level variation across England and Wales) reveals four key insights into the real-world geography of residential green central heating in 2021:
+
+1. **The Rural & Off-Gas-Grid Housing Effect (`Detached`, `I(Detached^2)`, and `No_Central_Heating`):**
+   Dwelling morphology (`Detached` and `I(Detached^2)`) is the single strongest determinant of green central heating adoption ($54.03\%$ adequacy). Moreover, the positive interaction between `Detached` and `No_Central_Heating` (**Figure 2**) shows that green central heating uptake is concentrated in rural, low-density districts where detached homes are off the UK's mains natural-gas grid. In urban districts dominated by flats and terraced housing, a lack of central heating does not lead to green central heating adoption; in rural detached-housing districts off the gas grid, households rely heavily on renewable heat pumps, biomass boilers, communal heat networks, or tank/bottled gas.
+2. **The Enabling Role of Homeownership (`Owned` Interactions):**
+   While `Owned` has a modest standalone correlation ($r = 0.191$, adequacy $= 6.24\%$), its positive interactions with `Detached` (**Figure 1**, crossover at $36.5\%$ detached) and `No_Central_Heating` highlight a critical tenure divide: in districts with detached, off-grid housing stock, **owner-occupation substantially accelerates green heating adoption**. Homeowners have the property rights and long-term financial horizon required to invest in alternative heating systems, whereas private and social rented sectors face split-incentive barriers.
+3. **Urban Labour Markets vs. Rural Demographics (`Full_Time_Employee` and `Age_Profile`):**
+   `Full_Time_Employee` is negatively associated with `Green_Central_Heating` ($\beta = -0.0806^{**}$, **Figure 3**). However, our Narrative modelling (**Table 2**) demonstrated that nearly half of the initial bivariate effect of `Full_Time_Employee` is explained away once we control for housing morphology (`Detached`), heating infrastructure (`No_Central_Heating`), tenure (`Owned`), and demographic ageing (`Age_Profile`). Urban commuter districts with younger, full-time working populations are overwhelmingly connected to the mains gas grid, whereas older, rural districts lead in non-mains/green central heating adoption.
+4. **Policy Implications:**
+   To achieve broad residential decarbonisation across the UK, climate and energy policy cannot rely solely on off-grid rural homeowners installing heat pumps or biomass in detached houses. Policymakers must address the **urban mains-gas and rented housing sectors**—expanding district heat networks for high-density flats, providing targeted grants for lower-income urban authorities, and introducing regulatory incentives to overcome landlord-tenant split incentives.
+
+---
+
+## References
+
+1. **Ross, S. (2019)** *Introduction to Probability and Statistics for Engineers and Scientists*. 4th edn. London: Elsevier Academic Press.
+2. **Office for National Statistics (2023)** *Results and timeline – Office for National Statistics*. Available at: <https://www.ons.gov.uk/census/aboutcensus/releaseplans> (Accessed: 14 January 2024).
+3. **Bruckmann, G., Willibald, F. and Blanco, V. (2021)** 'Battery Electric Vehicle adoption in regions without strong policies', *Transportation Research Part D: Transport and Environment*, 90, article number 102615. Available at: <https://doi.org/10.1016/j.trd.2020.102615>.
+4. **Hooks, D. *et al.* (2022)** 'Exploring factors influencing technology adoption rate at the macro level: A predictive model', *Technology in Society*, 68, article number 101826. Available at: <https://doi.org/10.1016/j.techsoc.2021.101826>.

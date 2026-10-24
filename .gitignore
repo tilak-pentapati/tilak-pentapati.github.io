@@ -4,3 +4,18 @@
 
 /.quarto/
 **/*.quarto_ipynb
+**/.jupyter_cache/
+projstructure.png
+projects/r/aps_eda/Assignment_1_data.RData
+Rplots.pdf
+
+# Raw datasets (keep image assets only)
+data/data_python/*
+!data/data_python/retail_site_select
+data/data_python/retail_site_select/*
+!data/data_python/retail_site_select/ENVS609Assign2.png
+
+data/data_r/gch_dataNfunc/
+data/data_r/se_m_airbnb/
+data/data_r/stm_covid/
+data/data_r/stroke_pm/

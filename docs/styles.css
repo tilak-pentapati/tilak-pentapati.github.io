@@ -1,0 +1,60 @@
+/* Ensure navbar maintains the exact same compact height in both light and dark modes */
+.navbar {
+  --bs-navbar-padding-y: 0.5rem !important;
+  padding-top: 0.5rem !important;
+  padding-bottom: 0.5rem !important;
+}
+
+/* Light mode: clean white navbar matching light background */
+body.quarto-light .navbar {
+  background-color: #ffffff !important;
+}
+
+/* Dark mode: dark gray navbar matching dark background instead of default blue */
+body.quarto-dark .navbar {
+  background-color: #222222 !important;
+}
+
+/* Mermaid Flowchart Custom Warm Yellow Palette */
+.mermaid .node rect,
+.mermaid .node polygon {
+  fill: #fff3bf !important;
+  stroke: #f59f00 !important;
+  stroke-width: 1.5px !important;
+}
+
+.mermaid .node .label,
+.mermaid .node text,
+.mermaid .node span,
+.mermaid .node div {
+  color: #1a1a1a !important;
+  fill: #1a1a1a !important;
+}
+
+.mermaid .cluster rect {
+  fill: #fffdf0 !important;
+  stroke: #fab005 !important;
+  stroke-width: 2px !important;
+}
+
+.mermaid .cluster text,
+.mermaid .cluster span {
+  fill: #1a1a1a !important;
+  color: #1a1a1a !important;
+  font-weight: bold !important;
+}
+
+.mermaid .edgePath path {
+  stroke: #495057 !important;
+  stroke-width: 1.5px !important;
+}
+
+/* Ensure maps and figures fit comfortably on screen without scrolling */
+.cell-output-display img,
+.figure-img {
+  max-height: 70vh !important;
+  width: auto !important;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}

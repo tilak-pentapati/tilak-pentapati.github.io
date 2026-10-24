@@ -1,23 +1,19 @@
 ---
 title: "Exploring Various Datasets of Bay Area and Finding Useful Insights for Policymakers"
 
-author: "Jay T. Pentapati"
-date: "10 Jan, 2024"
+author: "Jay Tilak P."
+date: "2024-01-10"
 image: Bay_Airbnb.jpg
 
-description: "Interactive Maps and Geodemographic Clustering with K-Means classfication method."
+description: "Spatial autocorrelation (Moran's I & LISA) and multivariate K-means geodemographic clustering of Airbnb listings and census indicators across San Francisco Bay Area ZIP codes."
 categories:
   - R
   - Spatial Analysis
   - AIRBNB
-  - Data Cleaning
-  - RESTFul API
+
 toc: true
 format: 
   html:
-    theme:
-      light: flatly
-      dark: darkly
     code-tools: true
     html-math-method: katex
     self-contained: false
@@ -28,41 +24,6 @@ editor: visual
 execute: 
   warning: false
 ---
-
-```{=html}
-<div id="includedContent"></div>
-
-<button id="goBackButton" style="position: fixed; top: 120px; left: 10px;" onclick="goBack()">Go Back</button>
-
-<script>
-function goBack() {
-  window.location.href = 'CaseStudies.html';
-}
-</script>
-
-<style>
-/* Light mode */
-body.light-mode .quarto-color-scheme-toggle {
-    color: black; /* Text color */
-    background-color: white;
-}
-
-/* Dark mode */
-body.dark-mode .quarto-color-scheme-toggle {
-    color: white; /* Text color */
-    background-color: black;
-}
-</style>
-```
-
-::: {style="margin-bottom: 40px;"}
-:::
-
-::: callout-tip
-## Note:
-
-Please click 'Go Back' Button for Central Page
-:::
 
 ## Installing Packages
 
