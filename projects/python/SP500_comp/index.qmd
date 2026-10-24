@@ -101,7 +101,7 @@ We begin by loading `stock_data.csv` into a Pandas `DataFrame` and inspecting it
 
 ```{python}
 # Load S&P 500 index dataset from CSV into a pandas DataFrame
-data = pan.read_csv('/Users/jay/Desktop/websiteV02/data/data_python/SP500_comp/stock_data.csv')
+data = pan.read_csv('../../../data/data_python/SP500_comp/stock_data.csv')  # relative to this page
 print(data.head())
 ```
 

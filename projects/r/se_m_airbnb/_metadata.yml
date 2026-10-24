@@ -36,4 +36,4 @@ reproduce:
       licence: "CC BY 4.0 (Inside Airbnb); cleaned for the University of Liverpool spatial modelling course"
       fetch: "Download Madrid `listings.csv` from Inside Airbnb and run the cleaning notebook kept alongside the data (`clean_data.ipynb`)."
       path: "`data/data_r/se_m_airbnb/assignment_1_madrid/madrid_abb.gpkg`"
-  note: "The page loads the GeoPackage from an absolute path; edit `data_path` before re-running."
+  note: "The page loads the GeoPackage from the expected path, relative to the project root."

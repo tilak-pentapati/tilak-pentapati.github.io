@@ -43,6 +43,9 @@ library(tidyverse)
 library(skimr)
 library(knitr)
 library(kableExtra)
+# Skip kableExtra's kePrint.js: it needs jQuery, which Quarto pages don't load
+# ("$ is not defined"). The tables only use Bootstrap classes, so nothing is lost.
+options(kableExtra.knit_print.dependency = FALSE)
 library(patchwork)
 library(corrplot)
 
@@ -71,8 +74,7 @@ theme_set(
 # Robust relative path detection across development environments
 data_candidates <- c(
   file.path("..", "..", "..", "data", "data_r", "stroke_pm", "healthcare-dataset-stroke-data.csv"),
-  file.path("data", "data_r", "stroke_pm", "healthcare-dataset-stroke-data.csv"),
-  "/Users/jay/Desktop/websiteV02/data/data_r/stroke_pm/healthcare-dataset-stroke-data.csv"
+  file.path("data", "data_r", "stroke_pm", "healthcare-dataset-stroke-data.csv")
 )
 
 data_path <- data_candidates[file.exists(data_candidates)][1]
@@ -503,21 +505,26 @@ kable(metrics_table, caption = "Table 3: Comparative Performance Metrics on Held
 ### Comparative ROC Curves
 
 ```{r roc-curves-plot, fig.cap="Figure 5: Receiver Operating Characteristic (ROC) curves across candidate models."}
-roc_m1 <- roc_curve(res_m1$results_df, truth = stroke, .pred_Yes, event_level = "second") %>% mutate(Model = "M1: Baseline GLM (AUC = 0.83)")
-roc_m2 <- roc_curve(res_m2$results_df, truth = stroke, .pred_Yes, event_level = "second") %>% mutate(Model = "M2: SMOTE GLM (AUC = 0.83)")
-roc_m3 <- roc_curve(res_m3$results_df, truth = stroke, .pred_Yes, event_level = "second") %>% mutate(Model = "M3: SMOTE Random Forest (AUC = 0.81)")
-roc_m4 <- roc_curve(res_m4$results_df, truth = stroke, .pred_Yes, event_level = "second") %>% mutate(Model = "M4: SMOTE XGBoost (AUC = 0.82)")
+# Legend labels carry each model's test-set AUC from the metrics table above
+auc_label <- function(name, res) sprintf("%s (AUC = %.2f)", name, res$summary$AUC_ROC)
+lab_m1 <- auc_label("M1: Baseline GLM", res_m1)
+lab_m2 <- auc_label("M2: SMOTE GLM", res_m2)
+lab_m3 <- auc_label("M3: SMOTE Random Forest", res_m3)
+lab_m4 <- auc_label("M4: SMOTE XGBoost", res_m4)
+
+roc_m1 <- roc_curve(res_m1$results_df, truth = stroke, .pred_Yes, event_level = "second") %>% mutate(Model = lab_m1)
+roc_m2 <- roc_curve(res_m2$results_df, truth = stroke, .pred_Yes, event_level = "second") %>% mutate(Model = lab_m2)
+roc_m3 <- roc_curve(res_m3$results_df, truth = stroke, .pred_Yes, event_level = "second") %>% mutate(Model = lab_m3)
+roc_m4 <- roc_curve(res_m4$results_df, truth = stroke, .pred_Yes, event_level = "second") %>% mutate(Model = lab_m4)
 
 all_rocs <- bind_rows(roc_m1, roc_m2, roc_m3, roc_m4)
 
 ggplot(all_rocs, aes(x = 1 - specificity, y = sensitivity, color = Model)) +
   geom_path(linewidth = 1.15) +
   geom_abline(lty = 3, color = "grey50") +
-  scale_color_manual(values = c(
-    "M1: Baseline GLM (AUC = 0.83)" = "#95a5a6",
-    "M2: SMOTE GLM (AUC = 0.83)" = "#e74c3c",
-    "M3: SMOTE Random Forest (AUC = 0.81)" = "#2980b9",
-    "M4: SMOTE XGBoost (AUC = 0.82)" = "#27ae60"
+  scale_color_manual(values = setNames(
+    c("#95a5a6", "#e74c3c", "#2980b9", "#27ae60"),
+    c(lab_m1, lab_m2, lab_m3, lab_m4)
   )) +
   coord_equal() +
   labs(
@@ -563,7 +570,7 @@ kable(best_coords, digits = 3, caption = "Table 4: Optimal Decision Threshold vi
   kable_styling(bootstrap_options = c("striped", "hover"), full_width = FALSE)
 ```
 
-By calibrating the decision threshold to **$p^* \approx 0.44$** on the SMOTE Logistic Regression model, the pipeline achieves **$80.0\%$ Sensitivity** and **$73.5\%$ Specificity**, successfully capturing 4 out of every 5 stroke patients in the held-out test cohort.
+By calibrating the decision threshold to **$p^* \approx `r sprintf("%.2f", best_coords$threshold[1])`$** on the SMOTE Logistic Regression model, the pipeline achieves **$`r sprintf("%.1f", 100 * best_coords$sensitivity[1])`\%$ Sensitivity** and **$`r sprintf("%.1f", 100 * best_coords$specificity[1])`\%$ Specificity**, capturing roughly `r round(10 * best_coords$sensitivity[1])` in every 10 stroke patients in the held-out test cohort.
 
 ---
 
@@ -784,9 +791,9 @@ Why Observable JS rather than Shinylive? A logistic regression is a dot product 
 
 ### Methodological Lessons in Medical Machine Learning
 
-- **Abandoning Raw Classification Accuracy:** In rare-event clinical epidemiology ($4.9\%$ prevalence), standard accuracy is fundamentally flawed. Relying on default $0.50$ thresholds in unweighted models yielded $95.2\%$ accuracy but missed $98\%$ of actual stroke events.
-- **The Value of Synthetic Resampling (SMOTE):** Incorporating SMOTE within a unified `tidymodels` pipeline elevated model sensitivity from $2.0\%$ to **$78.0\%$**, enabling the classifier to capture subtle physiological signals across the minority class.
-- **Explainability vs. Ensembles:** While Random Forest and XGBoost models achieved competitive discrimination ($\text{AUC} \approx 0.81 - 0.82$), **SMOTE-balanced Logistic Regression** delivered equivalent performance ($\text{AUC} = 0.83$) while providing interpretable odds ratios that clinicians can review and understand at the bedside.
+- **Abandoning Raw Classification Accuracy:** In rare-event clinical epidemiology ($4.9\%$ prevalence), standard accuracy is fundamentally flawed. Relying on default $0.50$ thresholds in unweighted models yielded $95.2\%$ accuracy but missed $`r sprintf("%.0f", 100 * (1 - res_m1$summary$Sensitivity))`\%$ of actual stroke events.
+- **The Value of Synthetic Resampling (SMOTE):** Incorporating SMOTE within a unified `tidymodels` pipeline elevated model sensitivity from $`r sprintf("%.1f", 100 * res_m1$summary$Sensitivity)`\%$ to **$`r sprintf("%.1f", 100 * res_m2$summary$Sensitivity)`\%$** (both at $p = 0.50$), enabling the classifier to capture subtle physiological signals across the minority class.
+- **Explainability vs. Ensembles:** Random Forest and XGBoost reached $\text{AUC} = `r sprintf("%.2f", res_m3$summary$AUC_ROC)`$ and $`r sprintf("%.2f", res_m4$summary$AUC_ROC)`$; **SMOTE-balanced Logistic Regression** discriminated better ($\text{AUC} = `r sprintf("%.2f", res_m2$summary$AUC_ROC)`$) while providing interpretable odds ratios that clinicians can review and understand at the bedside.
 
 ---
 

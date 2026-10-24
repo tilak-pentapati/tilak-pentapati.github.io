@@ -69,9 +69,8 @@ scripts/repro/setup-env.sh projects/r/stm_covid
 
 It builds the env under `~/.repro-envs/<project>` and prints the render command, e.g.
 `QUARTO_R=~/.repro-envs/stm_covid/bin quarto render projects/r/stm_covid/index.qmd --execute`.
-Fetch the page's data first (see its "Data availability" section). Several pages still read
-their data from absolute paths on the original machine (`/Users/jay/Desktop/websiteV02/data/...`);
-the data note on those pages says which line to edit.
+Fetch the page's data first (see its "Data availability" section) into the expected path
+under `data/`; the pages with Reproduce badges read it relative to the project root.
 
 On Binder every page's packages are preinstalled in one environment (the first build takes
 a while); open a terminal and run `quarto render <page> --execute`.

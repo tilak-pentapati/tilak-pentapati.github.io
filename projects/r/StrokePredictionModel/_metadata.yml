@@ -10,7 +10,7 @@ summary:
   problem: "Can routine clinical and lifestyle variables flag patients at high risk of stroke?"
   data: "Healthcare Dataset Stroke Data: 5,110 patients × 12 clinical and lifestyle features, with a strongly imbalanced outcome."
   methods: "Stratified BMI imputation, clinical feature engineering, SMOTE inside tidymodels recipes, 5-fold stratified CV, logistic regression vs random forest vs XGBoost, Youden's J threshold."
-  result: "SMOTE-balanced logistic regression reaches AUC = 0.83, matching random forest and XGBoost (≈ 0.81–0.82) while keeping interpretable odds ratios."
+  result: "SMOTE-balanced logistic regression reaches test AUC = 0.82, above random forest (0.79) and XGBoost (0.79), while keeping interpretable odds ratios; at the Youden threshold it catches 71% of strokes at 78% specificity."
   stack: ["R", "tidymodels", "themis", "ranger", "xgboost", "pROC", "ggplot2"]
 # Short label for the home-page skills network.
 short_title: "Stroke prediction"

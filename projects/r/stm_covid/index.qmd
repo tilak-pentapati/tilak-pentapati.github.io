@@ -49,6 +49,9 @@ library(RColorBrewer)
 library(corrplot)
 library(knitr)
 library(kableExtra)
+# Skip kableExtra's kePrint.js: it needs jQuery, which Quarto pages don't load
+# ("$ is not defined"). The tables only use Bootstrap classes, so nothing is lost.
+options(kableExtra.knit_print.dependency = FALSE)
 library(jtools)
 
 sf::sf_use_s2(FALSE)
@@ -69,15 +72,13 @@ We load the England COVID-19 GeoPackage (`covid19_eng.gpkg`) from `data/data_r/s
 # Robust path resolution across project-level, site-level, and interactive environments
 covid_candidates <- c(
   file.path("..", "..", "..", "data", "data_r", "stm_covid", "assignment_2_covid", "covid19_eng.gpkg"),
-  file.path("data", "data_r", "stm_covid", "assignment_2_covid", "covid19_eng.gpkg"),
-  "/Users/jay/Desktop/websiteV02/data/data_r/stm_covid/assignment_2_covid/covid19_eng.gpkg"
+  file.path("data", "data_r", "stm_covid", "assignment_2_covid", "covid19_eng.gpkg")
 )
 covid_path <- covid_candidates[file.exists(covid_candidates)][1]
 
 reg_candidates <- c(
   file.path("..", "..", "..", "data", "data_r", "stm_covid", "gwr", "Regions_December_2019_Boundaries_EN_BGC.shp"),
-  file.path("data", "data_r", "stm_covid", "gwr", "Regions_December_2019_Boundaries_EN_BGC.shp"),
-  "/Users/jay/Desktop/websiteV02/data/data_r/stm_covid/gwr/Regions_December_2019_Boundaries_EN_BGC.shp"
+  file.path("data", "data_r", "stm_covid", "gwr", "Regions_December_2019_Boundaries_EN_BGC.shp")
 )
 reg_path <- reg_candidates[file.exists(reg_candidates)][1]
 
