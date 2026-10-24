@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Build the environment for one project page and print the command to render it.
 #
-#   scripts/repro/setup-env.sh projects/python/bd_gps
+#   scripts/repro/setup-env.sh projects/python/SP500_comp
 #   scripts/repro/setup-env.sh projects/r/stm_covid
 #
 # Uses the project's environment.yml (conda-forge, pinned) or, for the satellites

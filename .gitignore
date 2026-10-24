@@ -22,3 +22,6 @@ data/data_r/stroke_pm/
 _extra/
 projects/*/_extra/
 **/.r_session_state.RData
+
+# GADM boundaries: licence forbids redistribution (unused by the airbnb_sf page)
+data/data_r/airbnb_sf/USA_boundaries/
