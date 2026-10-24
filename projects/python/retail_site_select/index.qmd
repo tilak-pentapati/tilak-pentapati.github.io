@@ -1,37 +1,10 @@
 ---
 title: "Retail Site Selection & Catchment Analysis for a New C-Store with Click & Collect in Liverpool"
 description: "Multi-criteria GIS site selection and network catchment modelling in Python to identify the optimal location for a new Marks & Spencer convenience store and Click & Collect facility in Liverpool."
-categories:
-  - Python
-  - GIS
-  - Spatial Analysis
-  - Retail Analytics
-  - Network Analysis
-author: "Jay Tilak P."
-image: retail_site.svg
 date: "2023-12-15"
-jupyter: python3
-toc: true
-toc-depth: 6
-toc-location: right
-number-sections: true
-format:
-  html:
-    highlight-style: github
-    code-tools: true
-    code-fold: true
-    self-contained: true
-    embed-resources: true
-    html-math-method: katex
-    lightbox: true
-    fig-align: center
-    fig-width: 10
-    fig-height: 6
-    df-print: paged
-execute:
-  echo: true
-  warning: false
-  message: false
+image: retail_site.svg
+categories: [Python, Spatial Analysis, Retail Analytics, Network Analysis]
+lightbox: true
 ---
 
 

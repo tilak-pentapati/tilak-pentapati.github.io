@@ -1,30 +1,9 @@
 ---
 title: "S&P 500 Market Mode & Factor Analysis: Dimensionality Reduction with PCA"
 description: "High-dimensional time-series analysis and eigen-portfolio construction using PCA to isolate market-wide systemic risk, sector factors and idiosyncratic noise."
-categories: [Big Data Analytics, Machine Learning, PCA, Python]
-author: "Jay Tilak P."
-image: pca_Mmode.svg
 date: "2023-12-30"
-toc: true
-toc-depth: 6
-toc-location: right
-number-sections: true
-format:
-  html:
-    highlight-style: github
-    code-tools: true
-    code-fold: true
-    self-contained: true
-    embed-resources: true
-    html-math-method: katex
-    fig-align: center
-    fig-width: 10
-    fig-height: 6
-    df-print: paged
-execute:
-  echo: true
-  warning: false
-  message: false
+image: pca_Mmode.svg
+categories: [Python, Big Data Analytics, Machine Learning, PCA]
 ---
 
 ## Introduction & Theoretical Background

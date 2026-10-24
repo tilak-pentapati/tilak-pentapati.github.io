@@ -1,0 +1,11 @@
+---
+title: "Page not found"
+toc: false
+---
+
+The page you were looking for doesn't exist or has moved.
+
+- [Home](/index.html)
+- [Projects](/projects.html)
+
+You can also use the search in the navigation bar.

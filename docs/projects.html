@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>My Projects</title>
+<title>My Projects – Jay Tilak Pentapati</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -31,9 +31,14 @@ ul.task-list li input[type="checkbox"] {
 
 <script src="site_libs/quarto-nav/quarto-nav.js"></script>
 <script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./favicon.svg" rel="icon" type="image/svg+xml">
 <script src="site_libs/quarto-listing/list.min.js"></script>
 <script src="site_libs/quarto-listing/quarto-listing.js"></script>
-<script src="site_libs/clipboard/clipboard.min.js"></script>
 <script src="site_libs/quarto-html/quarto.js" type="module"></script>
 <script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
 <script src="site_libs/quarto-html/popper.min.js"></script>
@@ -49,6 +54,18 @@ ul.task-list li input[type="checkbox"] {
 <link href="site_libs/bootstrap/bootstrap-dark-df07115ad9f15e2ef3479c789e6873c8.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
 <link href="site_libs/bootstrap/bootstrap-445b8638c3d06994fee0907d791121c4.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
   "language": {
     "search-no-results-text": "No results",
     "search-matching-documents-text": "matching documents",
@@ -73,7 +90,7 @@ ul.task-list li input[type="checkbox"] {
     }
 
     const options = {
-      valueNames: ['listing-title','listing-author','listing-date','listing-image','listing-description','listing-categories',{ data: ['index'] },{ data: ['categories'] },{ data: ['listing-date-sort'] },{ data: ['listing-file-modified-sort'] }],
+      valueNames: ['listing-image','listing-date','listing-title','listing-reading-time','listing-categories','listing-description',{ data: ['index'] },{ data: ['categories'] },{ data: ['listing-date-sort'] }],
       
       searchColumns: ["listing-title","listing-author","listing-date","listing-image","listing-description","listing-categories"],
     };
@@ -124,6 +141,12 @@ window.Quarto = {
 </script>
 
 <link rel="stylesheet" href="styles.css">
+<meta property="og:title" content="My Projects – Jay Tilak Pentapati">
+<meta property="og:image" content="https://tilak-pentapati.github.io/projects/r/stm_covid/stm_map.svg">
+<meta property="og:site_name" content="Jay Tilak Pentapati">
+<meta name="twitter:title" content="My Projects – Jay Tilak Pentapati">
+<meta name="twitter:image" content="https://tilak-pentapati.github.io/projects/r/stm_covid/stm_map.svg">
+<meta name="twitter:card" content="summary_large_image">
 </head>
 
 <body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
@@ -294,6 +317,12 @@ window.Quarto = {
   <header id="quarto-header" class="headroom fixed-top">
     <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
       <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="./index.html">
+    <span class="navbar-title">Jay Tilak Pentapati</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
           <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
   <span class="navbar-toggler-icon"></span>
 </button>
@@ -308,9 +337,26 @@ window.Quarto = {
 <span class="menu-text">Projects</span></a>
   </li>  
 </ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/tilak-pentapati" target="_blank"> <i class="bi bi-github" role="img" aria-label="GitHub">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://linkedin.com/in/jay-tilak-pentapati" target="_blank"> <i class="bi bi-linkedin" role="img" aria-label="LinkedIn">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
           </div> <!-- /navcollapse -->
             <div class="quarto-navbar-tools">
   <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+  <a href="" class="quarto-reader-toggle quarto-navigation-tool px-1" onclick="window.quartoToggleReader(); return false;" title="Toggle reader mode">
+  <div class="quarto-reader-toggle-btn">
+  <i class="bi"></i>
+  </div>
+</a>
 </div>
       </div> <!-- /container-fluid -->
     </nav>
@@ -321,7 +367,7 @@ window.Quarto = {
 <!-- margin-sidebar -->
     <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
         
-    <h5 class="quarto-listing-category-title">Categories</h5><div class="quarto-listing-category category-default"><div class="category" data-category="">All <span class="quarto-category-count">(12)</span></div><div class="category" data-category="QUlSQk5C">AIRBNB <span class="quarto-category-count">(2)</span></div><div class="category" data-category="QmlnJTIwRGF0YSUyMEFuYWx5dGljcw==">Big Data Analytics <span class="quarto-category-count">(2)</span></div><div class="category" data-category="RGF0YSUyMFByZXByb2Nlc3Npbmc=">Data Preprocessing <span class="quarto-category-count">(1)</span></div><div class="category" data-category="R0lT">GIS <span class="quarto-category-count">(2)</span></div><div class="category" data-category="R1dS">GWR <span class="quarto-category-count">(1)</span></div><div class="category" data-category="SGVhbHRoY2FyZSUyMEFuYWx5dGljcw==">Healthcare Analytics <span class="quarto-category-count">(1)</span></div><div class="category" data-category="TWFjaGluZSUyMExlYXJuaW5n">Machine Learning <span class="quarto-category-count">(2)</span></div><div class="category" data-category="TWVjaGFuaWNhbCUyMERlc2lnbg==">Mechanical Design <span class="quarto-category-count">(1)</span></div><div class="category" data-category="TXVsdGlsZXZlbCUyME1vZGVsbGluZw==">Multilevel Modelling <span class="quarto-category-count">(1)</span></div><div class="category" data-category="TmV0d29yayUyMEFuYWx5c2lz">Network Analysis <span class="quarto-category-count">(1)</span></div><div class="category" data-category="T0xTJTIwUmVncmVzc2lvbg==">OLS Regression <span class="quarto-category-count">(1)</span></div><div class="category" data-category="UENB">PCA <span class="quarto-category-count">(1)</span></div><div class="category" data-category="UHlTcGFyaw==">PySpark <span class="quarto-category-count">(1)</span></div><div class="category" data-category="UHl0aG9u">Python <span class="quarto-category-count">(5)</span></div><div class="category" data-category="Ug==">R <span class="quarto-category-count">(6)</span></div><div class="category" data-category="UmV0YWlsJTIwQW5hbHl0aWNz">Retail Analytics <span class="quarto-category-count">(1)</span></div><div class="category" data-category="Um9ib3RpY3M=">Robotics <span class="quarto-category-count">(1)</span></div><div class="category" data-category="U29jaWFsJTIwU3VydmV5JTIwQW5hbHlzaXM=">Social Survey Analysis <span class="quarto-category-count">(1)</span></div><div class="category" data-category="U3BhY2UlMjBTeXN0ZW1z">Space Systems <span class="quarto-category-count">(1)</span></div><div class="category" data-category="U3BhdGlhbCUyMEFuYWx5c2lz">Spatial Analysis <span class="quarto-category-count">(6)</span></div><div class="category" data-category="U3BhdGlhbCUyMEVjb25vbWV0cmljcw==">Spatial Econometrics <span class="quarto-category-count">(2)</span></div><div class="category" data-category="U3BhdGlhbCUyME1vZGVsbGluZw==">Spatial Modelling <span class="quarto-category-count">(1)</span></div><div class="category" data-category="U1QlMjBBbmFseXNpcw==">ST Analysis <span class="quarto-category-count">(1)</span></div></div></div>
+    <h5 class="quarto-listing-category-title">Categories</h5><div class="quarto-listing-category category-default"><div class="category" data-category="">All <span class="quarto-category-count">(12)</span></div><div class="category" data-category="QWlyYm5i">Airbnb <span class="quarto-category-count">(2)</span></div><div class="category" data-category="QmlnJTIwRGF0YSUyMEFuYWx5dGljcw==">Big Data Analytics <span class="quarto-category-count">(2)</span></div><div class="category" data-category="RGF0YSUyMFByZXByb2Nlc3Npbmc=">Data Preprocessing <span class="quarto-category-count">(1)</span></div><div class="category" data-category="R1dS">GWR <span class="quarto-category-count">(1)</span></div><div class="category" data-category="SGVhbHRoY2FyZSUyMEFuYWx5dGljcw==">Healthcare Analytics <span class="quarto-category-count">(1)</span></div><div class="category" data-category="TWFjaGluZSUyMExlYXJuaW5n">Machine Learning <span class="quarto-category-count">(2)</span></div><div class="category" data-category="TWVjaGFuaWNhbCUyMERlc2lnbg==">Mechanical Design <span class="quarto-category-count">(1)</span></div><div class="category" data-category="TXVsdGlsZXZlbCUyME1vZGVsbGluZw==">Multilevel Modelling <span class="quarto-category-count">(1)</span></div><div class="category" data-category="TmV0d29yayUyMEFuYWx5c2lz">Network Analysis <span class="quarto-category-count">(1)</span></div><div class="category" data-category="T0xTJTIwUmVncmVzc2lvbg==">OLS Regression <span class="quarto-category-count">(1)</span></div><div class="category" data-category="UENB">PCA <span class="quarto-category-count">(1)</span></div><div class="category" data-category="UHlTcGFyaw==">PySpark <span class="quarto-category-count">(1)</span></div><div class="category" data-category="UHl0aG9u">Python <span class="quarto-category-count">(5)</span></div><div class="category" data-category="Ug==">R <span class="quarto-category-count">(6)</span></div><div class="category" data-category="UmV0YWlsJTIwQW5hbHl0aWNz">Retail Analytics <span class="quarto-category-count">(1)</span></div><div class="category" data-category="Um9ib3RpY3M=">Robotics <span class="quarto-category-count">(1)</span></div><div class="category" data-category="U29jaWFsJTIwU3VydmV5JTIwQW5hbHlzaXM=">Social Survey Analysis <span class="quarto-category-count">(1)</span></div><div class="category" data-category="U3BhY2UlMjBTeXN0ZW1z">Space Systems <span class="quarto-category-count">(1)</span></div><div class="category" data-category="U3BhdGlhbCUyMEFuYWx5c2lz">Spatial Analysis <span class="quarto-category-count">(6)</span></div><div class="category" data-category="U3BhdGlhbCUyMEVjb25vbWV0cmljcw==">Spatial Econometrics <span class="quarto-category-count">(2)</span></div><div class="category" data-category="U3BhdGlhbCUyME1vZGVsbGluZw==">Spatial Modelling <span class="quarto-category-count">(1)</span></div><div class="category" data-category="U3BhdGlvLVRlbXBvcmFsJTIwQW5hbHlzaXM=">Spatio-Temporal Analysis <span class="quarto-category-count">(1)</span></div></div></div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
 
@@ -346,32 +392,13 @@ window.Quarto = {
 
 
 <script>
-document.addEventListener("DOMContentLoaded", function() {
-  function setAllTargetsBlank() {
-    document.querySelectorAll('a.quarto-grid-link').forEach(function(link) {
-      link.setAttribute('target', '_blank');
-      link.setAttribute('rel', 'noopener noreferrer');
-    });
+// Only the external drill-project card leaves the site, so open it in a new tab.
+document.addEventListener("click", function (e) {
+  const link = e.target.closest("a[href]");
+  if (link && link.closest(".quarto-listing") && link.host !== window.location.host) {
+    link.setAttribute("target", "_blank");
+    link.setAttribute("rel", "noopener noreferrer");
   }
-  setAllTargetsBlank();
-
-  // Handle dynamic re-renders when filtering categories or sorting
-  const observer = new MutationObserver(function() {
-    setAllTargetsBlank();
-  });
-  const listingEl = document.getElementById('listing-listing');
-  if (listingEl) {
-    observer.observe(listingEl, { childList: true, subtree: true });
-  }
-
-  // Delegated click handler to guarantee target="_blank"
-  document.addEventListener("click", function(e) {
-    const link = e.target.closest('a.quarto-grid-link');
-    if (link) {
-      link.setAttribute('target', '_blank');
-      link.setAttribute('rel', 'noopener noreferrer');
-    }
-  });
 });
 </script>
 
@@ -379,17 +406,232 @@ document.addEventListener("DOMContentLoaded", function() {
 
 
 <div class="quarto-listing quarto-listing-container-grid" id="listing-listing">
+<div class="listing-actions-group">
+   <div class="input-group input-group-sm quarto-listing-sort">
+    <span class="input-group-text"><i class="bi bi-sort-down"></i></span>
+    <select id="listing-listing-sort" class="form-select" aria-label="Order By" onchange="window['quarto-listings']['listing-listing'].sort(this.options[this.selectedIndex].value, { order: this.options[this.selectedIndex].getAttribute('data-direction')})">
+      <option value="" disabled="" selected="" hidden="">Order By</option>
+      <option value="index" data-direction="asc">Default</option>
+      <option value="listing-date-sort" data-direction="asc">
+        Date - Oldest
+      </option>
+      <option value="listing-date-sort" data-direction="desc">
+        Date - Newest
+      </option>
+      <option value="listing-title" data-direction="asc">
+        Title
+      </option>
+    </select>
+  </div>
+    <div class="input-group input-group-sm quarto-listing-filter">
+      <span class="input-group-text"><i class="bi bi-search"></i></span>
+      <input type="text" class="search form-control" placeholder="Filter">
+    </div>
+</div>
 <div class="list grid quarto-listing-cols-3">
-<div class="g-col-1" data-index="0" data-categories="UiUyQ01hY2hpbmUlMjBMZWFybmluZyUyQ0hlYWx0aGNhcmUlMjBBbmFseXRpY3MlMkNEYXRhJTIwUHJlcHJvY2Vzc2luZw==" data-listing-date-sort="1792710000000" data-listing-file-modified-sort="1792801840592" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="33" data-listing-word-count-sort="6404">
-<a href="./projects/r/StorkePredictionModel/index.html" class="quarto-grid-link">
+<div class="g-col-1" data-index="0" data-categories="UiUyQ1NwYXRpYWwlMjBNb2RlbGxpbmclMkNNdWx0aWxldmVsJTIwTW9kZWxsaW5nJTJDR1dSJTJDU3BhdGlvLVRlbXBvcmFsJTIwQW5hbHlzaXM=" data-listing-date-sort="1715814000000" data-listing-file-modified-sort="1792840692976" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="39" data-listing-word-count-sort="7607">
+<a href="./projects/r/stm_covid/index.html" class="quarto-grid-link">
 <div class="quarto-grid-item card h-100 card-left">
 <p class="card-img-top">
-<img loading="lazy" src="./projects/r/StorkePredictionModel/strokePM.svg" class="thumbnail-image card-img" style="height: 150px;">
+<img loading="lazy" src="./projects/r/stm_covid/stm_map.svg" class="thumbnail-image card-img" style="height: 150px;">
+</p>
+<div class="card-body post-contents">
+<h5 class="no-anchor card-title listing-title">
+Multilevel, Geographically Weighted and Spatio-Temporal Modelling of COVID-19 in England
+</h5>
+<div class="listing-reading-time card-text text-muted">39 min</div>
+<div class="listing-categories">
+
+<div class="listing-category" onclick="window.quartoListingCategory('Ug=='); return false;">R</div>
+
+<div class="listing-category" onclick="window.quartoListingCategory('U3BhdGlhbCUyME1vZGVsbGluZw=='); return false;">Spatial Modelling</div>
+
+<div class="listing-category" onclick="window.quartoListingCategory('TXVsdGlsZXZlbCUyME1vZGVsbGluZw=='); return false;">Multilevel Modelling</div>
+
+<div class="listing-category" onclick="window.quartoListingCategory('R1dS'); return false;">GWR</div>
+
+<div class="listing-category" onclick="window.quartoListingCategory('U3BhdGlvLVRlbXBvcmFsJTIwQW5hbHlzaXM='); return false;">Spatio-Temporal Analysis</div>
+
+</div>
+<div class="card-text listing-description delink">
+<p>Empirical investigation of England’s Alpha variant wave revealing how household overcrowding, ethnic diversity and health vulnerability drove local infection risk and…</p>
+</div>
+<div class="card-attribution card-text-small end">
+<div class="listing-date">
+May 16, 2024
+</div>
+</div>
+</div>
+</div></a>
+</div>
+<div class="g-col-1" data-index="1" data-categories="UiUyQ1NwYXRpYWwlMjBFY29ub21ldHJpY3MlMkNTcGF0aWFsJTIwQW5hbHlzaXMlMkNBaXJibmI=" data-listing-date-sort="1710979200000" data-listing-file-modified-sort="1792840692976" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="25" data-listing-word-count-sort="4921">
+<a href="./projects/r/se_m_airbnb/index.html" class="quarto-grid-link">
+<div class="quarto-grid-item card h-100 card-left">
+<p class="card-img-top">
+<img loading="lazy" src="./projects/r/se_m_airbnb/sem_air.svg" class="thumbnail-image card-img" style="height: 150px;">
+</p>
+<div class="card-body post-contents">
+<h5 class="no-anchor card-title listing-title">
+Point Pattern Analysis, Predictive Checks, and Spatial Econometrics of Madrid AirBnb Prices
+</h5>
+<div class="listing-reading-time card-text text-muted">25 min</div>
+<div class="listing-categories">
+
+<div class="listing-category" onclick="window.quartoListingCategory('Ug=='); return false;">R</div>
+
+<div class="listing-category" onclick="window.quartoListingCategory('U3BhdGlhbCUyMEVjb25vbWV0cmljcw=='); return false;">Spatial Econometrics</div>
+
+<div class="listing-category" onclick="window.quartoListingCategory('U3BhdGlhbCUyMEFuYWx5c2lz'); return false;">Spatial Analysis</div>
+
+<div class="listing-category" onclick="window.quartoListingCategory('QWlyYm5i'); return false;">Airbnb</div>
+
+</div>
+<div class="card-text listing-description delink">
+<p>Spatial point pattern analysis, IDW price interpolation, and spatial econometric modelling of Madrid Airbnb listing prices.</p>
+</div>
+<div class="card-attribution card-text-small end">
+<div class="listing-date">
+Mar 21, 2024
+</div>
+</div>
+</div>
+</div></a>
+</div>
+<div class="g-col-1" data-index="2" data-categories="UHl0aG9uJTJDU3BhdGlhbCUyMEFuYWx5c2lz" data-listing-date-sort="1709510400000" data-listing-file-modified-sort="1792840698751" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="23" data-listing-word-count-sort="4528">
+<a href="./projects/python/satellites_overhead/index.html" class="quarto-grid-link">
+<div class="quarto-grid-item card h-100 card-left">
+<p class="card-img-top">
+<img loading="lazy" src="./projects/python/satellites_overhead/satellite.jpg" class="thumbnail-image card-img" style="height: 150px;">
+</p>
+<div class="card-body post-contents">
+<h5 class="no-anchor card-title listing-title">
+Real-Time Orbital Tracking and Country-Level Satellite Density Analysis
+</h5>
+<div class="listing-reading-time card-text text-muted">23 min</div>
+<div class="listing-categories">
+
+<div class="listing-category" onclick="window.quartoListingCategory('UHl0aG9u'); return false;">Python</div>
+
+<div class="listing-category" onclick="window.quartoListingCategory('U3BhdGlhbCUyMEFuYWx5c2lz'); return false;">Spatial Analysis</div>
+
+</div>
+<div class="card-text listing-description delink">
+<p>An automated geoinformatics workflow and interactive Folium web map evaluating global satellite distributions overhead through RESTful API ingestion, Skyfield astrodynamics…</p>
+</div>
+<div class="card-attribution card-text-small end">
+<div class="listing-date">
+Mar 4, 2024
+</div>
+</div>
+</div>
+</div></a>
+</div>
+<div class="g-col-1" data-index="3" data-categories="UiUyQ1NwYXRpYWwlMjBBbmFseXNpcyUyQ0FpcmJuYg==" data-listing-date-sort="1704844800000" data-listing-file-modified-sort="1792840692975" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="32" data-listing-word-count-sort="6338">
+<a href="./projects/r/airbnb_sf/index.html" class="quarto-grid-link">
+<div class="quarto-grid-item card h-100 card-left">
+<p class="card-img-top">
+<img loading="lazy" src="./projects/r/airbnb_sf/Bay_Airbnb.jpg" class="thumbnail-image card-img" style="height: 150px;">
+</p>
+<div class="card-body post-contents">
+<h5 class="no-anchor card-title listing-title">
+Exploring Various Datasets of Bay Area and Finding Useful Insights for Policymakers
+</h5>
+<div class="listing-reading-time card-text text-muted">32 min</div>
+<div class="listing-categories">
+
+<div class="listing-category" onclick="window.quartoListingCategory('Ug=='); return false;">R</div>
+
+<div class="listing-category" onclick="window.quartoListingCategory('U3BhdGlhbCUyMEFuYWx5c2lz'); return false;">Spatial Analysis</div>
+
+<div class="listing-category" onclick="window.quartoListingCategory('QWlyYm5i'); return false;">Airbnb</div>
+
+</div>
+<div class="card-text listing-description delink">
+<p>Spatial autocorrelation (Moran’s I &amp; LISA) and multivariate K-means geodemographic clustering of Airbnb listings and census indicators across San Francisco Bay Area ZIP…</p>
+</div>
+<div class="card-attribution card-text-small end">
+<div class="listing-date">
+Jan 10, 2024
+</div>
+</div>
+</div>
+</div></a>
+</div>
+<div class="g-col-1" data-index="4" data-categories="UiUyQ1NwYXRpYWwlMjBFY29ub21ldHJpY3MlMkNPTFMlMjBSZWdyZXNzaW9u" data-listing-date-sort="1704672000000" data-listing-file-modified-sort="1792840692975" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="39" data-listing-word-count-sort="7640">
+<a href="./projects/r/GCH_census/index.html" class="quarto-grid-link">
+<div class="quarto-grid-item card h-100 card-left">
+<p class="card-img-top">
+<img loading="lazy" src="./projects/r/GCH_census/greenCH.svg" class="thumbnail-image card-img" style="height: 150px;">
+</p>
+<div class="card-body post-contents">
+<h5 class="no-anchor card-title listing-title">
+Ordinary Least Squares Regression for modelling Green Central Heating in Census 2021
+</h5>
+<div class="listing-reading-time card-text text-muted">39 min</div>
+<div class="listing-categories">
+
+<div class="listing-category" onclick="window.quartoListingCategory('Ug=='); return false;">R</div>
+
+<div class="listing-category" onclick="window.quartoListingCategory('U3BhdGlhbCUyMEVjb25vbWV0cmljcw=='); return false;">Spatial Econometrics</div>
+
+<div class="listing-category" onclick="window.quartoListingCategory('T0xTJTIwUmVncmVzc2lvbg=='); return false;">OLS Regression</div>
+
+</div>
+<div class="card-text listing-description delink">
+<p>Multivariate regression analysis of Census 2021 data revealing how dwelling morphology, off-gas-grid infrastructure and housing tenure affect residential green heating…</p>
+</div>
+<div class="card-attribution card-text-small end">
+<div class="listing-date">
+Jan 8, 2024
+</div>
+</div>
+</div>
+</div></a>
+</div>
+<div class="g-col-1" data-index="5" data-categories="UHl0aG9uJTJDQmlnJTIwRGF0YSUyMEFuYWx5dGljcyUyQ01hY2hpbmUlMjBMZWFybmluZyUyQ1BDQQ==" data-listing-date-sort="1703894400000" data-listing-file-modified-sort="1792840692974" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="17" data-listing-word-count-sort="3240">
+<a href="./projects/python/SP500_comp/index.html" class="quarto-grid-link">
+<div class="quarto-grid-item card h-100 card-left">
+<p class="card-img-top">
+<img loading="lazy" src="./projects/python/SP500_comp/pca_Mmode.svg" class="thumbnail-image card-img" style="height: 150px;">
+</p>
+<div class="card-body post-contents">
+<h5 class="no-anchor card-title listing-title">
+S&amp;P 500 Market Mode &amp; Factor Analysis: Dimensionality Reduction with PCA
+</h5>
+<div class="listing-reading-time card-text text-muted">17 min</div>
+<div class="listing-categories">
+
+<div class="listing-category" onclick="window.quartoListingCategory('UHl0aG9u'); return false;">Python</div>
+
+<div class="listing-category" onclick="window.quartoListingCategory('QmlnJTIwRGF0YSUyMEFuYWx5dGljcw=='); return false;">Big Data Analytics</div>
+
+<div class="listing-category" onclick="window.quartoListingCategory('TWFjaGluZSUyMExlYXJuaW5n'); return false;">Machine Learning</div>
+
+<div class="listing-category" onclick="window.quartoListingCategory('UENB'); return false;">PCA</div>
+
+</div>
+<div class="card-text listing-description delink">
+<p>High-dimensional time-series analysis and eigen-portfolio construction using PCA to isolate market-wide systemic risk, sector factors and idiosyncratic noise.</p>
+</div>
+<div class="card-attribution card-text-small end">
+<div class="listing-date">
+Dec 30, 2023
+</div>
+</div>
+</div>
+</div></a>
+</div>
+<div class="g-col-1" data-index="6" data-categories="UiUyQ01hY2hpbmUlMjBMZWFybmluZyUyQ0hlYWx0aGNhcmUlMjBBbmFseXRpY3MlMkNEYXRhJTIwUHJlcHJvY2Vzc2luZw==" data-listing-date-sort="1703894400000" data-listing-file-modified-sort="1792840692975" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="33" data-listing-word-count-sort="6404">
+<a href="./projects/r/StrokePredictionModel/index.html" class="quarto-grid-link">
+<div class="quarto-grid-item card h-100 card-left">
+<p class="card-img-top">
+<img loading="lazy" src="./projects/r/StrokePredictionModel/strokePM.svg" class="thumbnail-image card-img" style="height: 150px;">
 </p>
 <div class="card-body post-contents">
 <h5 class="no-anchor card-title listing-title">
 Clinical Stroke Prediction &amp; Risk Stratification: Machine Learning Pipeline in R
 </h5>
+<div class="listing-reading-time card-text text-muted">33 min</div>
 <div class="listing-categories">
 
 <div class="listing-category" onclick="window.quartoListingCategory('Ug=='); return false;">R</div>
@@ -404,214 +646,7 @@ Clinical Stroke Prediction &amp; Risk Stratification: Machine Learning Pipeline 
 <div class="card-text listing-description delink">
 <p>End-to-end clinical machine learning pipeline in R: exploratory data analysis, SMOTE resampling with themis/tidymodels, multi-model evaluation, and live interactive decision…</p>
 </div>
-<div class="card-attribution card-text-small justify">
-<div class="listing-author">
-Jay Tilak P.
-</div>
-<div class="listing-date">
-Oct 23, 2026
-</div>
-</div>
-</div>
-</div></a>
-</div>
-<div class="g-col-1" data-index="1" data-categories="UiUyQ1NwYXRpYWwlMjBNb2RlbGxpbmclMkNNdWx0aWxldmVsJTIwTW9kZWxsaW5nJTJDR1dSJTJDU1QlMjBBbmFseXNpcw==" data-listing-date-sort="1715814000000" data-listing-file-modified-sort="1792802527698" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="39" data-listing-word-count-sort="7607">
-<a href="./projects/r/stm_covid/index.html" class="quarto-grid-link">
-<div class="quarto-grid-item card h-100 card-left">
-<p class="card-img-top">
-<img loading="lazy" src="./projects/r/stm_covid/stm_map.svg" class="thumbnail-image card-img" style="height: 150px;">
-</p>
-<div class="card-body post-contents">
-<h5 class="no-anchor card-title listing-title">
-Multilevel, Geographically Weighted and Spatio-Temporal Modelling of COVID-19 in England
-</h5>
-<div class="listing-categories">
-
-<div class="listing-category" onclick="window.quartoListingCategory('Ug=='); return false;">R</div>
-
-<div class="listing-category" onclick="window.quartoListingCategory('U3BhdGlhbCUyME1vZGVsbGluZw=='); return false;">Spatial Modelling</div>
-
-<div class="listing-category" onclick="window.quartoListingCategory('TXVsdGlsZXZlbCUyME1vZGVsbGluZw=='); return false;">Multilevel Modelling</div>
-
-<div class="listing-category" onclick="window.quartoListingCategory('R1dS'); return false;">GWR</div>
-
-<div class="listing-category" onclick="window.quartoListingCategory('U1QlMjBBbmFseXNpcw=='); return false;">ST Analysis</div>
-
-</div>
-<div class="card-text listing-description delink">
-<p>Empirical investigation of England’s Alpha variant wave revealing how household overcrowding, ethnic diversity and health vulnerability drove local infection risk and…</p>
-</div>
-<div class="card-attribution card-text-small justify">
-<div class="listing-author">
-Jay Tilak P.
-</div>
-<div class="listing-date">
-May 16, 2024
-</div>
-</div>
-</div>
-</div></a>
-</div>
-<div class="g-col-1" data-index="2" data-categories="UiUyQ1NwYXRpYWwlMjBFY29ub21ldHJpY3MlMkNTcGF0aWFsJTIwQW5hbHlzaXMlMkNBSVJCTkI=" data-listing-date-sort="1710979200000" data-listing-file-modified-sort="1792802270667" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="25" data-listing-word-count-sort="4921">
-<a href="./projects/r/se_m_airbnb/index.html" class="quarto-grid-link">
-<div class="quarto-grid-item card h-100 card-left">
-<p class="card-img-top">
-<img loading="lazy" src="./projects/r/se_m_airbnb/sem_air.svg" class="thumbnail-image card-img" style="height: 150px;">
-</p>
-<div class="card-body post-contents">
-<h5 class="no-anchor card-title listing-title">
-Point Pattern Analysis, Predictive Checks, and Spatial Econometrics of Madrid AirBnb Prices
-</h5>
-<div class="listing-categories">
-
-<div class="listing-category" onclick="window.quartoListingCategory('Ug=='); return false;">R</div>
-
-<div class="listing-category" onclick="window.quartoListingCategory('U3BhdGlhbCUyMEVjb25vbWV0cmljcw=='); return false;">Spatial Econometrics</div>
-
-<div class="listing-category" onclick="window.quartoListingCategory('U3BhdGlhbCUyMEFuYWx5c2lz'); return false;">Spatial Analysis</div>
-
-<div class="listing-category" onclick="window.quartoListingCategory('QUlSQk5C'); return false;">AIRBNB</div>
-
-</div>
-<div class="card-text listing-description delink">
-<p>Spatial point pattern analysis, IDW price interpolation, and spatial econometric modelling of Madrid Airbnb listing prices.</p>
-</div>
-<div class="card-attribution card-text-small justify">
-<div class="listing-author">
-Jay Tilak P.
-</div>
-<div class="listing-date">
-Mar 21, 2024
-</div>
-</div>
-</div>
-</div></a>
-</div>
-<div class="g-col-1" data-index="3" data-categories="UHl0aG9uJTJDU3BhdGlhbCUyMEFuYWx5c2lz" data-listing-date-sort="1709510400000" data-listing-file-modified-sort="1792806463329" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="23" data-listing-word-count-sort="4528">
-<a href="./projects/python/satellites_overhead/index.html" class="quarto-grid-link">
-<div class="quarto-grid-item card h-100 card-left">
-<p class="card-img-top">
-<img loading="lazy" src="./projects/python/satellites_overhead/satellite.jpg" class="thumbnail-image card-img" style="height: 150px;">
-</p>
-<div class="card-body post-contents">
-<h5 class="no-anchor card-title listing-title">
-Real-Time Orbital Tracking and Country-Level Satellite Density Analysis
-</h5>
-<div class="listing-categories">
-
-<div class="listing-category" onclick="window.quartoListingCategory('UHl0aG9u'); return false;">Python</div>
-
-<div class="listing-category" onclick="window.quartoListingCategory('U3BhdGlhbCUyMEFuYWx5c2lz'); return false;">Spatial Analysis</div>
-
-</div>
-<div class="card-text listing-description delink">
-<p>An automated geoinformatics workflow and interactive Folium web map evaluating global satellite distributions overhead through RESTful API ingestion, Skyfield astrodynamics…</p>
-</div>
-<div class="card-attribution card-text-small justify">
-<div class="listing-author">
-Jay Tilak P.
-</div>
-<div class="listing-date">
-Mar 4, 2024
-</div>
-</div>
-</div>
-</div></a>
-</div>
-<div class="g-col-1" data-index="4" data-categories="UiUyQ1NwYXRpYWwlMjBBbmFseXNpcyUyQ0FJUkJOQg==" data-listing-date-sort="1704844800000" data-listing-file-modified-sort="1792806836666" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="32" data-listing-word-count-sort="6338">
-<a href="./projects/r/airbnb_sf/index.html" class="quarto-grid-link">
-<div class="quarto-grid-item card h-100 card-left">
-<p class="card-img-top">
-<img loading="lazy" src="./projects/r/airbnb_sf/Bay_Airbnb.jpg" class="thumbnail-image card-img" style="height: 150px;">
-</p>
-<div class="card-body post-contents">
-<h5 class="no-anchor card-title listing-title">
-Exploring Various Datasets of Bay Area and Finding Useful Insights for Policymakers
-</h5>
-<div class="listing-categories">
-
-<div class="listing-category" onclick="window.quartoListingCategory('Ug=='); return false;">R</div>
-
-<div class="listing-category" onclick="window.quartoListingCategory('U3BhdGlhbCUyMEFuYWx5c2lz'); return false;">Spatial Analysis</div>
-
-<div class="listing-category" onclick="window.quartoListingCategory('QUlSQk5C'); return false;">AIRBNB</div>
-
-</div>
-<div class="card-text listing-description delink">
-<p>Spatial autocorrelation (Moran’s I &amp; LISA) and multivariate K-means geodemographic clustering of Airbnb listings and census indicators across San Francisco Bay Area ZIP…</p>
-</div>
-<div class="card-attribution card-text-small justify">
-<div class="listing-author">
-Jay Tilak P.
-</div>
-<div class="listing-date">
-Jan 10, 2024
-</div>
-</div>
-</div>
-</div></a>
-</div>
-<div class="g-col-1" data-index="5" data-categories="UiUyQ1NwYXRpYWwlMjBFY29ub21ldHJpY3MlMkNPTFMlMjBSZWdyZXNzaW9u" data-listing-date-sort="1704672000000" data-listing-file-modified-sort="1792802393932" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="39" data-listing-word-count-sort="7640">
-<a href="./projects/r/GCH_census/index.html" class="quarto-grid-link">
-<div class="quarto-grid-item card h-100 card-left">
-<p class="card-img-top">
-<img loading="lazy" src="./projects/r/GCH_census/greenCH.svg" class="thumbnail-image card-img" style="height: 150px;">
-</p>
-<div class="card-body post-contents">
-<h5 class="no-anchor card-title listing-title">
-Ordinary Least Squares Regression for modelling Green Central Heating in Census 2021
-</h5>
-<div class="listing-categories">
-
-<div class="listing-category" onclick="window.quartoListingCategory('Ug=='); return false;">R</div>
-
-<div class="listing-category" onclick="window.quartoListingCategory('U3BhdGlhbCUyMEVjb25vbWV0cmljcw=='); return false;">Spatial Econometrics</div>
-
-<div class="listing-category" onclick="window.quartoListingCategory('T0xTJTIwUmVncmVzc2lvbg=='); return false;">OLS Regression</div>
-
-</div>
-<div class="card-text listing-description delink">
-<p>Multivariate regression analysis of Census 2021 data revealing how dwelling morphology, off-gas-grid infrastructure and housing tenure affect residential green heating…</p>
-</div>
-<div class="card-attribution card-text-small justify">
-<div class="listing-author">
-Jay Tilak P.
-</div>
-<div class="listing-date">
-Jan 8, 2024
-</div>
-</div>
-</div>
-</div></a>
-</div>
-<div class="g-col-1" data-index="6" data-categories="QmlnJTIwRGF0YSUyMEFuYWx5dGljcyUyQ01hY2hpbmUlMjBMZWFybmluZyUyQ1BDQSUyQ1B5dGhvbg==" data-listing-date-sort="1703894400000" data-listing-file-modified-sort="1792802574565" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="17" data-listing-word-count-sort="3240">
-<a href="./projects/python/SP500_comp/index.html" class="quarto-grid-link">
-<div class="quarto-grid-item card h-100 card-left">
-<p class="card-img-top">
-<img loading="lazy" src="./projects/python/SP500_comp/pca_Mmode.svg" class="thumbnail-image card-img" style="height: 150px;">
-</p>
-<div class="card-body post-contents">
-<h5 class="no-anchor card-title listing-title">
-S&amp;P 500 Market Mode &amp; Factor Analysis: Dimensionality Reduction with PCA
-</h5>
-<div class="listing-categories">
-
-<div class="listing-category" onclick="window.quartoListingCategory('QmlnJTIwRGF0YSUyMEFuYWx5dGljcw=='); return false;">Big Data Analytics</div>
-
-<div class="listing-category" onclick="window.quartoListingCategory('TWFjaGluZSUyMExlYXJuaW5n'); return false;">Machine Learning</div>
-
-<div class="listing-category" onclick="window.quartoListingCategory('UENB'); return false;">PCA</div>
-
-<div class="listing-category" onclick="window.quartoListingCategory('UHl0aG9u'); return false;">Python</div>
-
-</div>
-<div class="card-text listing-description delink">
-<p>High-dimensional time-series analysis and eigen-portfolio construction using PCA to isolate market-wide systemic risk, sector factors and idiosyncratic noise.</p>
-</div>
-<div class="card-attribution card-text-small justify">
-<div class="listing-author">
-Jay Tilak P.
-</div>
+<div class="card-attribution card-text-small end">
 <div class="listing-date">
 Dec 30, 2023
 </div>
@@ -619,7 +654,7 @@ Dec 30, 2023
 </div>
 </div></a>
 </div>
-<div class="g-col-1" data-index="7" data-categories="UHl0aG9uJTJDR0lTJTJDU3BhdGlhbCUyMEFuYWx5c2lzJTJDUmV0YWlsJTIwQW5hbHl0aWNzJTJDTmV0d29yayUyMEFuYWx5c2lz" data-listing-date-sort="1702598400000" data-listing-file-modified-sort="1792804298569" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="22" data-listing-word-count-sort="4375">
+<div class="g-col-1" data-index="7" data-categories="UHl0aG9uJTJDU3BhdGlhbCUyMEFuYWx5c2lzJTJDUmV0YWlsJTIwQW5hbHl0aWNzJTJDTmV0d29yayUyMEFuYWx5c2lz" data-listing-date-sort="1702598400000" data-listing-file-modified-sort="1792840692975" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="22" data-listing-word-count-sort="4375">
 <a href="./projects/python/retail_site_select/index.html" class="quarto-grid-link">
 <div class="quarto-grid-item card h-100 card-left">
 <p class="card-img-top">
@@ -629,11 +664,10 @@ Dec 30, 2023
 <h5 class="no-anchor card-title listing-title">
 Retail Site Selection &amp; Catchment Analysis for a New C-Store with Click &amp; Collect in Liverpool
 </h5>
+<div class="listing-reading-time card-text text-muted">22 min</div>
 <div class="listing-categories">
 
 <div class="listing-category" onclick="window.quartoListingCategory('UHl0aG9u'); return false;">Python</div>
-
-<div class="listing-category" onclick="window.quartoListingCategory('R0lT'); return false;">GIS</div>
 
 <div class="listing-category" onclick="window.quartoListingCategory('U3BhdGlhbCUyMEFuYWx5c2lz'); return false;">Spatial Analysis</div>
 
@@ -645,10 +679,7 @@ Retail Site Selection &amp; Catchment Analysis for a New C-Store with Click &amp
 <div class="card-text listing-description delink">
 <p>Multi-criteria GIS site selection and network catchment modelling in Python to identify the optimal location for a new Marks &amp; Spencer convenience store and Click &amp; Collect…</p>
 </div>
-<div class="card-attribution card-text-small justify">
-<div class="listing-author">
-Jay Tilak P.
-</div>
+<div class="card-attribution card-text-small end">
 <div class="listing-date">
 Dec 15, 2023
 </div>
@@ -656,7 +687,7 @@ Dec 15, 2023
 </div>
 </div></a>
 </div>
-<div class="g-col-1" data-index="8" data-categories="UiUyQ1NvY2lhbCUyMFN1cnZleSUyMEFuYWx5c2lz" data-listing-date-sort="1701129600000" data-listing-file-modified-sort="1792802176658" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="41" data-listing-word-count-sort="8188">
+<div class="g-col-1" data-index="8" data-categories="UiUyQ1NvY2lhbCUyMFN1cnZleSUyMEFuYWx5c2lz" data-listing-date-sort="1701129600000" data-listing-file-modified-sort="1792840692976" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="41" data-listing-word-count-sort="8188">
 <a href="./projects/r/aps_eda/index.html" class="quarto-grid-link">
 <div class="quarto-grid-item card h-100 card-left">
 <p class="card-img-top">
@@ -666,6 +697,7 @@ Dec 15, 2023
 <h5 class="no-anchor card-title listing-title">
 Relationship between Standard Occupational Classification (SOC) and Address Duration in APS 2021 Survey
 </h5>
+<div class="listing-reading-time card-text text-muted">41 min</div>
 <div class="listing-categories">
 
 <div class="listing-category" onclick="window.quartoListingCategory('Ug=='); return false;">R</div>
@@ -676,10 +708,7 @@ Relationship between Standard Occupational Classification (SOC) and Address Dura
 <div class="card-text listing-description delink">
 <p>Exploratory survey analysis of the UK Annual Population Survey (APS 2021) examining the relationship between ONS occupational skill levels and residential address duration…</p>
 </div>
-<div class="card-attribution card-text-small justify">
-<div class="listing-author">
-Jay Tilak P.
-</div>
+<div class="card-attribution card-text-small end">
 <div class="listing-date">
 Nov 28, 2023
 </div>
@@ -687,7 +716,7 @@ Nov 28, 2023
 </div>
 </div></a>
 </div>
-<div class="g-col-1" data-index="9" data-categories="UHl0aG9uJTJDUHlTcGFyayUyQ0JpZyUyMERhdGElMjBBbmFseXRpY3MlMkNTcGF0aWFsJTIwQW5hbHlzaXM=" data-listing-date-sort="1700524800000" data-listing-file-modified-sort="1792802738358" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="7" data-listing-word-count-sort="1386">
+<div class="g-col-1" data-index="9" data-categories="UHl0aG9uJTJDUHlTcGFyayUyQ0JpZyUyMERhdGElMjBBbmFseXRpY3MlMkNTcGF0aWFsJTIwQW5hbHlzaXM=" data-listing-date-sort="1700524800000" data-listing-file-modified-sort="1792840692975" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="7" data-listing-word-count-sort="1386">
 <a href="./projects/python/bd_gps/index.html" class="quarto-grid-link">
 <div class="quarto-grid-item card h-100 card-left">
 <p class="card-img-top">
@@ -697,6 +726,7 @@ Nov 28, 2023
 <h5 class="no-anchor card-title listing-title">
 Big Data Trajectory Analysis: Microsoft GeoLife GPS Dataset
 </h5>
+<div class="listing-reading-time card-text text-muted">7 min</div>
 <div class="listing-categories">
 
 <div class="listing-category" onclick="window.quartoListingCategory('UHl0aG9u'); return false;">Python</div>
@@ -711,10 +741,7 @@ Big Data Trajectory Analysis: Microsoft GeoLife GPS Dataset
 <div class="card-text listing-description delink">
 <p>Distributed processing and spatiotemporal trajectory analysis of Microsoft GeoLife GPS logs using Apache Spark (PySpark).</p>
 </div>
-<div class="card-attribution card-text-small justify">
-<div class="listing-author">
-Jay Tilak P.
-</div>
+<div class="card-attribution card-text-small end">
 <div class="listing-date">
 Nov 21, 2023
 </div>
@@ -722,7 +749,7 @@ Nov 21, 2023
 </div>
 </div></a>
 </div>
-<div class="g-col-1" data-index="10" data-categories="UHl0aG9uJTJDR0lTJTJDU3BhdGlhbCUyMEFuYWx5c2lz" data-listing-date-sort="1698274800000" data-listing-file-modified-sort="1792804978615" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="23" data-listing-word-count-sort="4521">
+<div class="g-col-1" data-index="10" data-categories="UHl0aG9uJTJDU3BhdGlhbCUyMEFuYWx5c2lz" data-listing-date-sort="1698274800000" data-listing-file-modified-sort="1792840692975" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="23" data-listing-word-count-sort="4521">
 <a href="./projects/python/stPopLCR/index.html" class="quarto-grid-link">
 <div class="quarto-grid-item card h-100 card-left">
 <p class="card-img-top">
@@ -732,11 +759,10 @@ Nov 21, 2023
 <h5 class="no-anchor card-title listing-title">
 Spatial and Temporal Population Trends in the Liverpool City Region
 </h5>
+<div class="listing-reading-time card-text text-muted">23 min</div>
 <div class="listing-categories">
 
 <div class="listing-category" onclick="window.quartoListingCategory('UHl0aG9u'); return false;">Python</div>
-
-<div class="listing-category" onclick="window.quartoListingCategory('R0lT'); return false;">GIS</div>
 
 <div class="listing-category" onclick="window.quartoListingCategory('U3BhdGlhbCUyMEFuYWx5c2lz'); return false;">Spatial Analysis</div>
 
@@ -744,10 +770,7 @@ Spatial and Temporal Population Trends in the Liverpool City Region
 <div class="card-text listing-description delink">
 <p>Spatial and temporal analysis of daytime workplace and nighttime residential population dynamics, commuting corridors, and 1991–2011 decadal demographic shifts across the…</p>
 </div>
-<div class="card-attribution card-text-small justify">
-<div class="listing-author">
-Jay Tilak P.
-</div>
+<div class="card-attribution card-text-small end">
 <div class="listing-date">
 Oct 26, 2023
 </div>
@@ -777,10 +800,7 @@ Design Showcase: a Rotary-Percussive Bite Drill for the Moon and Mars
 <div class="card-text listing-description delink">
 <p>How a 45 kg lander takes 1 m ice-bearing samples with no drilling fluid. Physics-based design, digital twin, and trade studies.</p>
 </div>
-<div class="card-attribution card-text-small justify">
-<div class="listing-author">
-Jay Tilak P.
-</div>
+<div class="card-attribution card-text-small end">
 <div class="listing-date">
 Sep 7, 2022
 </div>
@@ -790,7 +810,7 @@ Sep 7, 2022
 </div>
 </div>
 <div class="listing-no-matching d-none">No matching items</div>
-</div></main> <!-- /main -->
+</div><a onclick="window.scrollTo(0, 0); return false;" role="button" id="quarto-back-to-top"><i class="bi bi-arrow-up"></i> Back to top</a></main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
   window.document.addEventListener("DOMContentLoaded", function (event) {
     // Ensure there is a toggle, if there isn't float one in the top right
@@ -877,7 +897,7 @@ Sep 7, 2022
     }
       var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
       var mailtoRegex = new RegExp(/^mailto:/);
-        var filterRegex = new RegExp('/' + window.location.host + '/');
+        var filterRegex = new RegExp("https:\/\/tilak-pentapati\.github\.io");
       var isInternal = (href) => {
           return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
       }
@@ -1205,6 +1225,32 @@ Sep 7, 2022
   });
   </script>
 </div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>© 2023–2026 Jay Tilak Pentapati</p>
+</div>   
+    <div class="nav-footer-center">
+<p>Built with <a href="https://quarto.org">Quarto</a></p>
+<div class="toc-actions"><ul><li><a href="https://github.com/tilak-pentapati/tilak-pentapati.github.io/blob/main/projects.qmd" class="toc-action"><i class="bi bi-github"></i>View source</a></li><li><a href="https://github.com/tilak-pentapati/tilak-pentapati.github.io/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
+    <div class="nav-footer-right">
+      <ul class="footer-items list-unstyled">
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/tilak-pentapati">
+      <i class="bi bi-github" role="img" aria-label="GitHub">
+</i> 
+    </a>
+  </li>  
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://linkedin.com/in/jay-tilak-pentapati">
+      <i class="bi bi-linkedin" role="img" aria-label="LinkedIn">
+</i> 
+    </a>
+  </li>  
+</ul>
+    </div>
+  </div>
+</footer>
 
 
 

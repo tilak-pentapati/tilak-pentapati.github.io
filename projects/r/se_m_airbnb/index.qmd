@@ -1,38 +1,11 @@
 ---
 title: "Point Pattern Analysis, Predictive Checks, and Spatial Econometrics of Madrid AirBnb Prices"
 description: "Spatial point pattern analysis, IDW price interpolation, and spatial econometric modelling of Madrid Airbnb listing prices."
-categories:
-  - R
-  - Spatial Econometrics
-  - Spatial Analysis
-  - AIRBNB
-
-author: "Jay Tilak P."
-
 date: "2024-03-21"
 image: sem_air.svg
+categories: [R, Spatial Econometrics, Spatial Analysis, Airbnb]
 bibliography: references.bib
 csl: https://raw.githubusercontent.com/citation-style-language/styles/master/ieee.csl
-toc: true
-toc-depth: 6
-toc-location: right
-number-sections: true
-format:
-  html:
-    highlight-style: github
-    code-tools: true
-    code-fold: true
-    self-contained: true
-    embed-resources: true
-    html-math-method: katex
-    fig-align: center
-    fig-width: 10
-    fig-height: 6
-    df-print: paged
-execute:
-  echo: true
-  warning: false
-  message: false
 ---
 
 ## Introduction & Setup

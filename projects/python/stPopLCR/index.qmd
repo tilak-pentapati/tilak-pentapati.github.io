@@ -1,36 +1,12 @@
 ---
 title: "Spatial and Temporal Population Trends in the Liverpool City Region"
 description: "Spatial and temporal analysis of daytime workplace and nighttime residential population dynamics, commuting corridors, and 1991–2011 decadal demographic shifts across the Liverpool City Region using Python and GeoPandas."
-
-categories:
-  - Python
-  - GIS
-  - Spatial Analysis
-
-author: "Jay Tilak P."
 date: "2023-10-26"
 image: PopLCR.svg
-jupyter: python3
-toc: true
-toc-depth: 6
-toc-location: right
+categories: [Python, Spatial Analysis]
 number-sections: false
-format:
-  html:
-    highlight-style: github
-    code-tools: true
-    code-fold: true
-    self-contained: true
-    embed-resources: true
-    html-math-method: katex
-    fig-align: center
-    fig-width: 11
-    fig-height: 10
-    df-print: paged
-execute:
-  echo: true
-  warning: false
-  message: false
+fig-width: 11
+fig-height: 10
 ---
 
 

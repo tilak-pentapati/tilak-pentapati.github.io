@@ -1,0 +1,51 @@
+# Publish the site to GitHub Pages from the committed _freeze/ results.
+# No Python or R is installed: every computational page is rendered from
+# _freeze/, so the raw data under data/ (gitignored) is never needed.
+#
+# Requires Settings > Pages > Build and deployment > Source = "GitHub Actions".
+name: Publish site
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: quarto-dev/quarto-actions/setup@v2
+        with:
+          version: 1.10.18
+
+      # A later nightly job re-executes only the live satellite page before
+      # this step (`quarto render projects/python/satellites_overhead/index.qmd`
+      # with Python set up), which refreshes its _freeze/ entry; everything
+      # else still comes from _freeze/.
+      - name: Render site from freeze
+        uses: quarto-dev/quarto-actions/render@v2
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
