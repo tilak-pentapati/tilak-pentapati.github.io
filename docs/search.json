@@ -4,7 +4,7 @@
     "href": "projects/r/stm_covid/index.html",
     "title": "Multilevel, Geographically Weighted and Spatio-Temporal Modelling of COVID-19 in England",
     "section": "",
-    "text": "At a glance\n\n\n\nProblem\n\n\nWhat drove local COVID-19 infection risk in England’s third (Alpha) wave, and how did it spread?\n\n\n\n\nData\n\n\nDaily COVID-19 cases for 149 upper-tier local authorities in 9 regions (Dec 2020 – Jan 2021) with census covariates.\n\n\n\n\nMethods\n\n\nMultilevel varying-intercept and varying-slope models, fixed and adaptive GWR, Fixed Rank Kriging basis functions in Poisson and negative binomial space-time GLMs.\n\n\n\n\nKey result\n\n\nOvercrowding, ethnic diversity and long-term illness raise risk; the negative binomial cuts deviance from 171,098 to 9,261; a significant latitude × time term shows south-to-north spread.\n\n\n\n\nStack\n\n\nR lme4 spgwr FRK spacetime sf tmap\n\n\n\n\nCode\n\n\nPage source (.qmd)"
+    "text": "NoteNote:\n\n\n\nI apologize for any references I may have inadvertently forgotten to mention in this case study. All my work is built upon the invaluable contributions of the giants in the data science field, on whose shoulders I stand. I am deeply grateful for their insights and advancements, which have made this study possible."
   },
   {
     "objectID": "projects/r/stm_covid/index.html#introduction-data-structure-variable-specification",
@@ -46,7 +46,7 @@
     "href": "projects/r/aps_eda/index.html",
     "title": "Relationship between Standard Occupational Classification (SOC) and Address Duration in APS 2021 Survey",
     "section": "",
-    "text": "At a glance\n\n\n\nProblem\n\n\nIs occupational skill level related to how long people have lived at their current address?\n\n\n\n\nData\n\n\nAPS 2021 teaching extract: 249,997 respondents × 60 variables (108,964 complete cases), plus UK mid-year population estimates.\n\n\n\n\nMethods\n\n\nRecoding SOC 2020 into 4 ONS skill levels, median and SRDI summaries, two-way cross-tabulation, chi-square test, age-based post-stratification reweighting.\n\n\n\n\nKey result\n\n\nA significant association (χ² = 637.8, df = 9, p &lt; 2.2 × 10⁻¹⁶); age reweighting lowers the “10 years or longer” share from 47.9% to 44.5%.\n\n\n\n\nStack\n\n\nR tidyverse knitr\n\n\n\n\nCode\n\n\nPage source (.qmd)"
+    "text": "NoteNote:\n\n\n\nI apologize for any references I may have inadvertently forgotten to mention in this case study. All my work is built upon the invaluable contributions of the giants in the data science field, on whose shoulders I stand. I am deeply grateful for their insights and advancements, which have made this study possible."
   },
   {
     "objectID": "projects/r/aps_eda/index.html#standard-occupational-classification-soc-2020-sub-major-group",
@@ -144,7 +144,7 @@
     "href": "projects/r/StrokePredictionModel/index.html",
     "title": "Clinical Stroke Prediction & Risk Stratification: Machine Learning Pipeline in R",
     "section": "",
-    "text": "At a glance\n\n\n\nProblem\n\n\nCan routine clinical and lifestyle variables flag patients at high risk of stroke?\n\n\n\n\nData\n\n\nHealthcare Dataset Stroke Data: 5,110 patients × 12 clinical and lifestyle features, with a strongly imbalanced outcome.\n\n\n\n\nMethods\n\n\nStratified BMI imputation, clinical feature engineering, SMOTE inside tidymodels recipes, 5-fold stratified CV, logistic regression vs random forest vs XGBoost, Youden’s J threshold.\n\n\n\n\nKey result\n\n\nSMOTE-balanced logistic regression reaches test AUC = 0.82, above random forest (0.79) and XGBoost (0.79), while keeping interpretable odds ratios; at the Youden threshold it catches 71% of strokes at 78% specificity.\n\n\n\n\nStack\n\n\nR tidymodels themis ranger xgboost pROC ggplot2\n\n\n\n\nCode\n\n\nPage source (.qmd)"
+    "text": "NoteNote:\n\n\n\nI apologize for any references I may have inadvertently forgotten to mention in this case study. All my work is built upon the invaluable contributions of the giants in the data science field, on whose shoulders I stand. I am deeply grateful for their insights and advancements, which have made this study possible."
   },
   {
     "objectID": "projects/r/StrokePredictionModel/index.html#project-overview",
@@ -221,7 +221,7 @@
     "href": "projects/python/stPopLCR/index.html",
     "title": "Spatial and Temporal Population Trends in the Liverpool City Region",
     "section": "",
-    "text": "At a glance\n\n\n\nProblem\n\n\nHow do daytime (workplace) and night-time (residential) populations differ across the Liverpool City Region, and how did population shift between 1991 and 2011?\n\n\n\n\nData\n\n\n2011 Census workplace zones and LSOAs, workplace social grade (WP613EW), UK Data Service PopChange 1 km grids (1991, 2011), major-employer locations.\n\n\n\n\nMethods\n\n\nDensity choropleths with Jenks and quantile classes, high-density cluster thresholds, raster change classification, district summary tables.\n\n\n\n\nKey result\n\n\nDaytime workplace population of 987,210 against 1,506,940 night-time residents; mean LCR density fell from 2,087 to 2,065 persons/km² while the national mean rose.\n\n\n\n\nStack\n\n\nPython GeoPandas Rasterio Matplotlib QGIS\n\n\n\n\nCode\n\n\nPage source (.qmd)"
+    "text": "NoteNote:\n\n\n\nI apologize for any references I may have inadvertently forgotten to mention in this case study. All my work is built upon the invaluable contributions of the giants in the data science field, on whose shoulders I stand. I am deeply grateful for their insights and advancements, which have made this study possible."
   },
   {
     "objectID": "projects/python/stPopLCR/index.html#introduction-study-area",
@@ -291,7 +291,7 @@
     "href": "projects/python/retail_site_select/index.html",
     "title": "Retail Site Selection & Catchment Analysis for a New C-Store with Click & Collect in Liverpool",
     "section": "",
-    "text": "At a glance\n\n\n\nProblem\n\n\nWhere should Marks & Spencer open a new convenience store with Click & Collect in Liverpool?\n\n\n\n\nData\n\n\n298 Liverpool LSOAs: CDRC Internet User Classification 2018, IMD 2019, BRES daytime population 2020, Geolytix retail points 2023, road-network service areas.\n\n\n\n\nMethods\n\n\nThree-stage multi-criteria screening (demand → competition → site), fixed vs network drive-distance catchments, store-to-LSOA distance matrix.\n\n\n\n\nKey result\n\n\nOptimal site on the Wavertree / Childwall / Allerton border, outside competitors’ 1,500 m drive catchments; a 500 m network catchment covers 27.9% less area than a Euclidean buffer.\n\n\n\n\nStack\n\n\nPython GeoPandas pandas Matplotlib QGIS ArcGIS Pro\n\n\n\n\nCode\n\n\nPage source (.qmd)"
+    "text": "NoteNote:\n\n\n\nI apologize for any references I may have inadvertently forgotten to mention in this case study. All my work is built upon the invaluable contributions of the giants in the data science field, on whose shoulders I stand. I am deeply grateful for their insights and advancements, which have made this study possible."
   },
   {
     "objectID": "projects/python/retail_site_select/index.html#executive-summary-retail-location-problem",
@@ -361,7 +361,7 @@
     "href": "projects/python/SP500_comp/index.html",
     "title": "S&P 500 Market Mode & Factor Analysis: Dimensionality Reduction with PCA",
     "section": "",
-    "text": "At a glance\n\n\n\nProblem\n\n\nHow much of S&P 500 return variance is market-wide systemic risk, and how much is sector factors or stock-specific noise?\n\n\n\n\nData\n\n\nDaily prices for 486 continuously listed S&P 500 constituents, July 2014 to June 2017 (about 750 trading days).\n\n\n\n\nMethods\n\n\nDaily-return matrix → unnormalised and standardised PCA → scree-elbow and cumulative-variance analysis → eigenportfolio interpretation.\n\n\n\n\nKey result\n\n\nPC1 (the “market mode”) explains 28.8–31.8% of variance; the scree elbow is at PC4; 226–253 PCs are needed to reach 95%.\n\n\n\n\nStack\n\n\nPython pandas NumPy scikit-learn Matplotlib\n\n\n\n\nCode\n\n\nPage source (.qmd)"
+    "text": "NoteNote:\n\n\n\nI apologize for any references I may have inadvertently forgotten to mention in this case study. All my work is built upon the invaluable contributions of the giants in the data science field, on whose shoulders I stand. I am deeply grateful for their insights and advancements, which have made this study possible."
   },
   {
     "objectID": "projects/python/SP500_comp/index.html#introduction-theoretical-background",
@@ -445,7 +445,7 @@
     "href": "projects/python/bd_gps/index.html",
     "title": "Big Data Trajectory Analysis: Microsoft GeoLife GPS Dataset",
     "section": "",
-    "text": "At a glance\n\n\n\nProblem\n\n\nExtract per-user mobility metrics (activity, extremes, distance, speed) from raw GPS trajectory logs with distributed processing.\n\n\n\n\nData\n\n\nA sample of the Microsoft GeoLife GPS Trajectory Dataset (12 users, IDs 130–141).\n\n\n\n\nMethods\n\n\nExplicit Spark schema → GMT to GMT+8 timestamp conversion → window functions with lag → geodesic-distance UDF → grouped aggregation and ranking.\n\n\n\n\nKey result\n\n\n73,712 km of cumulative geodesic distance across all users, plus top-5 rankings for active days, weekly volume, altitude span and peak speed.\n\n\n\n\nStack\n\n\nPython PySpark Spark SQL geopy\n\n\n\n\nCode\n\n\nPage source (.qmd)"
+    "text": "NoteNote:\n\n\n\nI apologize for any references I may have inadvertently forgotten to mention in this case study. All my work is built upon the invaluable contributions of the giants in the data science field, on whose shoulders I stand. I am deeply grateful for their insights and advancements, which have made this study possible."
   },
   {
     "objectID": "projects/python/bd_gps/index.html#project-overview",
@@ -515,7 +515,7 @@
     "href": "projects/python/satellites_overhead/index.html",
     "title": "Real-Time Orbital Tracking and Country-Level Satellite Density Analysis",
     "section": "",
-    "text": "At a glanceLive · updated nightly\n\n\n\nProblem\n\n\nHow many active satellites are above each country at a given moment, and how does that change over a day?\n\n\n\n\nData\n\n\nCelesTrak two-line element sets for all active satellites (REST API); Opendatasoft World Administrative Boundaries (256 countries, GeoJSON).\n\n\n\n\nMethods\n\n\nSkyfield orbit propagation at 4-hour steps over the current UTC day → sub-satellite points → antimeridian fix → point-in-polygon spatial join → Natural Breaks classification.\n\n\n\n\nKey result\n\n\n\nTODO: headline figure (e.g. the country with the most satellites overhead). The page builds a country × time satellite-count matrix and an interactive choropleth; counts depend on the live TLE feed.\n\n\n\n\n\nStack\n\n\nPython requests Skyfield GeoPandas Shapely mapclassify Folium\n\n\n\n\nCode\n\n\nPage source (.qmd)\nCachedLast updated: 2026-10-24 12:34 UTCTLE epochs 2026-08-31 to 2026-09-29 12:15 UTC15,977 satellites · cached CelesTrak feed"
+    "text": "NoteNote:\n\n\n\nI apologize for any references I may have inadvertently forgotten to mention in this case study. All my work is built upon the invaluable contributions of the giants in the data science field, on whose shoulders I stand. I am deeply grateful for their insights and advancements, which have made this study possible.\nCachedLast updated: 2026-10-24 12:34 UTCTLE epochs 2026-08-31 to 2026-09-29 12:15 UTC15,977 satellites · cached CelesTrak feed"
   },
   {
     "objectID": "projects/python/satellites_overhead/index.html#analysis-of-spatial-datasets-through-apis",
@@ -557,7 +557,7 @@
     "href": "projects/r/GCH_census/index.html",
     "title": "Ordinary Least Squares Regression for modelling Green Central Heating in Census 2021",
     "section": "",
-    "text": "At a glance\n\n\n\nProblem\n\n\nWhat determines the uptake of green central heating across local authority districts in England and Wales?\n\n\n\n\nData\n\n\nCensus 2021: 331 local authority districts × 55 variables.\n\n\n\n\nMethods\n\n\nRank-based correlation screening, nested OLS models, two-way interactions with backward elimination, a polynomial term, diagnostics (Breusch–Pagan, VIF, Durbin–Watson).\n\n\n\n\nKey result\n\n\nHousing type, off-grid heating and tenure lift R² from 22.5% to 53.1% (AIC 1,255 → 1,095); detached, off-grid and owner-occupied effects interact significantly.\n\n\n\n\nStack\n\n\nR tidyverse car MASS broom sjPlot\n\n\n\n\nCode\n\n\nPage source (.qmd)"
+    "text": "NoteNote:\n\n\n\nI apologize for any references I may have inadvertently forgotten to mention in this case study. All my work is built upon the invaluable contributions of the giants in the data science field, on whose shoulders I stand. I am deeply grateful for their insights and advancements, which have made this study possible."
   },
   {
     "objectID": "projects/r/GCH_census/index.html#introduction",
@@ -641,7 +641,7 @@
     "href": "projects/r/airbnb_sf/index.html",
     "title": "Exploring Various Datasets of Bay Area and Finding Useful Insights for Policymakers",
     "section": "",
-    "text": "At a glance\n\n\n\nProblem\n\n\nWhich neighbourhood characteristics shape Airbnb activity across Bay Area ZIP codes, and how can policymakers target areas?\n\n\n\n\nData\n\n\nInside Airbnb listings (San Francisco, Oakland, San Mateo), ACS 2016–2020 income and broadband (tidycensus), ZCTA boundaries, vehicles and commercial electricity rates per ZIP (2020).\n\n\n\n\nMethods\n\n\nQueen-contiguity weights, global Moran’s I (Monte Carlo) and LISA, multivariate K-means geodemographic clustering, in EPSG:2227.\n\n\n\n\nKey result\n\n\nAirbnb listings cluster in San Francisco and Oakland ZIP codes with high internet use and medium-to-high household income.\n\n\n\n\nStack\n\n\nR sf tidycensus spdep tmap cluster\n\n\n\n\nCode\n\n\nPage source (.qmd)"
+    "text": "NoteNote:\n\n\n\nI apologize for any references I may have inadvertently forgotten to mention in this case study. All my work is built upon the invaluable contributions of the giants in the data science field, on whose shoulders I stand. I am deeply grateful for their insights and advancements, which have made this study possible."
   },
   {
     "objectID": "projects/r/airbnb_sf/index.html#installing-packages",
@@ -669,7 +669,7 @@
     "href": "projects/r/airbnb_sf/index.html#conclusion",
     "title": "Exploring Various Datasets of Bay Area and Finding Useful Insights for Policymakers",
     "section": "4 Conclusion",
-    "text": "4 Conclusion\nGeo-Demographic Classification allows for making data-informed decisions for various policy making and Societal Improvements. In Reality, It is much more nuanced, we need to have understanding of different neighborhood dynamics, real-estate markets and other Socio-Economic Factors. But, With target areas based on neighborhood charactertistics, Policymakers can very effectively address local issues and enhance overall community well-being.\nThough Multi-Variate Clustering is performed, we neglected timeline factor, which introduces temporal inconsistencies. There can be biases introduced because of New forms of spatial data like AIRBNB Data. However, Apart from above insights in geodemographic classifcation, To make well-informed decisions for policymakers, We need more sophisticated approaches and Real-Time Verification procedures.\n\n\n\n\n\n\nNoteNote:\n\n\n\nI apologize for any references I may have inadvertently forgotten to mention in this case study. All my work is built upon the invaluable contributions of the giants in the data science field, on whose shoulders I stand. I am deeply grateful for their insights and advancements, which have made this study possible."
+    "text": "4 Conclusion\nGeo-Demographic Classification allows for making data-informed decisions for various policy making and Societal Improvements. In Reality, It is much more nuanced, we need to have understanding of different neighborhood dynamics, real-estate markets and other Socio-Economic Factors. But, With target areas based on neighborhood charactertistics, Policymakers can very effectively address local issues and enhance overall community well-being.\nThough Multi-Variate Clustering is performed, we neglected timeline factor, which introduces temporal inconsistencies. There can be biases introduced because of New forms of spatial data like AIRBNB Data. However, Apart from above insights in geodemographic classifcation, To make well-informed decisions for policymakers, We need more sophisticated approaches and Real-Time Verification procedures."
   },
   {
     "objectID": "projects/r/airbnb_sf/index.html#references",
@@ -683,7 +683,7 @@
     "href": "projects/r/se_m_airbnb/index.html",
     "title": "Point Pattern Analysis, Predictive Checks, and Spatial Econometrics of Madrid AirBnb Prices",
     "section": "",
-    "text": "At a glance\n\n\n\nProblem\n\n\nHow are Madrid Airbnb prices distributed in space, and what drives them?\n\n\n\n\nData\n\n\nMadrid Airbnb listings GeoPackage: nightly price, capacity, rooms, amenities, neighbourhood and distance to El Retiro Park.\n\n\n\n\nMethods\n\n\nKDE and hex binning, IDW interpolation, OLS with simulation-based predictive checks, neighbourhood fixed effects and spatial regimes, k = 50 nearest-neighbour spatial lags, Moran’s I.\n\n\n\n\nKey result\n\n\nThe log-price model raises R² from 0.023 to 0.244 and passes predictive checks; adding spatial lags and distance to El Retiro reaches R² = 0.251.\n\n\n\n\nStack\n\n\nR sf gstat spdep spatialreg arm tmap\n\n\n\n\nCode\n\n\nPage source (.qmd)"
+    "text": "NoteNote:\n\n\n\nI apologize for any references I may have inadvertently forgotten to mention in this case study. All my work is built upon the invaluable contributions of the giants in the data science field, on whose shoulders I stand. I am deeply grateful for their insights and advancements, which have made this study possible."
   },
   {
     "objectID": "projects/r/se_m_airbnb/index.html#introduction-setup",
