@@ -1,0 +1,10 @@
+<script>
+// Project cards in any listing (home "Featured work", Projects page) open in a new tab.
+document.addEventListener("click", function (e) {
+  const link = e.target.closest("a[href]");
+  if (link && link.closest(".quarto-listing")) {
+    link.setAttribute("target", "_blank");
+    link.setAttribute("rel", "noopener noreferrer");
+  }
+});
+</script>

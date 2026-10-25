@@ -75,7 +75,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../../../site_libs/quarto-search/fuse.min.js"></script>
 <script src="../../../site_libs/quarto-search/quarto-search.js"></script>
 <meta name="quarto:offset" content="../../../">
-<link href="../../../favicon.svg" rel="icon" type="image/svg+xml">
+<link href="../../../favicon-iso.svg" rel="icon" type="image/svg+xml">
 <script src="../../../site_libs/quarto-html/quarto.js" type="module"></script>
 <script src="../../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
 <script src="../../../site_libs/quarto-html/popper.min.js"></script>
@@ -87,9 +87,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../../../site_libs/quarto-html/quarto-syntax-highlighting-886401abd66b684bd75f2f6e9275b3c8.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../../site_libs/bootstrap/bootstrap-ef0ca0690acdd717cdb7ae26571478d0.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../../site_libs/bootstrap/bootstrap-dark-25f129058592d4e706b95de67d80bc66.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../../site_libs/bootstrap/bootstrap-ef0ca0690acdd717cdb7ae26571478d0.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../../site_libs/bootstrap/bootstrap-a99618b5dba29064d33db33fe78de6ee.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../../site_libs/bootstrap/bootstrap-dark-71df7d1e0507b340a26abdcbee1b2ab2.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../../site_libs/bootstrap/bootstrap-a99618b5dba29064d33db33fe78de6ee.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -304,11 +304,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
     <a href="../../../index.html" class="navbar-brand navbar-brand-logo">
-    <img src="../../../assets/logo/jtp-mark-light.svg" alt="JTP monogram" class="navbar-logo light-content">
-    <img src="../../../assets/logo/jtp-mark-dark.svg" alt="JTP monogram" class="navbar-logo dark-content">
-    </a>
-    <a class="navbar-brand" href="../../../index.html">
-    <span class="navbar-title">Jay Tilak Pentapati</span>
+    <img src="../../../assets/logo/iso-mark-light.svg" alt="Isometric circle logo" class="navbar-logo light-content">
+    <img src="../../../assets/logo/iso-mark-dark.svg" alt="Isometric circle logo" class="navbar-logo dark-content">
     </a>
   </div>
             <div id="quarto-search" class="" title="Search"></div>
@@ -439,7 +436,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<div id="project-summary" class="eng-summary" role="note" aria-label="Project summary">
+<div id="project-summary" class="eng-summary" aria-label="Project summary" role="note">
 <div class="es-title">
 <i class="bi bi-clipboard-data" aria-hidden="true"></i>At a glance<span class="es-live">Live · updated nightly</span>
 </div>
@@ -1990,6 +1987,16 @@ document.addEventListener("DOMContentLoaded", function() {
 </section>
 
 <a onclick="window.scrollTo(0, 0); return false;" role="button" id="quarto-back-to-top"><i class="bi bi-arrow-up"></i> Back to top</a></main> <!-- /main -->
+<script>
+// Project cards in any listing (home "Featured work", Projects page) open in a new tab.
+document.addEventListener("click", function (e) {
+  const link = e.target.closest("a[href]");
+  if (link && link.closest(".quarto-listing")) {
+    link.setAttribute("target", "_blank");
+    link.setAttribute("rel", "noopener noreferrer");
+  }
+});
+</script>
 <script type="ojs-module-contents">
 eyJjb250ZW50cyI6W3sibWV0aG9kTmFtZSI6ImludGVycHJldCIsImNlbGxOYW1lIjoib2pzLWNlbGwtMSIsImlubGluZSI6ZmFsc2UsInNvdXJjZSI6InNhdFJvd3MgPSB0cmFuc3Bvc2Uoc2F0X2xvbmcpXG5cbnNhdFZpZXcgPSB7XG4gIGNvbnN0IGJ5Q291bnRyeSA9IGQzLnJvbGx1cHMoXG4gICAgc2F0Um93cy5maWx0ZXIoZCA9PiBzYXRUaW1lID09PSBcIjI0LWhvdXIgbWVhblwiIHx8IGQudGltZSA9PT0gc2F0VGltZSksXG4gICAgdiA9PiAoe2NvdW50OiBkMy5tZWFuKHYsIGQgPT4gZC5jb3VudCksIGFyZWE6IHZbMF0uYXJlYV9rbTJ9KSxcbiAgICBkID0+IGQuQ291bnRyaWVzKTtcbiAgY29uc3QgcGVyQXJlYSA9IHNhdE1ldHJpYyA9PT0gXCJQZXIgbWlsbGlvbiBrbcKyXCI7XG4gIGNvbnN0IHEgPSBzYXRTZWFyY2gudHJpbSgpLnRvTG93ZXJDYXNlKCk7XG4gIHJldHVybiBieUNvdW50cnlcbiAgICAubWFwKChbY291bnRyeSwgc10pID0+ICh7Y291bnRyeSwgdmFsdWU6IHBlckFyZWEgPyBzLmNvdW50IC8gKHMuYXJlYSAvIDFlNikgOiBzLmNvdW50LCBhcmVhOiBzLmFyZWF9KSlcbiAgICAvLyBkZW5zaXR5IGlzIHVuc3RhYmxlIGZvciBtaWNyby1zdGF0ZXMsIHNvIGl0IGlzIHNob3duIGZvciBjb3VudHJpZXMgPj0gMTAwLDAwMCBrbcKyIG9ubHlcbiAgICAuZmlsdGVyKGQgPT4gIXBlckFyZWEgfHwgZC5hcmVhID49IDFlNSlcbiAgICAuZmlsdGVyKGQgPT4gIXEgfHwgZC5jb3VudHJ5LnRvTG93ZXJDYXNlKCkuaW5jbHVkZXMocSkpXG4gICAgLnNvcnQoKGEsIGIpID0+IGQzLmRlc2NlbmRpbmcoYS52YWx1ZSwgYi52YWx1ZSkpXG4gICAgLnNsaWNlKDAsIHNhdFRvcE4pO1xufVxuIn0seyJtZXRob2ROYW1lIjoiaW50ZXJwcmV0IiwiY2VsbE5hbWUiOiJvanMtY2VsbC0yIiwiaW5saW5lIjpmYWxzZSwic291cmNlIjoidmlld29mIHNhdFRpbWUgPSBJbnB1dHMuc2VsZWN0KFtcIjI0LWhvdXIgbWVhblwiLCAuLi5zYXRfdGltZXNdLFxuICB7bGFiZWw6IFwiU25hcHNob3QgKFVUQylcIiwgdmFsdWU6IFwiMjQtaG91ciBtZWFuXCIsXG4gICBmb3JtYXQ6IHQgPT4gdCA9PT0gXCIyNC1ob3VyIG1lYW5cIiA/IHQgOiBgJHt0LnNsaWNlKDAsIDEwKX0gJHt0LnNsaWNlKDExLCAxNil9IFVUQ2B9KVxudmlld29mIHNhdE1ldHJpYyA9IElucHV0cy5yYWRpbyhbXCJTYXRlbGxpdGVzIG92ZXJoZWFkXCIsIFwiUGVyIG1pbGxpb24ga23CslwiXSxcbiAge2xhYmVsOiBcIk1lYXN1cmVcIiwgdmFsdWU6IFwiU2F0ZWxsaXRlcyBvdmVyaGVhZFwifSlcbnZpZXdvZiBzYXRUb3BOID0gSW5wdXRzLnJhbmdlKFs1LCA0MF0sIHtsYWJlbDogXCJDb3VudHJpZXMgc2hvd25cIiwgc3RlcDogMSwgdmFsdWU6IDE1fSlcbnZpZXdvZiBzYXRTZWFyY2ggPSBJbnB1dHMudGV4dCh7bGFiZWw6IFwiRmlsdGVyIGNvdW50cmllc1wiLCBwbGFjZWhvbGRlcjogXCJlLmcuIFVuaXRlZCwgQnJhemlsXCJ9KVxuXG5QbG90LnBsb3Qoe1xuICB3aWR0aDogTWF0aC5taW4od2lkdGgsIDgyMCksXG4gIGhlaWdodDogNDAgKyAyMiAqIE1hdGgubWF4KHNhdFZpZXcubGVuZ3RoLCAxKSxcbiAgbWFyZ2luTGVmdDogMTcwLFxuICB4OiB7bGFiZWw6IHNhdE1ldHJpYyA9PT0gXCJQZXIgbWlsbGlvbiBrbcKyXCIgPyBcIlNhdGVsbGl0ZXMgcGVyIG1pbGxpb24ga23CsiDihpJcIiA6IFwiU2F0ZWxsaXRlcyBvdmVyaGVhZCDihpJcIiwgZ3JpZDogdHJ1ZX0sXG4gIHk6IHtsYWJlbDogbnVsbCwgZG9tYWluOiBzYXRWaWV3Lm1hcChkID0+IGQuY291bnRyeSksXG4gICAgICB0aWNrRm9ybWF0OiBkID0+IGQubGVuZ3RoID4gMjQgPyBkLnNsaWNlKDAsIDIzKSArIFwi4oCmXCIgOiBkfSxcbiAgbWFya3M6IFtcbiAgICBQbG90LmJhclgoc2F0Vmlldywge3g6IFwidmFsdWVcIiwgeTogXCJjb3VudHJ5XCIsIGZpbGw6IFwiIzJlOGI1N1wiLCB0aXA6IHRydWV9KSxcbiAgICBQbG90LnJ1bGVYKFswXSlcbiAgXVxufSlcbiJ9LHsibWV0aG9kTmFtZSI6ImludGVycHJldFF1aWV0Iiwic291cmNlIjoic2hpbnlJbnB1dCgnc2F0VGltZScpIn0seyJtZXRob2ROYW1lIjoiaW50ZXJwcmV0UXVpZXQiLCJzb3VyY2UiOiJzaGlueUlucHV0KCdzYXRNZXRyaWMnKSJ9LHsibWV0aG9kTmFtZSI6ImludGVycHJldFF1aWV0Iiwic291cmNlIjoic2hpbnlJbnB1dCgnc2F0VG9wTicpIn0seyJtZXRob2ROYW1lIjoiaW50ZXJwcmV0UXVpZXQiLCJzb3VyY2UiOiJzaGlueUlucHV0KCdzYXRTZWFyY2gnKSJ9XX0=
 </script>

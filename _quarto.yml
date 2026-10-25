@@ -17,7 +17,7 @@ website:
   title: "Jay Tilak Pentapati"
   description: "Geographic data science and engineering portfolio of Jay Tilak Pentapati: spatial analysis, statistical modelling, machine learning and systems design."
   site-url: https://tilak-pentapati.github.io
-  favicon: favicon.svg
+  favicon: favicon-iso.svg
   image: pic_linkedin_V2.jpg
   open-graph: true
   twitter-card: true
@@ -29,6 +29,8 @@ website:
   repo-branch: main
   repo-actions: [source, issue]
   navbar:
+    # Logo only; website.title still feeds page titles and metadata.
+    title: false
     left:
       - href: index.qmd
         text: Home
@@ -61,3 +63,4 @@ format:
       light: [cosmo, assets/styles/site-navbar-colours.scss, brand, assets/styles/custom.scss]
       dark: [darkly, assets/styles/site-navbar-colours.scss, brand, assets/styles/custom.scss]
     embed-resources: false
+    include-after-body: assets/listing-links.html

@@ -15,15 +15,6 @@ listing:
 
 ```{=html}
 <script>
-// Only the external drill-project card leaves the site, so open it in a new tab.
-document.addEventListener("click", function (e) {
-  const link = e.target.closest("a[href]");
-  if (link && link.closest(".quarto-listing") && link.host !== window.location.host) {
-    link.setAttribute("target", "_blank");
-    link.setAttribute("rel", "noopener noreferrer");
-  }
-});
-
 // Pages with the "Live data" category are re-executed nightly: give that chip a live style.
 document.addEventListener("DOMContentLoaded", function () {
   document.querySelectorAll(".quarto-listing .listing-category").forEach(function (chip) {
