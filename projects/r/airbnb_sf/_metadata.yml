@@ -24,26 +24,3 @@ study_area:
   lat: 37.7
   lon: -122.33
   radius_km: 22
-
-# Reproducibility: "Reproduce" badges in the summary card and the "Data
-# availability" appendix (assets/filters/summary-card.lua), and the aggregated
-# data/README.md (scripts/build_data_readme.py). `env` is relative to this folder.
-reproduce:
-  env: environment.yml
-  data:
-    - name: "Inside Airbnb listings: San Francisco, Oakland, San Mateo County"
-      url: "https://insideairbnb.com/get-the-data/"
-      licence: "CC BY 4.0"
-      fetch: "Download `listings.csv` and `neighbourhoods.csv` for each city."
-      path: "`data/data_r/airbnb_sf/tables/` (committed)"
-    - name: "American Community Survey 2016–2020 (income, broadband) via tidycensus"
-      url: "https://api.census.gov/data/key_signup.html"
-      licence: "US Government work (public domain)"
-      fetch: "Fetched at render time; needs a free Census API key in the `CENSUS_API_KEY` environment variable."
-      path: "none (API)"
-    - name: "Bay Area ZIP code areas, utility rates by ZIP (2020), vehicle counts by ZIP (2020)"
-      url: "https://geodata.lib.berkeley.edu/"
-      licence: "Public agency open data (UC Berkeley GeoData, NREL/OpenEI, California Open Data); see each source page"
-      fetch: "Already in the repository."
-      path: "`data/data_r/airbnb_sf/bayarea_zipcodes/` and `tables/` (committed)"
-  note: "The data this page reads is committed, so only the Census API key is needed. Paths are relative to the project root."

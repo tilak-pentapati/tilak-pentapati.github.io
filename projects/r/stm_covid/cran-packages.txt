@@ -1,5 +1,0 @@
-# CRAN packages for projects/r/stm_covid/index.qmd that are not on conda-forge.
-# Pinned to the local r_env_gds library (R 4.5.3); installed by
-# scripts/repro/install_cran.R into the env built from environment.yml.
-FRK==2.3.2
-spgwr==0.6-37

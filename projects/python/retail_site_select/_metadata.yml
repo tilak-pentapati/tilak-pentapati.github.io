@@ -24,31 +24,3 @@ study_area:
   lat: 53.408
   lon: -2.92
   radius_km: 7
-
-# Reproducibility: "Reproduce" badges in the summary card and the "Data
-# availability" appendix (assets/filters/summary-card.lua), and the aggregated
-# data/README.md (scripts/build_data_readme.py). `env` is relative to this folder.
-reproduce:
-  env: environment.yml
-  data:
-    - name: "CDRC Internet User Classification 2018, IMD 2019 and Retail Centre Boundaries"
-      url: "https://data.cdrc.ac.uk/"
-      licence: "Open Government Licence v3.0 / CDRC open data terms (free registration)"
-      fetch: "Download from the CDRC data portal and clip to Liverpool LSOAs."
-      path: "`data/data_python/retail_site_select/demand/` and `boundaries/`"
-    - name: "Business Register and Employment Survey 2020 (workplace population)"
-      url: "https://www.nomisweb.co.uk/"
-      licence: "Open Government Licence v3.0"
-      fetch: "Nomis query for Liverpool LSOAs; joined to LSOA polygons as `Daytime_Pop_2020_Liverpool.shp`."
-      path: "`data/data_python/retail_site_select/demand/`"
-    - name: "Geolytix Retail Points (Foodstores), August 2023"
-      url: "https://geolytix.com/blog/supermarket-retail-points/"
-      licence: "Geolytix Open Data licence (attribution required)"
-      fetch: "Download the retail points CSV and filter to Liverpool."
-      path: "`data/data_python/retail_site_select/supply/`"
-    - name: "ONS LAD (May 2020) boundaries and OS Open Roads (service areas built in QGIS)"
-      url: "https://geoportal.statistics.gov.uk/"
-      licence: "Open Government Licence v3.0 (contains OS data © Crown copyright)"
-      fetch: "Boundaries from the ONS Open Geography Portal; road-network buffers were made in QGIS from OS Open Roads."
-      path: "`data/data_python/retail_site_select/boundaries/` and `buffers_and_network/`"
-  note: "These are module-prepared derivative layers; the page looks for them relative to the project root."
