@@ -87,9 +87,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../../../site_libs/quarto-html/quarto-syntax-highlighting-886401abd66b684bd75f2f6e9275b3c8.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../../site_libs/bootstrap/bootstrap-24b8dfeb24294192d3700cf9ea1cdd4f.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../../site_libs/bootstrap/bootstrap-dark-6fe63d9705f2623112f2c6bd86e2db1a.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../../site_libs/bootstrap/bootstrap-24b8dfeb24294192d3700cf9ea1cdd4f.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../../site_libs/bootstrap/bootstrap-ef0ca0690acdd717cdb7ae26571478d0.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../../site_libs/bootstrap/bootstrap-dark-25f129058592d4e706b95de67d80bc66.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../../site_libs/bootstrap/bootstrap-ef0ca0690acdd717cdb7ae26571478d0.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -141,17 +141,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <meta name="twitter:description" content="Spatial autocorrelation (Moran’s I &amp; LISA) and multivariate K-means geodemographic clustering of Airbnb listings and census indicators across San Francisco Bay Area ZIP codes.">
 <meta name="twitter:image" content="https://tilak-pentapati.github.io/projects/r/airbnb_sf/Bay_Airbnb.jpg">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="citation_title" content="Exploring Various Datasets of Bay Area and Finding Useful Insights for Policymakers">
-<meta name="citation_keywords" content="Airbnb,spatial autocorrelation,Moran's I,LISA,K-means,geodemographic classification,San Francisco Bay Area">
-<meta name="citation_author" content="Jay Tilak Pentapati">
-<meta name="citation_publication_date" content="2024-01-10">
-<meta name="citation_cover_date" content="2024-01-10">
-<meta name="citation_year" content="2024">
-<meta name="citation_online_date" content="2024-01-10">
-<meta name="citation_fulltext_html_url" content="https://tilak-pentapati.github.io/projects/r/airbnb_sf/">
-<meta name="citation_language" content="en">
-<meta name="citation_journal_title" content="Jay Tilak Pentapati: Geographic Data Science &amp;amp; Engineering Portfolio">
-<meta name="citation_publisher" content="Jay Tilak Pentapati">
 </head>
 
 <body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
@@ -400,7 +389,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   </ul></li>
   <li><a href="#conclusion" id="toc-conclusion" class="nav-link" data-scroll-target="#conclusion"><span class="header-section-number">4</span> Conclusion</a></li>
   <li><a href="#references" id="toc-references" class="nav-link" data-scroll-target="#references"><span class="header-section-number">5</span> References</a></li>
-  
   </ul>
 <div class="toc-actions"><ul><li><a href="https://github.com/tilak-pentapati/tilak-pentapati.github.io/blob/main/projects/r/airbnb_sf/index.qmd" class="toc-action"><i class="bi bi-github"></i>View source</a></li><li><a href="https://github.com/tilak-pentapati/tilak-pentapati.github.io/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div><div class="quarto-code-links"><h2>Code Links</h2><ul><li><a href="https://github.com/tilak-pentapati/tilak-pentapati.github.io/blob/main/projects/r/airbnb_sf/index.qmd"><i class="bi bi-github"></i>Page source (.qmd)</a></li></ul></div></nav>
     </div>
@@ -511,16 +499,6 @@ Code
 </div>
 <div class="es-value">
 <a href="https://github.com/tilak-pentapati/tilak-pentapati.github.io/blob/main/projects/r/airbnb_sf/index.qmd">Page source (.qmd)</a>
-</div>
-</div>
-<div class="es-row">
-<div class="es-label">
-Reproduce
-</div>
-<div class="es-value">
-<div class="repro-badges">
-<a class="repro-badge repro-codespaces" href="https://codespaces.new/tilak-pentapati/tilak-pentapati.github.io?quickstart=1" title="Open the repository in GitHub Codespaces, then run scripts/repro/setup-env.sh projects/r/airbnb_sf" target="_blank" rel="noopener"><i class="bi bi-github" aria-hidden="true"></i><span>Codespaces</span></a><a class="repro-badge repro-binder" href="https://mybinder.org/v2/gh/tilak-pentapati/tilak-pentapati.github.io/main?labpath=projects/r/airbnb_sf/index.qmd" title="Launch this page's source on mybinder.org" target="_blank" rel="noopener"><i class="bi bi-rocket-takeoff" aria-hidden="true"></i><span>Binder</span></a><a class="repro-badge repro-env" href="https://github.com/tilak-pentapati/tilak-pentapati.github.io/blob/main/projects/r/airbnb_sf/environment.yml" title="Pinned package versions: environment.yml" target="_blank" rel="noopener"><i class="bi bi-box-seam" aria-hidden="true"></i><span>Environment</span></a><a class="repro-badge repro-data" href="#data-availability" title="Where the data comes from and how to fetch it"><i class="bi bi-database" aria-hidden="true"></i><span>Data</span></a>
-</div>
 </div>
 </div>
 </div>
@@ -1434,69 +1412,7 @@ Levels of Quadrant 2 :</code></pre>
 
 </section>
 
-
-<a onclick="window.scrollTo(0, 0); return false;" role="button" id="quarto-back-to-top"><i class="bi bi-arrow-up"></i> Back to top</a><div id="quarto-appendix" class="default"><section id="data-availability" class="level2 appendix unnumbered"><h2 class="anchored quarto-appendix-heading">Data availability</h2><div class="quarto-appendix-contents">
-
-<div class="repro-source">
-<div>
-<strong><a href="https://insideairbnb.com/get-the-data/">Inside Airbnb listings: San Francisco, Oakland, San Mateo County</a></strong>
-</div>
-<div>
-<strong>Licence:</strong> CC BY 4.0
-</div>
-<div>
-<strong>How to get it:</strong> Download <code>listings.csv</code> and <code>neighbourhoods.csv</code> for each city.
-</div>
-<div>
-<strong>Expected path:</strong> <code>data/data_r/airbnb_sf/tables/</code> (committed)
-</div>
-</div>
-<div class="repro-source">
-<div>
-<strong><a href="https://api.census.gov/data/key_signup.html">American Community Survey 2016–2020 (income, broadband) via tidycensus</a></strong>
-</div>
-<div>
-<strong>Licence:</strong> US Government work (public domain)
-</div>
-<div>
-<strong>How to get it:</strong> Fetched at render time; needs a free Census API key in the <code>CENSUS_API_KEY</code> environment variable.
-</div>
-<div>
-<strong>Expected path:</strong> none (API)
-</div>
-</div>
-<div class="repro-source">
-<div>
-<strong><a href="https://geodata.lib.berkeley.edu/">Bay Area ZIP code areas, utility rates by ZIP (2020), vehicle counts by ZIP (2020)</a></strong>
-</div>
-<div>
-<strong>Licence:</strong> Public agency open data (UC Berkeley GeoData, NREL/OpenEI, California Open Data); see each source page
-</div>
-<div>
-<strong>How to get it:</strong> Already in the repository.
-</div>
-<div>
-<strong>Expected path:</strong> <code>data/data_r/airbnb_sf/bayarea_zipcodes/</code> and <code>tables/</code> (committed)
-</div>
-</div>
-The data this page reads is committed, so only the Census API key is needed. Paths are relative to the project root.
-<p>Raw data is not part of the repository (see <a href="https://github.com/tilak-pentapati/tilak-pentapati.github.io/blob/main/data/README.md"><code>data/README.md</code></a>). To rebuild the environment and re-run this page: <code>scripts/repro/setup-env.sh projects/r/airbnb_sf</code>.</p>
-</div></section><section class="quarto-appendix-contents" id="quarto-citation"><h2 class="anchored quarto-appendix-heading">Citation</h2><div><div class="quarto-appendix-secondary-label">BibTeX citation:</div><pre class="sourceCode code-with-copy quarto-appendix-bibtex"><code class="sourceCode bibtex">@online{pentapati2024,
-  author = {Pentapati, Jay Tilak},
-  publisher = {Jay Tilak Pentapati},
-  title = {Exploring {Various} {Datasets} of {Bay} {Area} and {Finding}
-    {Useful} {Insights} for {Policymakers}},
-  date = {2024-01-10},
-  url = {https://tilak-pentapati.github.io/projects/r/airbnb_sf/},
-  langid = {en}
-}
-</code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre><div class="quarto-appendix-secondary-label">For attribution, please cite this work as:</div><div id="ref-pentapati2024" class="csl-entry quarto-appendix-citeas" role="listitem">
-<div class="">J.
-T. Pentapati, <span>“Exploring Various Datasets of Bay Area and Finding
-Useful Insights for Policymakers,”</span> Jay Tilak Pentapati:
-Geographic Data Science &amp; Engineering Portfolio. [Online].
-Available: <a href="https://tilak-pentapati.github.io/projects/r/airbnb_sf/">https://tilak-pentapati.github.io/projects/r/airbnb_sf/</a></div>
-</div></div></section></div></main> <!-- /main -->
+<a onclick="window.scrollTo(0, 0); return false;" role="button" id="quarto-back-to-top"><i class="bi bi-arrow-up"></i> Back to top</a></main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
   window.document.addEventListener("DOMContentLoaded", function (event) {
     // Ensure there is a toggle, if there isn't float one in the top right

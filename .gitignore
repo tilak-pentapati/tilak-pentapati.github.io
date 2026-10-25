@@ -10,8 +10,7 @@ projstructure.png
 projects/r/aps_eda/Assignment_1_data.RData
 Rplots.pdf
 
-# Raw datasets (never commit these; data/README.md says where each comes from)
-!data/README.md
+# Raw datasets (never commit these)
 data/data_python/
 data/data_r/gch_dataNfunc/
 data/data_r/se_m_airbnb/

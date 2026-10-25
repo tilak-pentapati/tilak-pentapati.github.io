@@ -14,13 +14,6 @@ toc-depth: 6
 toc-location: right
 number-sections: true
 
-# "Cite this" appendix (BibTeX + plain citation) and Google Scholar <meta>
-# tags. The URL is filled per page from website.site-url.
-citation:
-  type: webpage
-  container-title: "Jay Tilak Pentapati: Geographic Data Science & Engineering Portfolio"
-  publisher: "Jay Tilak Pentapati"
-google-scholar: true
 # TODO (decision): choose a content licence, then uncomment, e.g.
 # license: "CC BY 4.0"
 # license: "CC BY-NC 4.0"
