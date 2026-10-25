@@ -40,11 +40,10 @@ listing:
   sort: false
 ---
 
-::: {.todo-note}
-**Research & engineering statement.** Two or three sentences in your own
-words: what questions you work on, how your petroleum-engineering training
-shapes the way you model spatial systems, and what you want to do next.
-:::
+I work at the intersection of sustainability and machine learning. My training
+in engineering has shaped both how I approach problems and my broader
+philosophical outlook. I try to keep in mind a phrase from Carl Sagan's book:
+"Look again at that dot. That's here. That's home. That's us."
 
 ### Research interests
 
