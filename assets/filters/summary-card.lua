@@ -14,8 +14,30 @@
 --     live: "Live · updated nightly"  # optional badge in the card title
 --
 -- Values are markdown. Any value starting with "TODO" is flagged visually.
+--
+-- Every page also gets the acknowledgement note (NOTE_TEXT) as a yellow
+-- callout above the card. A copy already written in a page's source is
+-- dropped so the note appears once.
 
 local stringify = pandoc.utils.stringify
+
+local NOTE_TEXT = "I apologize for any references I may have inadvertently forgotten to mention in this case study. All my work is built upon the invaluable contributions of the giants in the data science field, on whose shoulders I stand. I am deeply grateful for their insights and advancements, which have made this study possible."
+
+-- Quarto has already turned callouts into its own nodes when this filter
+-- runs, so build one with quarto.Callout; the wrapper carries the styling hook.
+local function ack_note()
+  local callout = quarto.Callout({
+    type = "note",
+    title = "Note:",
+    content = { pandoc.Para(pandoc.Inlines(NOTE_TEXT)) },
+  })
+  return pandoc.Div({ callout }, pandoc.Attr("", { "callout-ack" }))
+end
+
+local function is_ack_note(block)
+  return block.t == "Div" and block.attributes["__quarto_custom_type"] == "Callout"
+    and stringify(block):find("inadvertently forgotten", 1, true) ~= nil
+end
 
 local ROWS = {
   { key = "problem", label = "Problem" },
@@ -103,6 +125,8 @@ function Pandoc(doc)
   local card = pandoc.Div(rows, pandoc.Attr("project-summary", { "eng-summary" },
     { role = "note", ["aria-label"] = "Project summary" }))
 
+  doc.blocks = doc.blocks:filter(function(b) return not is_ack_note(b) end)
   doc.blocks:insert(1, card)
+  doc.blocks:insert(1, ack_note())
   return doc
 end
