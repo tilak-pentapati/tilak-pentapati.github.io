@@ -68,11 +68,11 @@ typography:
 logo:
   images:
     mark-light:
-      path: assets/logo/jtp-mark-light.svg
-      alt: "JTP monogram"
+      path: assets/logo/iso-mark-light.svg
+      alt: "Isometric circle logo"
     mark-dark:
-      path: assets/logo/jtp-mark-dark.svg
-      alt: "JTP monogram"
+      path: assets/logo/iso-mark-dark.svg
+      alt: "Isometric circle logo"
   small:
     light: mark-light
     dark: mark-dark

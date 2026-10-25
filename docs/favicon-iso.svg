@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="86 46 428 428" role="img" aria-label="Isometric circle logo">
+  <!-- Navbar mark on a square canvas, strokes thickened again for 16px tabs.
+       Colour follows the browser theme so it stays visible on dark tab bars. -->
+  <style>
+    .s { stroke: #000; } .f { fill: #000; }
+    @media (prefers-color-scheme: dark) { .s { stroke: #e4e7eb; } .f { fill: #e4e7eb; } }
+  </style>
+  <g class="s" fill="none" stroke-linecap="round">
+    <ellipse cx="300" cy="260" rx="200" ry="115.5" stroke-width="26"/>
+    <line x1="300" y1="260" x2="406.1" y2="250.5" stroke-width="28"/>
+    <line x1="406.1" y1="250.5" x2="441.4" y2="341.7" stroke-width="20" stroke-dasharray="30 30"/>
+  </g>
+  <g class="f">
+    <circle cx="300" cy="260" r="28"/>
+    <circle cx="441.4" cy="341.7" r="18"/>
+  </g>
+</svg>
