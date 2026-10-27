@@ -1,0 +1,28 @@
+# Per-page metadata for this project (kept out of index.qmd so its
+# _freeze/ hash is unaffected). Read by assets/filters/summary-card.lua.
+date-modified: 2026-10-27
+keywords: ["energy inequality", "domestic electricity", "spatial Markov chains", "club convergence", "place mobility", "MGWR", "LSOA", "England and Wales"]
+code-links:
+  - text: Page source (.qmd)
+    icon: github
+    href: https://github.com/tilak-pentapati/tilak-pentapati.github.io/blob/main/projects/python/energy_inequality/index.qmd
+  - text: Data and analysis pipeline
+    icon: code-square
+    href: https://github.com/tilak-pentapati/tilak-pentapati.github.io/tree/main/projects/python/energy_inequality
+summary:
+  problem: "Is domestic electricity use spatially unequal across England and Wales neighbourhoods, and do places converge, diverge or hold their positions over time?"
+  data: "DESNZ domestic electricity (and gas) per meter for 35,672 LSOAs, 2010–2024, harmonised to 2021 boundaries; Census 2021, EPC, IMD and population covariates."
+  methods: "Moran's I and FDR-corrected LISA, Theil and spatial Gini decompositions, classic, spatial and LISA Markov chains, Van Kerm mobility decomposition, Phillips–Sul convergence clubs, spatial econometric models, MGWR, event study and basis-function trend surface."
+  result: "Consumption is clustered (I ≈ 0.58) and persistent; three quarters of inequality lies within local authorities; no national convergence but twelve spatially clustered clubs; heating fuel and dwelling size drive levels at distinct spatial scales."
+  stack: ["Python", "GeoPandas", "PySAL (esda, giddy, inequality, spreg)", "mgwr", "statsmodels", "Observable Plot"]
+# Short label for the home-page skills network.
+short_title: "Energy inequality E&W"
+
+# Study area for the home-page map (scripts/build_projects_json.py).
+# scope: local | regional | city | national | global | non-spatial | offworld;
+# lat/lon (WGS84) only for mapped scopes, radius_km draws an extent circle.
+study_area:
+  label: "England & Wales (35,672 LSOAs)"
+  scope: national
+  lat: 52.6
+  lon: -2.0

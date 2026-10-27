@@ -1,15 +1,8 @@
 [
   {
-    "listing": "/index.html",
-    "items": [
-      "/projects/r/stm_covid/index.html",
-      "/projects/r/StrokePredictionModel/index.html",
-      "/projects/python/satellites_overhead/index.html"
-    ]
-  },
-  {
     "listing": "/projects.html",
     "items": [
+      "/projects/python/energy_inequality/index.html",
       "/projects/r/stm_covid/index.html",
       "/projects/r/se_m_airbnb/index.html",
       "/projects/python/satellites_overhead/index.html",
@@ -21,6 +14,14 @@
       "/projects/r/aps_eda/index.html",
       "/projects/python/bd_gps/index.html",
       "/projects/python/stPopLCR/index.html"
+    ]
+  },
+  {
+    "listing": "/index.html",
+    "items": [
+      "/projects/r/stm_covid/index.html",
+      "/projects/r/StrokePredictionModel/index.html",
+      "/projects/python/satellites_overhead/index.html"
     ]
   }
 ]
