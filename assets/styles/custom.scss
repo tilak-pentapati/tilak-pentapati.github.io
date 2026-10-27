@@ -436,7 +436,7 @@ body.quarto-dark .dt-container {
 }
 
 /* Long bare URLs (e.g. in reference lists) must wrap on phones. */
-a.uri { overflow-wrap: anywhere; }
+a.uri, .csl-entry a { overflow-wrap: anywhere; }
 
 /* Numbered display equations scroll inside themselves rather than widening the page. */
 .katex-display { overflow-x: auto; overflow-y: hidden; }
