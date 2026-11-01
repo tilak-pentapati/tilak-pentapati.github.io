@@ -13,6 +13,7 @@ toc-expand: 1
 #| code-summary: "Setup: paths, cached results and table helper"
 # All heavy computation lives in analysis/ (run_dynamics.py, b_run_models.py) and
 # writes cached tables to the gitignored results folder; this page only reads them.
+import re
 from pathlib import Path
 
 import geopandas as gpd
@@ -36,7 +37,9 @@ def read(folder, name):
 
 def show_table(df, floatfmt=".3f"):
     """Render a data frame as a Markdown table (cross-referenceable via tbl- labels)."""
-    display(Markdown(df.to_markdown(index=False, floatfmt=floatfmt)))
+    md = df.to_markdown(index=False, floatfmt=floatfmt)
+    # typographic minus for negative numbers (the |---| separator rows are untouched)
+    display(Markdown(re.sub(r"(?<=[\s|])-(?=\d)", "−", md)))
 ```
 
 ## Abstract {.unnumbered}
@@ -45,13 +48,27 @@ Domestic electricity use is a basic marker of how households live, heat their ho
 
 **Keywords:** energy inequality; spatial Markov chains; club convergence; place mobility; MGWR; LSOA; England and Wales.
 
+::: {.callout-tip title="Key findings at a glance"}
+The study follows average household electricity use in every small neighbourhood of England and Wales (35,672 areas of roughly 1,000–3,000 residents each) from 2010 to 2024.
+
+- **Where electricity use is high, it stays high.** Use is highest in rural, off-gas-grid areas such as Cornwall, the Welsh uplands and Lincolnshire, where many homes are heated by electricity, and lowest in inner London, the northern conurbations and the South Wales valleys. The map in 2024 looks almost the same as in 2010, even though the average home's metered use fell by a fifth (from 4,148 to 3,343 kWh a year).
+- **Most of the inequality is inside council areas.** About three quarters of the differences between neighbourhoods are between neighbourhoods in the *same* local authority, so support targeted at whole councils misses most of the variation.
+- **Neighbourhoods rarely change places.** Of every 100 neighbourhoods in the lowest-use fifth, about 88 are still there a year later; in the highest-use fifth, about 94. Neighbours matter too: a low-use area surrounded by other low-use areas is less than half as likely to move up as one surrounded by high-use areas.
+- **The 2020 and 2022 shocks moved everyone together.** Use rose 4.9% in the 2020 lockdown year and fell 8.8% in the 2022 price crisis, but most of that was the whole country shifting, not places swapping positions. In 2022 high-use and better-off areas cut most (about 10%) and the most deprived areas least (6.8%), most likely because they had least left to cut.
+- **There is no catching up.** Gaps between places are not closing. Local authorities fall into twelve ranked groups that follow their own separate paths, and these groups are clustered on the map.
+- **Housing and heating explain most of the differences.** Census and housing characteristics, led by electric heating and home size, account for about 80% of the variation between areas, but how much each one matters differs from place to place.
+- **Heat pumps are starting to show.** Areas with more renewable (mostly heat-pump) heating in 2021 have steadily used more electricity relative to the rest of the country since 2010, an early sign of the switch from gas boilers to electric heating.
+
+All results describe *areas*, not individual households, and are associations rather than proof of cause and effect.
+:::
+
 ## Introduction
 
 Where people live shapes how much energy they use, how much it costs them and how exposed they are to price shocks. Fuel poverty has long been understood as the meeting point of low income, high prices and an inefficient housing stock [@boardman2010fixing], and each of those conditions is unevenly distributed across space. The energy-justice literature has made this geography explicit: vulnerability is produced through housing, infrastructure networks and local labour markets, and it forms "landscapes" that national averages hide [@walker2012fuel; @bouzarovski2017spatializing]. Area-based policy, from retrofit programmes to the targeting of bill support, depends on knowing where consumption and need are concentrated and whether those places change.
 
-Small-area evidence on *consumption* (as opposed to modelled need) has nevertheless remained mostly cross-sectional. The Department for Energy Security and Net Zero (DESNZ) has published meter-based domestic electricity consumption for every LSOA in Great Britain since 2010 [@desnz2025lsoa; @desnz2026subnational], but the series crosses a change of census geography and of processing system, and it spans three disruptions: the COVID-19 lockdowns, the 2022 energy-price crisis and the early electrification of heat. Whether neighbourhoods are converging, diverging or simply holding their places is unknown.
+Small-area evidence on *consumption* (as opposed to modelled need) has nevertheless remained mostly cross-sectional. The Department for Energy Security and Net Zero (DESNZ) has published meter-based domestic electricity consumption for every LSOA in Great Britain since 2010 [@desnz2025lsoa; @desnz2026subnational]. An LSOA (Lower Layer Super Output Area) is a small statistical neighbourhood of 1,000–3,000 residents, or 400–1,200 households, designed by the Office for National Statistics for reporting small-area data [@ons2021statgeog]. The series is rich, it crosses a change of census geography and of processing system, and it spans three disruptions: the COVID-19 lockdowns, the 2022 energy-price crisis and the early electrification of heat. Whether neighbourhoods are converging, diverging or simply holding their places is unknown.
 
-This study treats per-meter domestic electricity consumption as a distribution of places and asks how that distribution is structured in space and how it moves through time. It brings together tools that are well established for regional income but almost unused for neighbourhood energy: exploratory spatial data analysis, decomposable inequality measures, classic and spatial Markov chains [@rey2001spatial], place-mobility decomposition [@vankerm2004what; @rey2023place], club-convergence tests [@phillips2007transition; @phillips2009economic] and multiscale geographically weighted regression [@fotheringham2017multiscale]. The research was carried out at the University of Liverpool under the supervision of Dr. Ron M. It addresses five questions:
+This study treats per-meter domestic electricity consumption as a distribution of places and asks how that distribution is structured in space and how it moves through time. It brings together tools that are well established for regional income but almost unused for neighbourhood energy: exploratory spatial data analysis, decomposable inequality measures, classic and spatial Markov chains [@rey2001spatial], place-mobility decomposition [@vankerm2004what; @rey2023place], club-convergence tests [@phillips2007transition; @phillips2009economic] and multiscale geographically weighted regression [@fotheringham2017multiscale]. The research was carried out at the University of Liverpool under the supervision of Dr Ron M. It addresses five questions:
 
 1. **RQ1 – Spatial structure.** Is consumption spatially clustered at the LSOA scale, and how much of its inequality lies within rather than between local authorities?
 2. **RQ2 – Dynamics and place mobility.** Do places keep their relative positions, and is their movement conditioned by neighbourhood context?
@@ -67,7 +84,7 @@ Later scholarship recast fuel poverty as a matter of distributional, recognition
 
 ### Drivers of household electricity demand
 
-Dwelling-level studies agree on a broad hierarchy of determinants. In English gas-heated homes, appliance ownership and use explain the largest share of variation in electricity use and household size leads the socio-demographic factors [@huebner2016understanding]; when total energy is modelled, floor area and dwelling type dominate [@huebner2015explaining; @wyatt2013dwelling], and neighbourhood types differ markedly [@druckman2008household]. Weather is a first-order driver wherever electricity provides heat [@summerfield2010two]. Energy Performance Certificates (EPCs) are the usual proxy for dwelling efficiency [@mhclg2025epc], but the register contains recording errors [@hardy2019analysis], modelled demand diverges from measured demand as ratings worsen [@summerfield2019empirical; @few2023overprediction], and occupants of inefficient homes often use far less than predicted [@sunikkablank2012introducing]. Few studies examine how such relationships vary across space: @feng2025examining find with MGWR that drivers in Nottingham operate at different scales, and @netobradley2023microsimulation show how household practice and local context jointly shape fuel use. National evidence of this kind for England and Wales, followed over time, is largely missing.
+Dwelling-level studies agree on a broad hierarchy of determinants. In English gas-heated homes, appliance ownership and use explain the largest share of variation in electricity use and household size leads the socio-demographic factors [@huebner2016understanding]; when total energy is modelled, floor area and dwelling type dominate [@huebner2015explaining; @wyatt2013dwelling], and neighbourhood types differ markedly [@druckman2008household]. Weather is a first-order driver wherever electricity provides heat [@summerfield2010two]. Energy Performance Certificates (EPCs) are the usual proxy for dwelling efficiency [@mhclg2025epc], but the register contains recording errors [@hardy2019analysis], modelled demand diverges from measured demand as ratings worsen [@summerfield2019empirical; @few2023overprediction], and occupants of inefficient homes often use far less than predicted [@sunikkablank2012introducing]. Few studies examine how such relationships vary across space: @feng2025examining find with MGWR that drivers in Nottingham operate at different scales, and, for cities in southern India, @netobradley2023microsimulation show how household practice and local context jointly shape access to clean cooking fuel. National evidence of this kind for England and Wales, followed over time, is largely missing.
 
 ### Measuring consumption at small-area scale
 
@@ -75,11 +92,11 @@ DESNZ domestic electricity covers non-half-hourly meters on standard and Economy
 
 ### Spatial inequality, distribution dynamics and convergence
 
-Moran's *I* [@moran1950notes] and local indicators of spatial association [@anselin1995local] are the standard first account of spatial structure, with false-discovery-rate control for the many dependent local tests [@caldasdecastro2006controlling]. Inequality across places is measured with decomposable indices [@theil1967economics; @shorrocks1980class; @cowell2011measuring] and, spatially, with the spatial Gini [@rey2013spatial; @rey2025spatial]. Static snapshots cannot show whether places change position. Quah's distribution-dynamics approach models the evolution of the whole cross-section with Markov chains [@quah1996twin; @quah1997empirics]; @rey2001spatial conditioned transitions on neighbourhood context, with formal tests of the spatial-Markov property [@rey2016properties; @kang2018conditional] and of time homogeneity [@bickenbach2003evaluating], and LISA Markov chains and directional rose diagrams show how places move jointly with their neighbours [@rey2011visualizing; @rey2016space]. Mobility can be decomposed into growth, dispersion and exchange [@shorrocks1978measurement; @vankerm2004what], as @rey2010interregional and @rey2023place do for Mexican regions. The log *t* test and clustering algorithm of @phillips2007transition [-@phillips2009economic] identify convergence clubs without assuming homogeneous technology; they have been applied to European regions [@bartkowska2012regional] and, for energy, to Chinese provinces [@herrerias2017residential] and Turkish cities [@tastan2023club], but not at neighbourhood scale.
+Moran's *I* [@moran1950notes] and local indicators of spatial association (LISA) [@anselin1995local] are the standard first account of spatial structure, with false-discovery-rate control for the many dependent local tests [@caldasdecastro2006controlling]. Inequality across places is measured with decomposable indices [@theil1967economics; @shorrocks1980class; @cowell2011measuring] and, spatially, with the spatial Gini [@rey2013spatial; @rey2025spatial]. Static snapshots cannot show whether places change position. Quah's distribution-dynamics approach models the evolution of the whole cross-section with Markov chains [@quah1996twin; @quah1997empirics]; @rey2001spatial conditioned transitions on neighbourhood context, with formal tests of the spatial-Markov property [@rey2016properties; @kang2018conditional] and of time homogeneity [@bickenbach2003evaluating], and LISA Markov chains and directional rose diagrams show how places move jointly with their neighbours [@rey2011visualizing; @rey2016space]. Mobility can be decomposed into growth, dispersion and exchange [@shorrocks1978measurement; @vankerm2004what], as @rey2010interregional and @rey2023place do for Mexican states and municipalities. The log *t* test and clustering algorithm of @phillips2007transition [-@phillips2009economic] identify convergence clubs without assuming homogeneous technology; they have been applied to European regions [@bartkowska2012regional] and, for energy, to Chinese provinces [@herrerias2017residential] and Turkish cities [@tastan2023club], but not at neighbourhood scale.
 
 ### Explaining spatial heterogeneity and the shocks of 2020–2022
 
-Geographically weighted regression [@brunsdon1996geographically] and its multiscale generalisation [@fotheringham2017multiscale; @oshan2019mgwr] estimate locally varying coefficients, each with its own bandwidth in MGWR; spatio-temporal extensions add a temporal kernel [@huang2010geographically; @fotheringham2015geographical], and fixed-rank basis-function models scale to very large data [@cressie2008fixed; @zammitmangion2021frk; @sainsburydale2024modeling]. Good practice is set out by @comber2023route. The study period contains three disruptions. Lockdowns shifted demand into homes [@bahmanyar2020impact]; smart-meter evidence for Great Britain puts the first-year rise at 7.8% [@zapatawebborn2023impact]. The 2022 price crisis raised household burdens worldwide [@guan2023burden], and winter 2022/23 consumption in Great Britain fell by 8.4% after weather adjustment, with the largest cuts linked to under-heating [@zapatawebborn2024winter; @webborn2021serl]. Meanwhile heat pumps add substantial seasonal load [@love2017addition] and cluster locally [@arvanitopoulos2025decarbonising], while rooftop solar reduces metered imports [@mckenna2018solar; @baltaozkan2015regional].
+Geographically weighted regression [@brunsdon1996geographically] and its multiscale generalisation [@fotheringham2017multiscale; @oshan2019mgwr] estimate locally varying coefficients, each with its own bandwidth in MGWR; spatio-temporal extensions add a temporal kernel [@huang2010geographically; @fotheringham2015geographical], and fixed-rank basis-function models scale to very large data [@cressie2008fixed; @zammitmangion2021frk; @sainsburydale2024modeling]. Good practice is set out by @comber2023route. The study period contains three disruptions. Lockdowns shifted demand into homes [@bahmanyar2020impact]; smart-meter evidence for England and Wales puts the first-year rise in household electricity use at 7.8% [@zapatawebborn2023impact]. The 2022 price crisis raised household burdens worldwide [@guan2023burden], and in Great Britain household electricity use in winter 2022/23 was 8.4% below the previous winter after weather adjustment, with the largest cuts linked to under-heating [@zapatawebborn2024winter; @webborn2021serl]. Meanwhile heat pumps add substantial seasonal load [@love2017addition] and cluster locally [@arvanitopoulos2025decarbonising], while rooftop solar reduces metered imports [@mckenna2018solar; @baltaozkan2015regional].
 
 ### Research gap
 
@@ -89,7 +106,7 @@ No study has described the full LSOA-level distribution of domestic electricity 
 
 ### Sources
 
-All inputs are official statistics released under the Open Government Licence v3.0 (@tbl-sources); the LSOA, MSOA and local authority boundaries contain OS data © Crown copyright and database right. The outcome is the mean annual domestic electricity consumption per meter (kWh) for each LSOA, taken from the DESNZ release of December 2025, which covers 2010–2024 [@desnz2025lsoa]. Domestic gas consumption from the same release, which DESNZ weather-corrects, is used as a comparison. Covariates come from Census 2021 (central-heating type, dwelling type, rooms, household size, tenure, age), the Index of Multiple Deprivation 2019 for England and the Welsh equivalent (ranked within country), the ONS Rural–Urban Classification 2021, ONS mid-year population estimates and the ONS summary of EPC energy efficiency by MSOA [@mhclg2025epc].
+All inputs are official statistics released under the Open Government Licence v3.0 (@tbl-sources); the LSOA, MSOA and local authority boundaries contain OS data © Crown copyright and database right. The outcome is the mean annual domestic electricity consumption per meter for each LSOA, measured in kilowatt-hours (kWh), the unit used on household bills, taken from the DESNZ release of December 2025, which covers 2010–2024 [@desnz2025lsoa]. Domestic gas consumption from the same release, which DESNZ weather-corrects, is used as a comparison. Covariates come from Census 2021 (central-heating type, dwelling type, rooms, household size, tenure, age), the Index of Multiple Deprivation 2019 for England and the Welsh equivalent (ranked within country), the ONS Rural–Urban Classification 2021, ONS mid-year population estimates and the ONS summary of EPC energy efficiency by MSOA [@mhclg2025epc].
 
 ::: {.table-responsive}
 
@@ -110,9 +127,9 @@ All inputs are official statistics released under the Open Government Licence v3
 
 ### Study area and harmonisation
 
-The study covers England and Wales: 35,672 LSOAs (2021), 7,264 MSOAs and 318 local authority districts (LADs, May 2026 vintage). Scotland is excluded because its Data Zones are not comparable with LSOAs and the EPC and census covariates differ. DESNZ publishes 2015–2024 directly on 2021 LSOAs, so only 2010–2014 had to be converted. Using the ONS exact-fit lookup, 33,647 LSOAs are unchanged and 119 are merges, for which meters and consumption are summed exactly. The 1,900 splits and 6 irregular changes are apportioned by Census 2021 household counts at output-area level, and the mean is recomputed as total kWh ÷ meters. National totals are conserved exactly. Because split LSOAs inherit their parent's mean in 2010–2014, every result that touches those years is repeated without them, and **2015–2024**, which uses one geography and one DESNZ processing system, is the core period for dynamics.
+The study covers England and Wales: 35,672 LSOAs (2021), 7,264 MSOAs and 318 local authority districts (LADs, May 2026 vintage). These form a nested hierarchy: an MSOA (Middle Layer Super Output Area) groups about five LSOAs into an area of 5,000–15,000 residents [@ons2021statgeog], and a LAD is a council area such as a district, borough or unitary authority. Scotland is excluded because its Data Zones are not comparable with LSOAs and the EPC and census covariates differ. DESNZ publishes 2015–2024 directly on 2021 LSOAs, so only 2010–2014 had to be converted. Using the ONS exact-fit lookup, 33,647 LSOAs are unchanged and 119 are merges, for which meters and consumption are summed exactly. The 1,900 splits and 6 irregular changes are apportioned by Census 2021 household counts at output-area level, and the mean is recomputed as total kWh ÷ meters. National totals are conserved exactly. Because split LSOAs inherit their parent's mean in 2010–2014, every result that touches those years is repeated without them, and **2015–2024**, which uses one geography and one DESNZ processing system, is the core period for dynamics.
 
-Nothing is dropped silently. LSOA-years with fewer than 50 meters, implausibly low means, extreme robust *z*-scores or one-year spikes are flagged (0.26% of electricity LSOA-years) and every result is repeated without them. The balanced analysis panel contains 35,636 LSOAs observed in all fifteen years. Local-authority series are built as total kWh ÷ total meters summed from LSOAs, never as an average of LSOA means; they agree with the official local-authority tables to within a few kWh, and the unallocated meters that DESNZ withholds for disclosure control are at most 0.27% in any year. *Relative consumption*, the LSOA (or LAD) mean divided by the meter-weighted England and Wales mean for the year, removes common shocks and is used for maps and dynamics.
+Nothing is dropped silently. LSOA-years with fewer than 50 meters, implausibly low means, extreme robust *z*-scores or one-year spikes are flagged (0.26% of electricity LSOA-years) and every result is repeated without them. The balanced analysis panel contains 35,636 LSOAs observed in all fifteen years. Local-authority series are built as total kWh ÷ total meters summed from LSOAs, never as an average of LSOA means; they agree with the official local-authority tables to within a few kWh, and the unallocated meters that DESNZ withholds for disclosure control are at most 0.27% in any year. *Relative consumption*, the LSOA (or LAD) mean divided by the meter-weighted England and Wales mean for the year, removes common shocks and is used for maps and dynamics. A value of 1.10 means that meters in that area used 10% more than the national average in that year; 0.90 means 10% less.
 
 ```{python}
 #| label: tbl-national
@@ -121,13 +138,13 @@ s = read(DYN, "esda_summary_stats")
 mi = read(DYN, "esda_moran_global").query("weights == 'queen' and variable == 'level'")
 t = s.merge(mi[["year", "I"]], on="year")
 t = t[["year", "mean_meter_weighted", "median", "cv", "skewness_log", "p90_p10", "I"]]
-t.columns = ["Year", "Mean (kWh)", "Median LSOA (kWh)", "CV", "Skew (log)", "P90/P10", "Moran's I"]
+t.columns = ["Year", "Mean (kWh)", "Median LSOA (kWh)", "CV", "Skew (log)", "P90/P10", "Moran's *I*"]
 t["Mean (kWh)"] = t["Mean (kWh)"].round(0).astype(int)
 t["Median LSOA (kWh)"] = t["Median LSOA (kWh)"].round(0).astype(int)
 show_table(t, floatfmt=(".0f", ",.0f", ",.0f", ".3f", ".3f", ".3f", ".3f"))
 ```
 
-Mean consumption fell by a fifth, from 4,148 kWh per meter in 2010 to 3,343 kWh in 2024 (@tbl-national). The two exceptions are 2020, when lockdowns pushed it up by 4.9%, and 2022, when the price crisis cut it by 8.8%. The coefficient of variation and the log skewness both rose, so the distribution became wider and more right-skewed while its centre fell.
+Mean consumption fell by a fifth, from 4,148 kWh per meter in 2010 to 3,343 kWh in 2024 (@tbl-national). The decline was not smooth: lockdowns pushed it up by 4.9% in 2020, the price crisis cut it by 8.8% in 2022, and it edged back up in 2023–2024. The coefficient of variation (CV, the standard deviation divided by the mean) and the log skewness both rose, so the distribution became wider and more right-skewed while its centre fell. The ratio P90/P10 compares an LSOA near the top of the distribution (the 90th percentile) with one near the bottom (the 10th): throughout the period the first uses about 1.6 times as much electricity per meter as the second.
 
 ### Caveats that apply throughout
 
@@ -142,75 +159,83 @@ All analysis is in Python, using PySAL [@rey2022pysal] (`esda`, `libpysal`, `gid
 
 ### Spatial weights and exploratory analysis
 
-The main weights are queen contiguity on the 2021 LSOA polygons, row-standardised (5.84 neighbours on average; the Isles of Scilly are joined to their nearest LSOA). Eight nearest neighbours on population-weighted centroids are the robustness alternative. Global spatial autocorrelation is measured by Moran's *I* [@moran1950notes],
+The main weights are queen contiguity on the 2021 LSOA polygons, row-standardised (5.84 neighbours on average; the Isles of Scilly are joined to their nearest LSOA). Eight nearest neighbours (KNN-8) on population-weighted centroids are the robustness alternative. Global spatial autocorrelation, the tendency of nearby places to have similar values, is measured by Moran's *I* (@eq-moran) [@moran1950notes],
 
 $$
 I = \frac{n}{\sum_i \sum_j w_{ij}} \, \frac{\sum_i \sum_j w_{ij} (x_i - \bar{x})(x_j - \bar{x})}{\sum_i (x_i - \bar{x})^2},
 $$ {#eq-moran}
 
-and local clusters by the local Moran statistic $I_i = z_i \sum_j w_{ij} z_j$ [@anselin1995local], with 999 and 9,999 conditional permutations respectively and Benjamini–Hochberg control of the false discovery rate at 5% [@caldasdecastro2006controlling]. Kernel densities of log relative consumption use Silverman's bandwidth [@silverman1986density]; maps use seven Fisher–Jenks classes [@fisher1958grouping; @jenks1967data] estimated once on a sample of the pooled 2015–2024 values [@rey2017evaluation] so that maps are comparable over time.
+where $x_i$ is the value in LSOA $i$ and $w_{ij}$ the spatial weight linking LSOAs $i$ and $j$. *I* is close to 0 when values are scattered at random across the map and positive when high values sit next to high values and low next to low; on this scale 0.58 is strong clustering. Local clusters (LISA) are identified by the local Moran statistic $I_i = z_i \sum_j w_{ij} z_j$, where $z$ are standardised values [@anselin1995local]. Inference uses 999 (global) and 9,999 (local) conditional permutations, which compare each observed statistic with values obtained by reshuffling the data across the map, and Benjamini–Hochberg control of the false discovery rate (FDR) at 5% [@caldasdecastro2006controlling]. Kernel densities of log relative consumption use Silverman's bandwidth [@silverman1986density]; maps use seven Fisher–Jenks classes [@fisher1958grouping; @jenks1967data] estimated once on a sample of the pooled 2015–2024 values [@rey2017evaluation] so that maps are comparable over time.
 
 ### Inequality
 
-The meter-weighted Theil index decomposes exactly into nested components [@theil1967economics; @shorrocks1980class]:
+The Theil index is zero when every LSOA has the same mean and rises as consumption becomes more unequal. Its meter-weighted form decomposes exactly into nested components (@eq-theil) [@theil1967economics; @shorrocks1980class]:
 
 $$
 T = \sum_{i} s_i \ln\frac{x_i}{\bar{x}} = \underbrace{\sum_{r} s_r \ln\frac{\bar{x}_r}{\bar{x}}}_{\text{between regions}} + \underbrace{\sum_{r}\sum_{l \in r} s_l \ln\frac{\bar{x}_l}{\bar{x}_r}}_{\text{between LADs within regions}} + \underbrace{\sum_{l} s_l T_l}_{\text{within LADs}},
 $$ {#eq-theil}
 
-where $s$ denotes shares of total consumption. The between-LAD part is tested against 999 random relabellings of LSOAs to LADs of the same size. The spatial Gini [@rey2013spatial] splits the Gini numerator into neighbour and non-neighbour pairs,
+where $s$ denotes shares of total consumption, $r$ indexes regions and $l$ LADs, and $T_l$ is the Theil index among the LSOAs of LAD $l$. The between-LAD part is tested against 999 random relabellings of LSOAs to LADs of the same size. The Gini coefficient (0 for perfect equality, 1 for maximal inequality) is half the average absolute difference between all pairs of places, relative to the mean. The spatial Gini [@rey2013spatial] splits its numerator into neighbour and non-neighbour pairs (@eq-sgini),
 
 $$
 G = \frac{\sum_i \sum_j w_{ij}\,|x_i - x_j|}{2 n^2 \bar{x}} + \frac{\sum_i \sum_j (1-w_{ij})\,|x_i - x_j|}{2 n^2 \bar{x}},
 $$ {#eq-sgini}
 
-with permutation inference on the non-neighbour term. Within each LAD the dispersion of LSOA means (CV, meter-weighted CV and quartile coefficient of dispersion) is related to the LAD level by Spearman correlation with bootstrap intervals and by OLS and spatial-error regressions [@arraiz2010spatial].
+where $w_{ij}$ is here the binary contiguity indicator (1 for neighbours, 0 otherwise), with permutation inference on the non-neighbour term. Within each LAD the dispersion of LSOA means (CV, meter-weighted CV and quartile coefficient of dispersion) is related to the LAD level by Spearman rank correlation with bootstrap intervals and by ordinary least squares (OLS) and spatial-error regressions [@arraiz2010spatial].
 
 ### Distribution dynamics
 
-Each year, units are assigned to five classes of relative consumption with pooled 2010–2024 quintile bounds, fixed across windows. The maximum-likelihood transition probabilities of the first-order Markov chain are $\hat{p}_{ij} = n_{ij} / \sum_j n_{ij}$ [@quah1996twin]. From the transition matrix $P$ we derive the ergodic distribution, mean first passage times, sojourn times $1/(1-p_{ii})$ and the Shorrocks index $M = (k - \operatorname{tr} P)/(k-1)$ [@shorrocks1978measurement]. The spatial Markov chain estimates a separate $P$ for each quintile of the spatial lag [@rey2001spatial]; spatial and temporal homogeneity are tested with the likelihood-ratio and $Q$ statistics of @bickenbach2003evaluating and with a permutation test that does not assume independent transitions [@rey2016properties; @kang2018conditional]. LISA Markov chains track moves between Moran-scatterplot quadrants, and directional rose diagrams [@rey2011visualizing] test whether places and their neighbours move together more often than spatial randomness implies.
+Each year, units are assigned to five classes (quintiles, Q1 lowest to Q5 highest) of relative consumption with pooled 2010–2024 quintile bounds, fixed across windows. A Markov chain summarises movement between classes as a transition matrix: row $i$, column $j$ holds the share of units in class $i$ one year that are in class $j$ the next. The maximum-likelihood estimates are $\hat{p}_{ij} = n_{ij} / \sum_j n_{ij}$, where $n_{ij}$ counts the observed moves [@quah1996twin]. From the transition matrix $P$ we derive the ergodic distribution (the long-run share in each class if the estimated probabilities held for ever), mean first passage times (the expected number of years before a unit starting in one class first reaches another), sojourn times $1/(1-p_{ii})$ (the expected stay in a class) and the Shorrocks index $M = (k - \operatorname{tr} P)/(k-1)$, which is 0 when every unit stays in its class and 1 when next year's class is independent of this year's [@shorrocks1978measurement]. The spatial Markov chain estimates a separate $P$ for each quintile of the spatial lag, the weighted average of a unit's neighbours [@rey2001spatial]; spatial and temporal homogeneity are tested with the likelihood-ratio and $Q$ statistics of @bickenbach2003evaluating and with a permutation test that does not assume independent transitions [@rey2016properties; @kang2018conditional]. LISA Markov chains track moves between Moran-scatterplot quadrants, and directional rose diagrams [@rey2011visualizing] test whether places and their neighbours move together more often than spatial randomness implies.
 
 ### Place mobility and rank concordance
 
-Following @vankerm2004what as applied to places by @rey2023place, mobility between years $t_0$ and $t_1$ is the mean absolute change across places, $M = \frac{1}{n}\sum_i |y_{i,t_1} - y_{i,t_0}|$, measured in log points. It is decomposed into a **growth** component (the end-year mean is switched on), a **dispersion** component (the end-year shape of the distribution, with ranks held) and an **exchange** component (end-year ranks), each a Shapley value over all orderings so that the three sum exactly to the total [@shorrocks2013decomposition]. Rank concordance is measured by Kendall's $\tau_b$, by spatial $\tau$ over contiguous pairs and by local neighbour $\tau$ [@rey2016space], with a value-matched null that compares neighbours with random pairs of equally similar starting values.
+Following @vankerm2004what as applied to places by @rey2023place, mobility between years $t_0$ and $t_1$ is the mean absolute change across places, $M = \frac{1}{n}\sum_i |y_{i,t_1} - y_{i,t_0}|$, measured in log points (100 × the change in natural logs; for small changes one log point is about 1%). It is decomposed into a **growth** component (the end-year mean is switched on), a **dispersion** component (the end-year shape of the distribution, with ranks held) and an **exchange** component (end-year ranks), each a Shapley value over all orderings so that the three sum exactly to the total [@shorrocks2013decomposition]. Rank concordance is measured by Kendall's $\tau_b$, by spatial $\tau$ over contiguous pairs and by local neighbour $\tau$ [@rey2016space], with a value-matched null that compares neighbours with random pairs of equally similar starting values.
 
 ### Club convergence
 
-The log *t* test of @phillips2007transition is applied to Hodrick–Prescott-filtered log consumption ($\lambda = 400$) [@hodrick1997postwar]. With relative transition paths $h_{it} = X_{it} / N^{-1}\sum_i X_{it}$ and their cross-sectional variance $H_t$, the regression
+The log *t* test of @phillips2007transition asks whether all units are heading towards a common relative level. It is applied to Hodrick–Prescott-filtered log consumption ($\lambda = 400$) [@hodrick1997postwar]. With relative transition paths $h_{it} = X_{it} / N^{-1}\sum_i X_{it}$ (each unit's filtered value relative to the cross-sectional average) and their cross-sectional variance $H_t$, the regression (@eq-logt)
 
 $$
 \log\frac{H_1}{H_t} - 2\log\log t = \hat{a} + \hat{b}\log t + \hat{u}_t, \qquad t = [rT], \dots, T, \; r = 1/3,
 $$ {#eq-logt}
 
-rejects convergence when the Newey–West *t*-statistic on $\hat{b}$ falls below −1.65 [@newey1987simple]. Clubs are found with the clustering-and-merging algorithm of @phillips2009economic, following the logic of *ConvergenceClubs* [@sichera2019convergenceclubs], in a vectorised implementation validated by Monte Carlo (adjusted Rand index 0.985–1.000 against planted clubs). LADs are the main specification; MSOAs, LSOAs, a pre-shock window (2010–2019), a post-break window (2015–2024) and a levels variant are robustness checks. Because clubs are a-spatial by construction, membership is tested for spatial clustering with join counts and Moran's *I*, and profiled by ordered logit [@mccullagh1980regression].
+rejects convergence when the Newey–West *t*-statistic on $\hat{b}$ falls below −1.65 [@newey1987simple]: a significantly negative slope means that the relative paths are spreading out rather than coming together. A convergence club is a group of units that do converge among themselves, to a level that differs from other clubs'. Clubs are found with the clustering-and-merging algorithm of @phillips2009economic, following the logic of *ConvergenceClubs* [@sichera2019convergenceclubs], in a vectorised implementation validated by Monte Carlo (adjusted Rand index 0.985–1.000 against planted clubs). LADs are the main specification; MSOAs, LSOAs, a pre-shock window (2010–2019), a post-break window (2015–2024) and a levels variant are robustness checks. Because clubs are a-spatial by construction, membership is tested for spatial clustering with join counts and Moran's *I*, and profiled by ordered logit [@mccullagh1980regression].
 
 ### Explanatory models
 
-Cross-sectional models explain log mean consumption in 2022–2024 (and 2019 as a pre-crisis comparison) with standardised 2021 covariates screened by variance inflation (maximum VIF 4.8). At LSOA level, OLS with robust Lagrange-multiplier diagnostics [@anselin1996simple] is followed by SLX [@hallekvega2015slx], spatial lag, spatial error and Durbin-type models, estimated by GMM/IV because maximum likelihood is infeasible at $n = 35{,}662$ [@kelejian2010specification], with LeSage–Pace impacts [@lesage2009introduction]. Local models are fitted at MSOA level ($n = 7{,}264$), where the EPC covariate is native and means rest on about 3,600 meters each. MGWR [@fotheringham2017multiscale; @oshan2019mgwr] estimates
+Cross-sectional models explain log mean consumption in 2022–2024 (and 2019 as a pre-crisis comparison) with 2021 covariates standardised to a mean of 0 and a standard deviation (SD) of 1, so that each coefficient is the change associated with a 1-SD difference, and screened for collinearity by variance inflation factors (maximum VIF 4.8). At LSOA level, OLS with robust Lagrange-multiplier diagnostics [@anselin1996simple] is followed by models that add neighbours' covariates (SLX) [@hallekvega2015slx], neighbours' outcomes (spatial lag, SAR), spatially correlated errors (spatial error, SEM) or combinations of these (Durbin-type SDM and SDEM), estimated by GMM/IV because maximum likelihood is infeasible at $n = 35{,}662$ [@kelejian2010specification], with LeSage–Pace impacts [@lesage2009introduction]. Local models are fitted at MSOA level ($n = 7{,}264$), where the EPC covariate is native and means rest on about 3,600 meters each. MGWR [@fotheringham2017multiscale; @oshan2019mgwr] estimates
 
 $$
 y_i = \sum_{j=0}^{k} \beta_{bw_j}(u_i, v_i)\, x_{ij} + \varepsilon_i,
 $$ {#eq-mgwr}
 
-with a separate adaptive bisquare bandwidth $bw_j$ for each covariate, selected by AICc through backfitting. Local inference uses the corrected critical *t* of @dasilva2016multiple. Because the reference implementation would take more than 100 hours at this size, inference was computed with a vectorised re-implementation that reproduces the `mgwr` package to within $4\times10^{-13}$ on a validation subsample.
+where $(u_i, v_i)$ are the coordinates of MSOA $i$, with a separate adaptive bisquare bandwidth $bw_j$ for each covariate (@eq-mgwr), selected through backfitting by the corrected Akaike information criterion (AICc, which rewards fit and penalises complexity; lower is better). The bandwidth is the number of nearest MSOAs used to estimate each local coefficient: a bandwidth close to all 7,264 MSOAs means the relationship is the same everywhere, and a small one means it changes over short distances. Local inference uses the corrected critical *t* of @dasilva2016multiple. Because the reference implementation would take more than 100 hours at this size, inference was computed with a vectorised re-implementation that reproduces the `mgwr` package to within $4\times10^{-13}$ on a validation subsample.
 
-**Change models** relate the log change in consumption, 2010–12 → 2022–24 (long) and 2019 → 2022 (shock), to the same 2021 baselines, the log change in meter counts (new-build growth) and the initial level, which turns each model into a conditional β-convergence regression [@barro1992convergence]. A **spatio-temporal** analysis replaces a GTWR, whose temporal coefficients would not be identified with census-only covariates [@huang2010geographically], by two identified alternatives: a two-way fixed-effects event study interacting year dummies with 2021 baselines, and a basis-function trend surface in the spirit of Fixed Rank Kriging [@cressie2008fixed; @zammitmangion2021frk], fitted by cross-validated ridge regression on 458 multi-resolution spatial and 10 temporal basis functions.
+**Change models** relate the log change in consumption, 2010–12 → 2022–24 (long) and 2019→2022 (shock), to the same 2021 baselines, the log change in meter counts (new-build growth) and the initial level, which turns each model into a conditional β-convergence regression [@barro1992convergence]: a negative coefficient on the initial level means that places starting higher fell faster, closing the gap. A **spatio-temporal** analysis replaces a GTWR, whose temporal coefficients would not be identified with census-only covariates [@huang2010geographically], by two identified alternatives: a two-way fixed-effects event study interacting year dummies with 2021 baselines, which traces year by year how the gap between areas with more and less of a characteristic changed relative to 2019, and a basis-function trend surface in the spirit of Fixed Rank Kriging [@cressie2008fixed; @zammitmangion2021frk], fitted by cross-validated ridge regression on 458 multi-resolution spatial and 10 temporal basis functions.
 
 ## Results
 
-### Spatial structure
+### Spatial structure: strong and stable clustering
 
 ![Relative domestic electricity consumption per meter (LSOA mean ÷ England and Wales mean), 2015 and 2024. Fisher–Jenks classes estimated on the pooled 2015–2024 values.](figures/esda_map_fj_2015_2024.png){#fig-map fig-alt="Two choropleth maps of England and Wales LSOAs showing relative electricity consumption in 2015 and 2024, with a London inset. Rural areas are darker (higher), cities lighter."}
 
 Per-meter consumption has a clear and stable geography (@fig-map). It is highest across rural England and Wales: Cornwall and Devon, the Welsh uplands, Cumbria and North Yorkshire, Lincolnshire, East Anglia and the outer South East. It is lowest in inner London, Tyneside and Teesside, the South Wales valleys and the Pennine conurbations. The distribution is unimodal in every year, with no sign of "twin peaks"; its mode drifted from 0.92 to 0.89 of the mean between 2015 and 2024 as the upper tail lengthened (@fig-kde).
 
 ::: {layout-ncol=2}
-![Kernel densities of relative consumption, selected years (log-scale KDE, Silverman bandwidth).](figures/esda_kde_relative.png){#fig-kde}
+![Kernel densities of relative consumption before the shocks (2010, 2015, 2019) and in the shock years (2019, 2020, 2022, 2024); KDE on the log scale with Silverman's bandwidth.](figures/esda_kde_relative.png){#fig-kde fig-alt="Two panels of smooth density curves of relative consumption. All years share a single peak just below 1 and a long right tail; the curves for different years almost overlap."}
 
-![Global Moran's *I*, 2010–2024, under queen contiguity and eight nearest neighbours, with and without split LSOAs.](figures/esda_moran_series.png){#fig-moran}
+![Global Moran's *I*, 2010–2024, under queen contiguity and eight nearest neighbours, with and without split LSOAs.](figures/esda_moran_series.png){#fig-moran fig-alt="Line chart of global Moran's I from 2010 to 2024. Queen-contiguity series stay between 0.57 and 0.60 and the eight-nearest-neighbour series stays near 0.40, with a small step at the 2014/15 break that disappears when split LSOAs are excluded."}
 :::
 
 Global Moran's *I* lies between 0.57 and 0.59 under contiguity in every year (pseudo-*p* = 0.001 in all years, weights and transformations; @fig-moran), and barely moves through the pandemic and the price crisis even though mean consumption fell by a fifth. With eight nearest neighbours it is about 0.40: rural LSOAs are large, so contiguity gives them few, similar neighbours, while KNN reaches further. Without split LSOAs the series shows no step at 2015 (0.598 in 2014, 0.600 in 2015). After FDR correction about 17% of LSOAs belong to significant local clusters, high–high in rural and off-gas areas and low–low in the conurbations (@fig-lisa); spatial outliers are rare.
+
+::: {.callout-note title="In plain terms"}
+**What it says.** Neighbourhoods that use a lot of electricity per meter sit next to other high-use neighbourhoods, and low-use ones next to low-use ones. Moran's *I* measures this on a scale where 0 would mean no pattern at all; a value of 0.58 means a strong, map-wide pattern. About one LSOA in six belongs to a statistically significant local cluster (a LISA cluster): a "hot spot" of high use in the countryside or a "cold spot" of low use in a city.
+
+**What it means.** The map is mainly a map of homes and heating. Rural areas without mains gas often heat with electricity and have larger, detached homes, so their meters record more; city flats on the gas network record less. The pattern hardly changed while average use fell by a fifth, so everyone's consumption moved down together rather than the map being redrawn.
+
+**Why it matters.** Because high use comes in geographic blocks, support for heating costs or retrofit can be targeted at identifiable areas. It also warns that a national average describes neither the off-gas village nor the inner-city estate.
+:::
 
 ![LISA cluster map, 2024 (queen contiguity, 9,999 permutations, Benjamini–Hochberg FDR at 5%).](figures/esda_lisa_map_2024.png){#fig-lisa fig-alt="LISA cluster map of England and Wales showing high-high clusters in rural areas and low-low clusters in cities."}
 
@@ -218,7 +243,7 @@ Global Moran's *I* lies between 0.57 and 0.59 under contiguity in every year (ps
 
 ```{python}
 #| label: tbl-theil
-#| tbl-cap: "Meter-weighted Theil index and its exact three-level decomposition (% of total), with the LSOA Gini and the spatial polarisation index."
+#| tbl-cap: "Meter-weighted Theil index and its exact three-level decomposition (% of total), selected years."
 th = read(DYN, "ineq_theil")
 t = th[["year", "theil_T", "share_between_region", "share_between_lad_within_region", "share_within_lad"]].copy()
 for c in t.columns[2:]:
@@ -228,19 +253,27 @@ t.columns = ["Year", "Theil T", "Between regions %", "Between LADs in region %",
 show_table(t, floatfmt=(".0f", ".4f", ".1f", ".1f", ".1f"))
 ```
 
-Inequality between LSOAs is modest in absolute terms (Gini 0.11–0.12) but rose: the Theil index grew by about a fifth between 2015 and 2021 (@tbl-theil). Roughly three quarters of it lies **within** local authorities, a share that rose from 73% to 76%, and almost a third lies within MSOAs; regions account for less than a tenth. The between-LAD component is about 25 times its permutation expectation (*p* = 0.001), and the same split holds for the mean log deviation and for unweighted indices. The spatial Gini confirms that the inequality is spatially organised: contiguous LSOAs differ on average by 30% less than random pairs, and the non-neighbour component exceeds its permutation expectation in every year (*z* = 101–116).
+Inequality between LSOAs is modest in absolute terms (Gini 0.11–0.12) but rose: the Theil index grew by about a fifth between 2015 and 2021 (@tbl-theil, @fig-theil). Roughly three quarters of it lies **within** local authorities, a share that rose from 73% to 76%, and almost a third lies within MSOAs; regions account for less than a tenth. The between-LAD component is about 25 times its permutation expectation (*p* = 0.001), and the same split holds for the mean log deviation and for unweighted indices. The spatial Gini confirms that the inequality is spatially organised: contiguous LSOAs differ on average by 30% less than random pairs, and the non-neighbour component exceeds its permutation expectation in every year (*z* = 101–116).
 
 ::: {layout-ncol=2}
-![Theil decomposition and Gini coefficient, 2010–2024.](figures/ineq_theil_gini.png){#fig-theil}
+![Theil decomposition and Gini coefficient, 2010–2024.](figures/ineq_theil_gini.png){#fig-theil fig-alt="Top panel: LSOA Gini rising from about 0.11 to 0.12 and the Theil index rising slowly between 2010 and 2024. Bottom panel: stacked shares of the Theil index, with the within-LAD share making up about three quarters throughout."}
 
-![Within-LAD coefficient of variation against LAD mean consumption, 2024.](figures/ineq_cv_vs_mean_2024.png){#fig-cv}
+![Within-LAD coefficient of variation against LAD mean consumption, 2024 (log scales).](figures/ineq_cv_vs_mean_2024.png){#fig-cv fig-alt="Scatter plot of 317 local authorities: authorities with higher mean consumption per meter have a clearly higher spread of consumption between their LSOAs."}
 :::
 
 Within-LAD dispersion rises steeply with LAD consumption (@fig-cv). Spearman's ρ between the CV and the LAD mean is 0.68 [0.61, 0.74] in 2010 and 0.75 [0.70, 0.80] by 2022–24, and the elasticity of the CV with respect to the mean is about 2.5. The relationship survives a tail-robust dispersion measure, the removal of outlier LSOAs, region fixed effects and LAD size, a spatial-error specification, and the LAD median as the level, so it is not a mechanical tail artefact. The highest-consumption authorities are largely rural LADs where electrically heated, off-gas-grid neighbourhoods sit beside gas-heated market towns.
 
-The price crisis compressed relative differences only briefly (@fig-shock). In 2021→22 the highest-consumption quintile cut consumption by 9.6% and the least deprived quintile by 10.0%, against 6.8% in the lowest-consumption and most deprived quintiles; the gradient is monotonic. The Gini fell from 0.121 to 0.115 by 2023 but returned to 0.121 in 2024. In 2019→20 the gradient reversed: the least deprived areas rose most (+5.9%), consistent with home working concentrated among higher-income households [@zapatawebborn2023impact]. Smaller cuts in deprived areas fit evidence that the poorest households had little left to cut [@zapatawebborn2024winter; @fawcett2024using]; lower consumption there is not a better outcome.
+The price crisis compressed relative differences only briefly (@fig-shock). In 2021→22 the highest-consumption quintile cut consumption by 9.6% and the least deprived quintile by 10.0%, against 6.8% in the lowest-consumption and most deprived quintiles; the gradient is monotonic. The Gini fell from 0.121 to 0.115 by 2023 but returned to 0.121 in 2024. In 2019→20 the gradient reversed: the least deprived areas rose most (+5.9%), consistent with smart-meter evidence that wealthier households raised their electricity use most during the pandemic, alongside the shift to home working [@zapatawebborn2023impact]. Smaller cuts in deprived areas fit evidence that the poorest households had little left to cut [@zapatawebborn2024winter; @fawcett2024using]; lower consumption there is not a better outcome.
 
-![Change in consumption per meter, 2021→22, by start-year consumption quintile and by deprivation quintile.](figures/ineq_shock_2022_by_group.png){#fig-shock width=80%}
+![Change in consumption per meter, 2021→22, by start-year consumption quintile and by deprivation quintile.](figures/ineq_shock_2022_by_group.png){#fig-shock width=80% fig-alt="Two bar charts of the percentage fall in consumption per meter in 2021–22. Falls grow steadily from 6.8% in the lowest-consumption quintile to 9.6% in the highest, and from 6.8% in the most deprived quintile to 10.0% in the least deprived."}
+
+::: {.callout-note title="In plain terms"}
+**What it says.** The Theil and Gini indices are standard measures of inequality, borrowed from the study of incomes, that are zero when every area uses the same amount. Differences between neighbourhoods are modest (a Gini of about 0.12 on a scale from 0 to 1), but they widened slowly. The key point is *where* the differences are. Splitting the Theil index shows that about three quarters of it comes from differences between neighbourhoods inside the same local authority, and less than a tenth from differences between regions; the within-authority share is rising.
+
+**What it means.** Rural councils are the most mixed: an off-gas village heated by electric storage heaters can sit a few miles from a gas-heated market town. In the 2022 price crisis, high-use and better-off areas cut most (about 10%), while the most deprived areas cut least (6.8%). This narrowed the gaps for a year or two, but they were back by 2024.
+
+**Why it matters.** Funding or advice allocated by council area will miss most of the variation, so neighbourhood-level targeting fits the problem better. The small cuts in deprived areas are not good news: other studies suggest that many of those households were already using as little as they could, so lower use there is more likely to signal hardship than efficiency.
+:::
 
 ### Distribution dynamics: persistence, conditioned by neighbourhood
 
@@ -255,25 +288,33 @@ summ = read(DYN, "markov_summary").set_index("chain").loc["lsoa 2015-24 (core)"]
 P["Sojourn (yrs)"] = [summ[f"sojourn_{k}"] for k in range(1, 6)]
 P["Ergodic"] = [summ[f"steady_{k}"] for k in range(1, 6)]
 P.columns = [c.split(" ")[0] for c in P.columns[:5]] + list(P.columns[5:])
-P.insert(0, "From \\ to", [c.split(" ")[0] for c in order])
-show_table(P)
+P.insert(0, "From / to", [c.split(" ")[0] for c in order])
+show_table(P, floatfmt=(None, ".3f", ".3f", ".3f", ".3f", ".3f", ".1f", ".3f"))
 ```
 
-Places keep their relative positions (@tbl-markov). Between 70% and 94% of LSOAs stay in the same quintile from one year to the next; the extremes are the most persistent (0.88 for the lowest quintile, 0.94 for the highest), and moves almost always go to an adjacent class. For LADs the diagonals are 0.88–0.96. The mean first-passage time from the lowest to the highest quintile is 128 years for LSOAs and 230 years for LADs. The first-order chain, if anything, *understates* persistence: the Markov property is rejected, and the observed five-year probability of remaining in Q1 (0.85) or Q5 (0.91) is far higher than $P^5$ implies (0.63 and 0.76). Much apparent annual mobility near class boundaries is transitory back-and-forth from estimated readings, meter churn and weather.
+Places keep their relative positions (@tbl-markov). Between 70% and 94% of LSOAs stay in the same quintile from one year to the next; the extremes are the most persistent (0.88 for the lowest quintile, 0.94 for the highest), and moves almost always go to an adjacent class. For LADs the diagonals are 0.88–0.96. The mean first-passage time from the lowest to the highest quintile is 128 years for LSOAs and 230 years for LADs. The first-order chain, if anything, *understates* persistence: the Markov property is rejected, and the observed five-year probability of remaining in Q1 (0.85) or Q5 (0.91) is far higher than $P^5$ implies (0.63 and 0.76). Much apparent annual mobility near class boundaries is transitory back-and-forth, consistent with estimated readings, meter churn and weather.
 
 ::: {layout-ncol=2}
-![Shorrocks mobility index by annual transition, LSOAs and LADs.](figures/markov_shorrocks_annual.png){#fig-shorrocks}
+![Shorrocks mobility index by annual transition, LSOAs and LADs.](figures/markov_shorrocks_annual.png){#fig-shorrocks fig-alt="Line chart of the Shorrocks mobility index for each one-year transition from 2011 to 2024. LSOA mobility hovers around 0.20 to 0.24, with a small spike at the 2015 break, and peaks at 0.31 in 2022; LAD mobility is lower, peaking at 0.18 in 2022."}
 
-![Spatial Markov transition matrices for LSOAs whose neighbours are in the lowest and in the highest quintile, 2015–2024.](figures/markov_spatial_lsoa_extremes.png){#fig-smarkov}
+![Spatial Markov transition matrices for LSOAs whose neighbours are in the lowest and in the highest quintile, 2015–2024.](figures/markov_spatial_lsoa_extremes.png){#fig-smarkov fig-alt="Two five-by-five heat maps of transition probabilities. With low-consumption neighbours, LSOAs in Q1 stay there with probability 0.92 and those in Q5 with 0.85; with high-consumption neighbours, Q1 stays with 0.82 and Q5 with 0.97."}
 :::
 
 Mobility was lowest in 2015–19, rose through the pandemic and peaked in 2021→22, when the Shorrocks index reached 0.31 for LSOAs and 0.18 for LADs (@fig-shorrocks). Time homogeneity is rejected, but the largest change in any transition probability between sub-periods is only 0.05. The 2014→15 transition is more mobile than its neighbours; about two thirds of that excess disappears without split LSOAs and none is visible for LADs, so it is mostly a boundary-conversion artefact.
 
-Neighbourhood context conditions movement strongly and symmetrically (@fig-smarkov). Spatial homogeneity is rejected by the analytical tests (*Q* = 6,150, df = 80) and by a permutation test (observed χ² 6,150 against a permutation maximum of 176). A low-consumption LSOA surrounded by low-consumption neighbours leaves the bottom quintile with probability 0.08, against 0.19 when its neighbours are in the top quintile; a high-consumption LSOA among high-consumption neighbours drops out of the top quintile with probability 0.03, against 0.16 among low-consumption neighbours. The conditional ergodic distributions are near mirror images (59% in Q1 under the lowest lag class, 59% in Q5 under the highest). The LISA Markov chain agrees: 92.1% of LSOA-years keep their quadrant, and significant high–high clusters last 17 years on average. The rose diagrams show that when LSOAs move, they move *with* their neighbours far more often than spatial randomness predicts (@fig-rose).
+Neighbourhood context conditions movement strongly and symmetrically (@fig-smarkov). Spatial homogeneity is rejected by the analytical tests (*Q* = 6,150, df = 80) and by a permutation test (observed χ² 6,150 against a permutation maximum of 176). A low-consumption LSOA surrounded by low-consumption neighbours leaves the bottom quintile with probability 0.08, against 0.19 when its neighbours are in the top quintile; a high-consumption LSOA among high-consumption neighbours drops out of the top quintile with probability 0.03, against 0.15 among low-consumption neighbours. The conditional ergodic distributions are near mirror images (59% in Q1 under the lowest lag class, 59% in Q5 under the highest). The LISA Markov chain agrees: 92.1% of LSOA-years keep their quadrant, and significant high–high clusters last 17 years on average. The rose diagrams show that when LSOAs move, they move *with* their neighbours far more often than spatial randomness predicts (@fig-rose).
 
-![Directional LISA rose diagrams, 2015→2024: joint movement of each LSOA and its spatial lag; sectors compared with 999 spatial permutations.](figures/rose_directional_lisa.png){#fig-rose width=80%}
+![Directional LISA rose diagrams for 2015–19, 2019–20, 2021–22 and 2015–24: joint movement of each LSOA and its spatial lag; sectors compared with 999 spatial permutations.](figures/rose_directional_lisa.png){#fig-rose width=80% fig-alt="Four circular rose diagrams. In each, the sectors where an LSOA and its neighbours move up together or down together are larger than expected under spatial randomness, while sectors where they move in opposite directions are smaller than expected."}
 
 These are descriptive dependencies, not identified spillovers: shared exposure to climate, housing stock and the gas grid would produce the same pattern.
+
+::: {.callout-note title="In plain terms"}
+**What it says.** Split all neighbourhoods into five equal groups (quintiles) from lowest to highest relative use, and follow them from one year to the next. A Markov transition matrix (@tbl-markov) is simply the table of how many move between groups. Out of every 100 neighbourhoods in the lowest-use fifth, about 88 are still there a year later and almost all of the rest have moved up just one group; in the highest-use fifth, about 94 stay. A neighbourhood typically stays in the bottom fifth for about 8.6 years at a stretch and in the top fifth for about 16.5 years. If those yearly odds held, it would take a bottom-fifth neighbourhood 128 years on average to reach the top fifth for the first time (the "first-passage time"). This is not a forecast, just a way of showing how sticky positions are, and the real persistence is even greater: after five years, 85 in 100 are still in the bottom fifth. The Shorrocks index sums this up on a scale from 0 (nobody moves) to 1 (this year's position tells you nothing about next year's); it was about 0.2 in most years and peaked at 0.31 in the 2022 crisis.
+
+**Neighbours matter.** Each year, a low-use neighbourhood surrounded by other low-use neighbourhoods has an 8-in-100 chance of moving up, against 19 in 100 if its neighbours are high users. A high-use neighbourhood surrounded by high users has only a 3-in-100 chance of dropping out of the top fifth, against 15 in 100 if its neighbours are low users. When neighbourhoods do move, they tend to move together with the areas around them.
+
+**Why it matters.** The places with the highest electricity demand, and the highest bills, will be largely the same places for years to come, which makes them a stable target for retrofit and heating support. The neighbour effect does not prove that neighbours influence each other: it is equally consistent with shared climate, housing types and gas-grid access. In practice it means that change is likely to come from altering the housing and heating of whole areas, not from a slow drift of individual places.
+:::
 
 ### Place mobility: common shocks, little re-ranking
 
@@ -294,36 +335,44 @@ show_table(pd.DataFrame(rows), floatfmt=".1f")
 The decomposition separates the common shocks from the re-sorting of places (@tbl-vankerm, @fig-vankerm). Between 2019 and 2022, 71–82% of LSOA mobility, and over 90% for LADs, is the national level moving up with COVID-19 and then sharply down with the price crisis. In calm years exchange dominates, but it is small and roughly constant (1.3–2.2 log points a year) and accumulates to only 2.4 points over 2015–24: if annual re-rankings were permanent they would sum to more than 13 points, so most reverse. Dispersion is consistently the smallest component. Kendall's $\tau_b$ between consecutive years is 0.86–0.90 for LSOAs (lowest in 2021→22) and falls to 0.76 over 2015–24 (@fig-tau). Spatial $\tau$ is below global $\tau$, but against a value-matched null neighbouring LSOAs re-rank no more than equally similar random pairs, and no local hotspot of re-ranking survives FDR correction.
 
 ::: {layout-ncol=2}
-![Annual Van Kerm decomposition of LSOA mobility.](figures/mobility_vankerm_annual.png){#fig-vankerm}
+![Annual Van Kerm decomposition of LSOA and LAD mobility.](figures/mobility_vankerm_annual.png){#fig-vankerm fig-alt="Stacked bar charts of annual mobility for LSOAs and LADs from 2011 to 2024, split into growth, dispersion and exchange. Growth dominates the tall bars of 2020, 2021 and 2022; in other years the bars are short and, for LSOAs, mostly exchange."}
 
-![Kendall's τ, spatial τ and value-matched null by window.](figures/rank_tau_annual.png){#fig-tau}
+![Kendall's τ and spatial τ between consecutive years, LSOAs and LADs.](figures/rank_tau_annual.png){#fig-tau fig-alt="Line chart of rank concordance between consecutive years. LAD values stay between about 0.92 and 0.97; LSOA Kendall's tau stays between 0.86 and 0.90, with spatial tau a little lower, and both dip in 2022."}
 :::
 
-### Convergence clubs
+::: {.callout-note title="In plain terms"}
+**What it says.** Think of all neighbourhoods ranked in a league table by electricity use. Movement between two years can come from three sources: everyone's use rising or falling together (*growth*), the gaps between the top and bottom of the table stretching or shrinking while the order stays the same (*dispersion*), and neighbourhoods swapping places (*exchange*). Between 2021 and 2022 the typical neighbourhood's use changed by about 9% (9.3 log points); 7.7 of those points were the nationwide fall and only 1.5 came from neighbourhoods swapping places. Over 2015–2024 as a whole, swapping adds up to just 2.4 points, although the yearly swaps sum to more than 13: most of them reverse the next year. Kendall's τ, which compares two rankings (1 means an identical order, 0 an unrelated one), is 0.86–0.90 from one year to the next.
+
+**What it means.** The pandemic and the price crisis pushed almost all areas in the same direction; they did not reshuffle which areas use a lot and which use little. The year-to-year jumps of individual areas are mostly short-lived noise, plausibly from estimated meter readings and weather.
+
+**Why it matters.** A single year's change in a neighbourhood's consumption is a poor guide to whether a local scheme worked; multi-year trends are far more reliable. And national shocks, whether a lockdown or a price spike, change everyone's bills without changing who is most exposed.
+:::
+
+### Convergence clubs: no national catching up
 
 ```{python}
 #| label: tbl-clubs
-#| tbl-cap: "Phillips–Sul log t tests and club clustering by scale and window."
+#| tbl-cap: "Phillips–Sul log *t* tests and club clustering by scale and window."
 cs = read(MOD, "clubs_summary").query("club == 'all'")
 win = {"full": "2010–24", "pre": "2010–19", "post15": "2015–24", "levels": "2010–24 (levels)"}
 t = pd.DataFrame({
-    "Scale": cs.level.str.upper(), "Window": cs.window.map(win), "Units": cs.n.astype(int),
-    "b̂": cs.beta, "t": cs.t, "Initial clubs": cs.n_initial_clubs.astype(int),
+    "Scale": cs.level.str.upper(), "Window": cs.window.map(win), "Units": cs.n.astype(float),
+    "$\\hat{b}$": cs.beta, "*t*": cs.t, "Initial clubs": cs.n_initial_clubs.astype(int),
     "Final clubs": cs.n_final_clubs.astype(int), "Divergent": cs.n_divergent.astype(int)})
-show_table(t, floatfmt=(None, None, ".0f", ".2f", ".1f", ".0f", ".0f", ".0f"))
+show_table(t, floatfmt=(None, None, ",.0f", ".2f", ".1f", ".0f", ".0f", ".0f"))
 ```
 
 There is no evidence of national convergence. The log *t* test rejects it decisively at every scale and in every window (@tbl-clubs): before COVID-19, after the processing break, and when common proportional shocks are removed by working in levels. Relative dispersion rose (σ-divergence: the cross-LAD CV went from 0.117 in 2010 to 0.129 in 2024), so the absolute fall in consumption did not narrow relative gaps. Local authorities instead sort into twelve ordered clubs whose relative transition paths were largely fixed by 2010 (@fig-paths): the top clubs drift slowly upwards and the bottom clubs slowly downwards. The *ordering* of clubs is robust across windows, scales and transformations (rank correlations 0.85–0.98); exact club boundaries are not (adjusted Rand 0.14–0.37), so clubs should be read as ordinal strata.
 
 ::: {layout-ncol=2}
-![Relative transition paths of LAD convergence clubs, 2010–2024 (HP-filtered; bold lines are club medians).](figures/clubs_paths_lad_full.png){#fig-paths}
+![Relative transition paths of LAD convergence clubs, 2010–2024 (HP-filtered; bold lines are club medians).](figures/clubs_paths_lad_full.png){#fig-paths fig-alt="Line chart of relative transition paths for 318 local authorities, with bold median lines for twelve clubs stacked in order from about 1.03 down to 0.97. The top clubs slope gently upwards and the bottom clubs gently downwards between 2010 and 2024."}
 
-![MSOA convergence clubs, 2010–2024.](figures/clubs_map_msoa_full.png){#fig-clubmap}
+![MSOA convergence clubs, 2010–2024 (21 clubs; 1 = highest).](figures/clubs_map_msoa_full.png){#fig-clubmap fig-alt="Map of England and Wales MSOAs coloured by convergence club, with a London inset. Clubs form contiguous patches rather than a random scatter."}
 :::
 
 Club membership is strongly geographical. The share of neighbour links joining units of the same club is 1.2–1.8 times its random expectation, and Moran's *I* of the club number is 0.41–0.58 (all *p* ≤ 0.023). High clubs cover the affluent, detached and partly off-gas commuter belts of the South East and East of England together with rural Wales and the South West; low clubs cover Tyneside, Teesside, the South Wales valleys and inner London (@fig-clubmap). In an ordered logit on 2021 characteristics (@fig-profile), a 1-SD higher share of electric heating multiplies the odds of being in a higher MSOA club by 6.4, household size by 3.1, lower deprivation by 2.9, detached housing by 2.2 and off-gas fuels by 2.1, while private renting (0.52) and EPC efficiency (0.56) mark the lower clubs. The interactive map below lets you compare LAD clubs with relative consumption and its change.
 
-![Ordered-logit profile of MSOA club membership: odds ratios per SD of 2021 characteristics.](figures/clubs_profile_ordered_logit.png){#fig-profile width=75%}
+![Ordered-logit profile of MSOA club membership: log-odds per SD of 2021 characteristics (odds ratio = exp of the plotted value).](figures/clubs_profile_ordered_logit.png){#fig-profile width=75% fig-alt="Dot-and-interval chart of ordered-logit coefficients. Electric heating has the largest positive value, followed by household size, lower deprivation, detached housing and oil, LPG or solid-fuel heating; private renting and EPC efficiency have the largest negative values."}
 
 ```{python}
 #| label: lad-map-data
@@ -399,26 +448,34 @@ Plot.plot({
 
 *Interactive map of the 318 local authorities. Choose an indicator; hover or tap for values. The five divergent authorities are left unfilled on the club map.*
 
-### What explains the cross-section?
+::: {.callout-note title="In plain terms"}
+**What it says.** *Convergence* means places becoming more alike over time, with high users and low users drifting towards a common level. The Phillips–Sul test checks whether every area is heading to the same relative level, and it rejects that firmly at every scale. Instead, the 318 local authorities fall into twelve *convergence clubs*: groups whose members move together towards a shared level, with each club heading to a different level, like runners in separate lanes. The lanes are slowly fanning out (the spread between authorities, measured by the CV, rose from 0.117 to 0.129), and the clubs form blocks on the map rather than a random scatter.
+
+**Who is in the high clubs?** Areas with more electric heating, larger households, less deprivation, more detached houses and more oil, LPG or solid-fuel heating. The odds ratio of 6.4 for electric heating means that an MSOA one standard deviation (SD) above average in its share of electrically heated homes has 6.4 times the odds of sitting in a higher club; these are associations, not causes. The exact boundaries between clubs shift between specifications, so the clubs are best read as rough, ranked bands.
+
+**Why it matters.** There is no automatic catch-up: the national fall in consumption has not narrowed the gaps between places, and the high-use bands are long-lasting. Without deliberate action on their housing and heating, the areas that need the most energy today are likely to remain the areas that need the most energy tomorrow.
+:::
+
+### Drivers: housing and heating, at different scales
 
 ```{python}
 #| label: tbl-models
-#| tbl-cap: "Model comparison for log consumption per meter, 2022–2024 average, MSOAs (n = 7,264, 13 standardised covariates)."
+#| tbl-cap: "Model comparison for log consumption per meter, 2022–2024 average, MSOAs (*n* = 7,264, 13 standardised covariates). ENP: effective number of parameters; lower AICc is better."
 mc = read(MOD, "xs_msoa_y2224_model_comparison")
-t = mc[["model", "k", "AICc", "delta_AICc", "pseudo_R2", "resid_moran_I"]]
-t.columns = ["Model", "Parameters (ENP)", "AICc", "ΔAICc", "Pseudo-R²", "Residual Moran's I"]
-show_table(t, floatfmt=(None, ".0f", ".0f", ".0f", ".3f", ".2f"))
+t = mc[["model", "k", "AICc", "delta_AICc", "pseudo_R2", "resid_moran_I"]].astype({"k": float})
+t.columns = ["Model", "Parameters (ENP)", "AICc", "ΔAICc", "Pseudo-*R*²", "Residual Moran's *I*"]
+show_table(t, floatfmt=(None, ",.0f", ",.0f", ",.0f", ".3f", ".2f"))
 ```
 
 Small-area consumption is highly predictable from housing and heating composition: census, EPC and deprivation covariates explain about 79% of the variance between LSOAs and 80% between MSOAs, with the same ranking in 2019 and 2022–24 (@fig-forest). Dwelling size (mean rooms) and electric central heating each add about 11–12% per SD, off-gas heating about 5% and household size about 4%; density, district heating and Wales carry negative associations. EPC efficiency has the expected negative sign but a small coefficient, consistent with modelled efficiency being a weak proxy for realised demand [@few2023overprediction; @summerfield2019empirical].
 
-![Coefficients of the LSOA models for 2022–2024 (log points per SD; OLS and spatial error model, GMM).](figures/xs_lsoa_y2224_forest.png){#fig-forest width=85%}
+![Coefficients of the LSOA models for 2022–2024 (change in log kWh per SD of each covariate; OLS, SLX and spatial error model, GMM).](figures/xs_lsoa_y2224_forest.png){#fig-forest width=85% fig-alt="Coefficient plot for LSOA models of log consumption in 2022–2024. Mean rooms and electric heating have the largest positive coefficients, at about 0.11 to 0.12, followed by oil, LPG or solid-fuel heating and household size; log population density, Wales and district heating are negative. The three models agree closely."}
 
-The residuals are strongly spatially autocorrelated, and the robust LM tests point to error dependence (robust LM-error 13,326 against robust LM-lag 2.1, *p* = 0.15), not a substantive spillover. Spatial-error and Durbin-type models remove the residual autocorrelation; the spatial lag model does not. We read this as unmeasured, spatially smooth context: climate, housing vintage, network and tariff history. Separating own from neighbourhood deprivation (SDEM) reverses the sign of the deprivation coefficient: within its surroundings a less deprived LSOA consumes slightly *less* per meter (−0.009), while living among less deprived neighbourhoods raises consumption (+0.026). The positive raw association between affluence and consumption is a regional gradient, not a within-neighbourhood one [@openshaw1984modifiable].
+The residuals are strongly spatially autocorrelated, and the robust LM tests point to error dependence (robust LM-error 13,326 against robust LM-lag 2.1, *p* = 0.15), not a substantive spillover. Spatial-error and Durbin-type models remove the residual autocorrelation; the spatial lag model does not. We read this as unmeasured, spatially smooth context: climate, housing vintage, network and tariff history. Separating own from neighbourhood deprivation (SDEM) reverses the sign of the deprivation coefficient: within its surroundings a less deprived LSOA consumes slightly *less* per meter (−0.009 log points per SD), while living among less deprived neighbourhoods raises consumption (+0.026). The positive raw association between affluence and consumption is therefore a regional gradient, not a within-neighbourhood one, a reminder that associations measured on areas depend on the scale of the areas [@openshaw1984modifiable].
 
 ```{python}
 #| label: tbl-mgwr
-#| tbl-cap: "MGWR (MSOAs, 2022–2024): covariate-specific bandwidths (nearest MSOAs of 7,264), local coefficients and share of MSOAs significant after the corrected critical t."
+#| tbl-cap: "MGWR (MSOAs, 2022–2024): covariate-specific bandwidths (nearest MSOAs of 7,264), local coefficients and share of MSOAs significant after the corrected critical *t*."
 ls = read(MOD, "xs_mgwr_msoa_y2224_local_summary").sort_values("bandwidth_nn")
 labels = {"const": "Intercept", "share_ch_electric": "Electric heating", "share_ch_offgas": "Off-gas heating",
           "share_ch_renewable": "Renewable heating", "mean_hh_size": "Household size",
@@ -426,58 +483,81 @@ labels = {"const": "Intercept", "share_ch_electric": "Electric heating", "share_
           "share_social_rent": "Social rent", "share_private_rent": "Private rent",
           "share_age_65plus": "Aged 65+", "dep19_pct": "Less deprived", "epc_ee": "EPC efficiency",
           "log_density": "Log density"}
-t = pd.DataFrame({"Covariate": ls.term.map(labels).fillna(ls.term), "Bandwidth": ls.bandwidth_nn,
+t = pd.DataFrame({"Covariate": ls.term.map(labels).fillna(ls.term), "Bandwidth": ls.bandwidth_nn.astype(float),
                   "Mean β": ls["mean"], "Min β": ls["min"], "Max β": ls["max"],
                   "Significant %": 100 * ls.share_sig})
-show_table(t, floatfmt=(None, ".0f", ".2f", ".2f", ".2f", ".0f"))
+show_table(t, floatfmt=(None, ",.0f", ".2f", ".2f", ".2f", ".0f"))
 ```
 
-Relationships vary strongly over space. GWR and MGWR raise *R*² to about 0.95 and cut AICc by 2,500–2,700 relative to the best global model (@tbl-models). GWR's single bandwidth (178 MSOAs) gives the lowest AICc, so MGWR's extra flexibility is not rewarded on information criteria; its value lies in what its bandwidths reveal about the *scale* of each process (@tbl-mgwr, @fig-bw). Age structure acts at a national scale and log density near-nationally; off-gas heating, social renting and flats regionally; electric heating, EPC efficiency, private renting and renewable heating locally (about 250–300 MSOAs). Electric heating is positive and significant everywhere, strongest in inner London where electrically heated flats are concentrated and weakest in Surrey (@fig-mgwr-elec). EPC efficiency is significantly negative in 40% of MSOAs and never significantly positive (@fig-mgwr-epc). Household size and detached share have the smallest bandwidths but are rarely significant after correction.
+Relationships vary strongly over space. GWR and MGWR raise *R*² to about 0.95 and cut AICc by 2,500–2,700 relative to the best global model (@tbl-models). GWR's single bandwidth (178 MSOAs) gives the lowest AICc, so MGWR's extra flexibility is not rewarded on information criteria; its value lies in what its bandwidths reveal about the *scale* of each process (@tbl-mgwr, @fig-bw). Age structure acts at a national scale and log density near-nationally; off-gas heating, social renting and flats regionally; electric heating, EPC efficiency, private renting and renewable heating locally (about 240–310 MSOAs). Electric heating is positive and significant everywhere, strongest in inner London where electrically heated flats are concentrated and weakest in Surrey (@fig-mgwr-elec). EPC efficiency is significantly negative in 40% of MSOAs and never significantly positive (@fig-mgwr-epc). Household size and detached share have the smallest bandwidths but are rarely significant after correction.
 
-![MGWR bandwidths by covariate, 2022–2024 (MSOAs).](figures/xs_mgwr_msoa_y2224_bandwidths.png){#fig-bw width=85%}
+![MGWR bandwidths by covariate, 2022–2024 (MSOAs; smaller = more local).](figures/xs_mgwr_msoa_y2224_bandwidths.png){#fig-bw width=85% fig-alt="Horizontal bar chart of MGWR bandwidths on a log scale. Aged 65+ uses all 7,263 neighbours and log density 3,653; oil, LPG or solid-fuel heating 1,389, social rent 981 and flats 722; renewable heating, private rent, electric heating and EPC efficiency 241 to 305; mean rooms 168; detached houses, household size and the intercept 41 to 53."}
 
 ::: {layout-ncol=2}
-![MGWR local coefficient of electric heating (grey: not significant after correction).](figures/xs_mgwr_msoa_y2224_map_share_ch_electric.png){#fig-mgwr-elec}
+![MGWR local coefficient of electric heating (grey: not significant after correction).](figures/xs_mgwr_msoa_y2224_map_share_ch_electric.png){#fig-mgwr-elec fig-alt="Map of England and Wales MSOAs in shades of orange: the electric-heating coefficient is positive and significant everywhere, darkest in inner London and lighter around Surrey."}
 
-![MGWR local coefficient of EPC energy efficiency (grey: not significant after correction).](figures/xs_mgwr_msoa_y2224_map_epc_ee.png){#fig-mgwr-epc}
+![MGWR local coefficient of EPC energy efficiency (grey: not significant after correction).](figures/xs_mgwr_msoa_y2224_map_epc_ee.png){#fig-mgwr-epc fig-alt="Map of England and Wales MSOAs: the EPC-efficiency coefficient is grey (not significant) across much of the Midlands and North and significantly negative, in blue, across London, the South West, parts of southern and eastern England and pockets of the North East."}
+:::
+
+::: {.callout-note title="In plain terms"}
+**What it says.** A handful of facts about an area's homes from the 2021 Census, such as how many rooms they have, how they are heated and how many people live in them, predicts about 80% of the differences in electricity use between areas. Comparing an area that is typical with one that is noticeably above typical (one standard deviation, SD, higher) on a single characteristic, more rooms per home or more homes on electric central heating each go with about 11–12% more electricity per meter. Better EPC ratings go with lower use, but only weakly, because EPCs estimate how much energy a home *should* need, not how much its occupants actually use.
+
+**Local relationships.** Multiscale geographically weighted regression (MGWR) lets each relationship differ from place to place, and its *bandwidth* says how widely a relationship holds. The link with an older population is the same everywhere: its bandwidth uses all 7,263 other MSOAs. Electric heating and EPC efficiency vary over a few hundred neighbouring MSOAs, about 3–4% of the country. Electric heating goes with higher use everywhere, most strongly in inner London, where electrically heated flats are concentrated. Better EPC ratings go with significantly lower use in 40% of MSOAs and nowhere with higher use.
+
+**Why it matters.** The largest differences between places line up with physical features of the housing stock, its heating system and its size, rather than with who lives there; after accounting for location, better-off neighbourhoods do not use more than poorer ones nearby. A single national rule of thumb, such as "each step up in EPC band saves so much", will hold well in some places and poorly in others, so local programmes need local evidence.
 :::
 
 ### Change, shocks and electrification
 
 ```{python}
 #| label: tbl-beta
-#| tbl-cap: "β-convergence regressions of the change in log consumption on the initial level: long change (2010–12 → 2022–24) and shock change (2019 → 2022)."
+#| tbl-cap: "β-convergence regressions of the change in log consumption on the initial level: long change (2010–12 → 2022–24) and shock change (2019→2022)."
 bc = read(MOD, "ch_beta_convergence")
 t = bc[["level", "change", "spec", "n", "beta", "t", "mean_change"]].copy()
+t["n"] = t.n.astype(float)
 t["level"] = t.level.str.upper()
-t["change"] = t.change.map({"long": "2010–12 → 2022–24", "shock": "2019 → 2022"})
-t.columns = ["Scale", "Change", "Specification", "n", "β", "t", "Mean Δlog"]
-show_table(t, floatfmt=(None, None, None, ".0f", ".3f", ".1f", ".3f"))
+t["change"] = t.change.map({"long": "2010–12 → 2022–24", "shock": "2019→2022"})
+t.columns = ["Scale", "Change", "Specification", "*n*", "β", "*t*", "Mean Δlog"]
+show_table(t, floatfmt=(None, None, None, ",.0f", ".3f", ".1f", ".3f"))
 ```
 
-Consumption per meter fell by about 19% over 2010–12 → 2022–24 and by about 11% over 2019 → 2022 at every scale. Unconditionally, higher-consuming places fell slightly *less* in proportion over the long run (weak β-divergence; @tbl-beta), matching the Phillips–Sul result and the rise in σ, but fell *more* in the 2022 shock. Holding 2021 composition constant, the places that fell least over 2010–24 were electrically heated, large-dwelling, rented and heat-pump areas, while new-build growth and density went with larger falls (@fig-change). The conditional level coefficient is strongly negative, but it is inflated by regression to the mean in a noisy baseline and should not be read as behavioural catch-up. For the long change MGWR is the best-fitting model (AICc 13,398 against 13,512 for GWR and 14,806 for SDM): heat-pump heating, dwelling size, social renting, deprivation and density act uniformly across the country, electric heating, private renting and EPC efficiency locally, and the level effect and new-build dilution very locally (@fig-change-bw). Domestic solar PV installed under the Feed-in Tariff shows no association with either change at LAD level once housing and heating are controlled; with coarse, pre-2019 installation counts that are confounded with detached owner-occupation, this is not evidence that solar leaves net consumption unchanged [@mckenna2018solar].
+Consumption per meter fell by about 19% over 2010–12 → 2022–24 and by about 11% over 2019→2022 at every scale. Unconditionally, higher-consuming places fell slightly *less* in proportion over the long run (weak β-divergence; @tbl-beta), matching the Phillips–Sul result and the rise in dispersion (σ-divergence), but fell *more* in the 2022 shock. Holding 2021 composition constant, the places that fell least over 2010–24 were electrically heated, large-dwelling, rented and heat-pump areas, while new-build growth and density went with larger falls (@fig-change). The conditional level coefficient is strongly negative, but it is inflated by regression to the mean in a noisy baseline and should not be read as behavioural catch-up. For the long change MGWR is the best-fitting model (AICc 13,398 against 13,512 for GWR and 14,806 for SDM): heat-pump heating, dwelling size, social renting, deprivation and density act uniformly across the country, electric heating, private renting and EPC efficiency locally, and the level effect and new-build dilution very locally (@fig-change-bw). Domestic solar PV installed under the Feed-in Tariff shows no association with either change at LAD level once housing and heating are controlled; with coarse, pre-2019 installation counts that are confounded with detached owner-occupation, this is not evidence that solar leaves net consumption unchanged [@mckenna2018solar].
 
 ::: {layout-ncol=2}
-![Coefficients of the LSOA long-change models (2010–12 → 2022–24).](figures/ch_lsoa_long_forest.png){#fig-change}
+![Coefficients of the LSOA long-change models (2010–12 → 2022–24; negative = larger fall).](figures/ch_lsoa_long_forest.png){#fig-change fig-alt="Coefficient plot for the long change in log consumption. Mean rooms, electric heating and household size have the largest positive coefficients (smaller falls); initial consumption, log density and meter growth have negative coefficients (larger falls)."}
 
-![MGWR bandwidths for the long change (MSOAs).](figures/ch_mgwr_msoa_long_bandwidths.png){#fig-change-bw}
+![MGWR bandwidths for the long change (MSOAs; smaller = more local).](figures/ch_mgwr_msoa_long_bandwidths.png){#fig-change-bw fig-alt="Horizontal bar chart of MGWR bandwidths for the long change. Density, deprivation, social rent, mean rooms, oil or solid-fuel heating and renewable heating are near-global (about 7,100 to 7,263 MSOAs); private rent, EPC efficiency and electric heating are local (250 to 496); meter growth and initial consumption are very local (93 to 120)."}
 :::
 
 The event study (@fig-event) traces how the consumption gap associated with each 2021 baseline evolved, relative to 2019, in a two-way fixed-effects panel of 33,750 LSOAs. Three signatures stand out. **Heat pumps:** areas with more renewable heating have drifted almost linearly upwards relative to others since 2010, by about 1.3% per SD over the period, and the drift continued through the price crisis, the expected footprint of the electrification of heat [@love2017addition; @arvanitopoulos2025decarbonising]. **COVID-19:** less deprived and detached-housing areas rose most in 2020–21 and fell back by 2022. **Electric heating:** electrically heated areas did *not* cut more than others in 2022; relative to 2019 they rose slightly, then oscillated with winter temperatures, which the non-weather-corrected series cannot separate. In the panel itself, growth in meter counts lowers the mean (new-build dilution, elasticity −0.09) and more residents per meter raise it (+0.16).
 
-![Event-study coefficients: % difference in consumption per SD of each 2021 baseline, relative to 2019 (95% CIs clustered by local authority; dotted line: 2014/15 processing break).](figures/st_event_study.png){#fig-event width=80%}
+![Event-study coefficients: % difference in consumption per SD of each 2021 baseline, relative to 2019 (95% CIs clustered by local authority; dotted line: 2014/15 processing break).](figures/st_event_study.png){#fig-event width=80% fig-alt="Four small line charts from 2010 to 2024. Renewable heating rises almost in a straight line from about −0.9% to +0.4%; electric heating rises to about zero by 2017 and then oscillates; less deprived areas spike in 2020 and fall back by 2022; detached-housing areas rise through 2021 and then ease back."}
 
 The basis-function trend surface (@fig-trend) shows that the large-scale geography is stable: the 2024 surface is almost the 2010 surface with slightly larger amplitude. It explains only 17–20% of the cross-sectional variance; the persistent fine-scale (below 25 km) LSOA component accounts for 67–83%. Most spatial variation is therefore neighbourhood-scale and persistent, which is why convergence clubs sort neighbourhoods rather than regions.
 
-![Large-scale spatio-temporal trend surface of relative log consumption (multi-resolution bisquare basis, ridge-penalised), 2010, 2019, 2022 and 2024.](figures/st_trend_surface_years.png){#fig-trend}
+![Large-scale spatio-temporal trend surface of relative log consumption (multi-resolution bisquare basis, ridge-penalised), 2010, 2019, 2022 and 2024.](figures/st_trend_surface_years.png){#fig-trend fig-alt="Four nearly identical smooth maps of England and Wales: higher relative consumption (orange) in the South West, Wales, East Anglia and the outer South East, and lower (blue) in parts of northern England, the Midlands and London."}
+
+::: {.callout-note title="In plain terms"}
+**What it says.** β-convergence asks a simple question: did the places that used most at the start cut fastest, closing the gap? Over 2010–2024 the answer is no; they fell slightly *less* in percentage terms, so gaps widened a little. In the 2022 crisis high users did cut slightly more, but only for a short time. The event study follows, year by year, how much more or less areas with a given characteristic used compared with 2019. Since 2010, areas with more renewable heating (mostly heat pumps) have moved steadily upwards relative to everywhere else, by about 1.3% per standard deviation in total, and the rise did not pause even in the price crisis. Areas with fast growth in the number of meters saw their average per meter fall, consistent with new, typically smaller or more efficient homes joining the count. The smooth, region-sized pattern accounts for only about a fifth of the differences between neighbourhoods; most of the variation is local and long-lasting.
+
+**What it means.** The electrification of heat is already visible in the meter statistics, while heat pumps are still uncommon. When a heat pump replaces a gas or oil boiler, the home's electricity use goes up [@love2017addition], even though its total energy use usually goes down.
+
+**Why it matters.** Rising electricity use in heat-pump areas should not be read as worsening efficiency, affluence or need. Fuel-poverty indicators, bill-support formulas and local network planning that rely on electricity use alone will increasingly need to know how homes are heated.
+:::
 
 ### Robustness
 
 No substantive conclusion depends on the outlier flags, the split LSOAs, the weights or the inference method. Excluding flagged LSOAs changes Moran's *I* by at most 0.011, Markov diagonals by at most 0.003 and the spatial-Markov contrast hardly at all. Gas, which is weather-corrected, offers a useful contrast on the 34,551 LSOAs with both fuels (@fig-gas): its clustering is similar (*I* 0.50–0.53), its inequality is flat rather than rising, it is about half as mobile (Shorrocks 0.13 against 0.25), and its spatial conditioning runs in the same direction but is weaker. Restricting electricity to gas-connected LSOAs lowers its Moran's *I* from 0.58 to 0.52, so much of electricity's clustering comes from off-gas-grid areas where it substitutes for heating fuel [@roberts2015fuel].
 
-![Electricity and gas compared on the same LSOAs, with and without outlier-flagged LSOAs.](figures/sens_elec_gas_outliers.png){#fig-gas width=85%}
+![Electricity and gas compared on the same LSOAs, with and without outlier-flagged LSOAs.](figures/sens_elec_gas_outliers.png){#fig-gas width=85% fig-alt="Two line charts from 2010 to 2024. Top: Moran's I for electricity stays between about 0.56 and 0.59 with or without flagged LSOAs, and for gas between about 0.50 and 0.53. Bottom: the electricity Gini rises from about 0.11 to 0.12, while the gas Gini is roughly flat at about 0.13 after 2013."}
+
+::: {.callout-note title="In plain terms"}
+None of the main findings depends on the analytical choices: removing suspicious values or split neighbourhoods, defining neighbours differently or using other statistical tests changes the numbers only slightly. Gas, which DESNZ adjusts for weather, is a useful cross-check. It is clustered on the map almost as strongly as electricity, but its inequality is not rising and it moves about half as much from year to year. Part of electricity's year-to-year movement is therefore weather, and much of its clustering comes from off-gas-grid areas, where electricity does the job that gas does elsewhere.
+:::
 
 ## Discussion
+
+@tbl-hypotheses sets each hypothesis against the evidence. "Supported" means that the results agree with what the literature led us to expect; "rejected" means that they point the other way.
 
 ::: {.table-responsive}
 
@@ -502,7 +582,17 @@ No substantive conclusion depends on the outlier flags, the split LSOAs, the wei
 
 The geography of domestic electricity use in England and Wales is remarkably durable (@tbl-hypotheses). Over fifteen years in which consumption per meter fell by a fifth and the system absorbed a pandemic and a price shock, the spatial pattern, its level of clustering and the relative positions of places barely changed. Inequality between neighbourhoods rose slowly, and it rose *within* places rather than between regions. This matters for policy. Area-based support allocated at local-authority level will miss most of the variation, because three quarters of it lies inside authorities, and the most internally unequal authorities are precisely the high-consumption rural districts where electrically heated, off-gas neighbourhoods sit beside gas-heated towns. Targeting at LSOA or MSOA scale, informed by heating fuel and dwelling size, is far better matched to where consumption differs.
 
-The dynamics add a second message: persistence is self-reinforcing in space. Places surrounded by low-consumption neighbourhoods are roughly half as likely to move up, and high-consumption places among high-consumption neighbours almost never move down. Combined with the convergence-club evidence of graded, spatially clustered strata, this suggests that local housing and heating systems lock in consumption levels, so changing them requires changing the stock, not waiting for diffusion. The shocks of 2020–2022 moved the whole distribution, with only brief and partial compression of relative differences; deprived areas cut least in 2022, consistent with households that had little discretionary use left [@zapatawebborn2024winter; @fawcett2024using]. Finally, electrification is already visible: heat-pump areas have drifted steadily upwards relative to the rest of the country. As heat pumps spread, per-meter electricity will increasingly measure the decarbonisation of heat rather than affluence or need, and analyses of energy inequality will have to read high consumption more carefully.
+The dynamics add a second message: persistence is spatially clustered. Places surrounded by low-consumption neighbourhoods are less than half as likely to move up, and high-consumption places among high-consumption neighbours almost never move down. Combined with the convergence-club evidence of graded, spatially clustered strata, this is consistent with local housing and heating systems locking in consumption levels, in which case changing them requires changing the stock, not waiting for diffusion. The shocks of 2020–2022 moved the whole distribution, with only brief and partial compression of relative differences; deprived areas cut least in 2022, consistent with households that had little discretionary use left [@zapatawebborn2024winter; @fawcett2024using]. Finally, electrification is already visible: heat-pump areas have drifted steadily upwards relative to the rest of the country. As heat pumps spread, per-meter electricity will increasingly measure the decarbonisation of heat rather than affluence or need, and analyses of energy inequality will have to read high consumption more carefully.
+
+::: {.callout-note title="What this means in practice"}
+- **For households.** Where you live says a great deal about how much electricity your home is likely to use, mainly because of how homes there are heated and how big they are. Households in off-gas, electrically heated areas face persistently higher consumption, and that position rarely changes from one year to the next.
+- **For fuel poverty.** Low consumption is not always good news. In 2022 the most deprived areas cut least, most plausibly because many of their households had little left to cut. Electricity use on its own cannot tell efficiency apart from hardship, so it should be read alongside income, heating type and housing condition.
+- **For local councils.** Three quarters of the inequality lies *inside* local authorities, and the most unequal authorities are rural ones where electrically heated villages sit beside gas-heated towns. Programmes such as retrofit grants and bill support will reach the right homes more often if they are targeted at neighbourhood (LSOA or MSOA) level, using heating fuel and dwelling size.
+- **For national energy policy.** Shocks such as the pandemic and the price crisis moved every area's consumption together without changing which areas were most exposed, and the gaps between areas are not closing on their own. Lasting change is more likely to come from changing the heating and fabric of the housing stock than from waiting for the gaps to narrow.
+- **For the heat-pump transition.** Areas with more heat pumps are already drifting upwards in electricity use. That is the expected and welcome sign of homes switching from gas or oil to electric heating, not of waste. Measures that treat high electricity use as a marker of affluence or inefficiency will become less reliable as the transition proceeds.
+
+All of these are conclusions about areas. They describe which kinds of place use more or less electricity and how that changes, not the behaviour of any individual household.
+:::
 
 ### Limitations
 
@@ -510,7 +600,7 @@ The dynamics add a second message: persistence is self-reinforcing in space. Pla
 - **Meters, not households, and no weather correction.** Economy 7, second homes, communal supplies and estimated readings distort small-area means; part of the year-to-year movement in electricity reflects winter temperatures.
 - **Geography and processing break.** 2010–2014 are converted from 2011 LSOAs and come from an earlier DESNZ system; 2015–2024 is the core period, and the break is quantified.
 - **Short panels for convergence tests.** With *T* = 10–15 and very large *N*, the Phillips–Sul procedure finds many fine strata; club ordering is robust, club boundaries are not.
-- **Cross-sectional covariates.** Census 2021 baselines say which kinds of place changed more, not why; mechanisms such as the timing of heat-pump installations or retrofit are not observed. EPC data cover only dwellings sold, let or built since 2008 [@hardy2019analysis].
+- **Cross-sectional covariates.** Census 2021 baselines say which kinds of place changed more, not why; mechanisms such as the timing of heat-pump installations or retrofit are not observed. EPC data cover only dwellings sold, let or built since 2008, and the register contains recording errors [@mhclg2025epc; @hardy2019analysis].
 - **Local-model complexity.** GWR and MGWR use about 1,000–1,350 effective parameters and local collinearity is highest in inner London; their maps describe where associations differ rather than giving precise local estimates.
 
 ## Conclusion
