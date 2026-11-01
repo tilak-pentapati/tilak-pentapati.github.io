@@ -89,7 +89,7 @@ No study has described the full LSOA-level distribution of domestic electricity 
 
 ### Sources
 
-All inputs are official statistics released under the Open Government Licence v3.0 (@tbl-sources). The outcome is the mean annual domestic electricity consumption per meter (kWh) for each LSOA, taken from the DESNZ release of December 2025, which covers 2010–2024 [@desnz2025lsoa]. Domestic gas consumption from the same release, which DESNZ weather-corrects, is used as a comparison. Covariates come from Census 2021 (central-heating type, dwelling type, rooms, household size, tenure, age), the Index of Multiple Deprivation 2019 for England and the Welsh equivalent (ranked within country), the ONS Rural–Urban Classification 2021, ONS mid-year population estimates and the ONS summary of EPC energy efficiency by MSOA [@mhclg2025epc].
+All inputs are official statistics released under the Open Government Licence v3.0 (@tbl-sources); the LSOA, MSOA and local authority boundaries contain OS data © Crown copyright and database right. The outcome is the mean annual domestic electricity consumption per meter (kWh) for each LSOA, taken from the DESNZ release of December 2025, which covers 2010–2024 [@desnz2025lsoa]. Domestic gas consumption from the same release, which DESNZ weather-corrects, is used as a comparison. Covariates come from Census 2021 (central-heating type, dwelling type, rooms, household size, tenure, age), the Index of Multiple Deprivation 2019 for England and the Welsh equivalent (ranked within country), the ONS Rural–Urban Classification 2021, ONS mid-year population estimates and the ONS summary of EPC energy efficiency by MSOA [@mhclg2025epc].
 
 ::: {.table-responsive}
 
@@ -124,7 +124,7 @@ t = t[["year", "mean_meter_weighted", "median", "cv", "skewness_log", "p90_p10",
 t.columns = ["Year", "Mean (kWh)", "Median LSOA (kWh)", "CV", "Skew (log)", "P90/P10", "Moran's I"]
 t["Mean (kWh)"] = t["Mean (kWh)"].round(0).astype(int)
 t["Median LSOA (kWh)"] = t["Median LSOA (kWh)"].round(0).astype(int)
-show_table(t)
+show_table(t, floatfmt=(".0f", ",.0f", ",.0f", ".3f", ".3f", ".3f", ".3f"))
 ```
 
 Mean consumption fell by a fifth, from 4,148 kWh per meter in 2010 to 3,343 kWh in 2024 (@tbl-national). The two exceptions are 2020, when lockdowns pushed it up by 4.9%, and 2022, when the price crisis cut it by 8.8%. The coefficient of variation and the log skewness both rose, so the distribution became wider and more right-skewed while its centre fell.
@@ -516,10 +516,6 @@ The dynamics add a second message: persistence is self-reinforcing in space. Pla
 ## Conclusion
 
 Using fifteen years of meter-based statistics for every neighbourhood in England and Wales, this study shows that domestic electricity consumption is spatially clustered, mostly unequal within rather than between local authorities, highly persistent, conditioned by neighbourhood context and stratified into ordered, spatially concentrated convergence clubs rather than converging. Housing and heating composition explains most of the cross-section, but its associations operate at distinct spatial scales. The pandemic and the 2022 price crisis shifted the whole distribution without lasting change to the relative positions of places, and the electrification of heat is emerging as a new source of divergence. Future work should add regional degree-days to separate weather from behaviour, link small-area heat-pump, solar and EV installation records, and extend the analysis to gas and total energy to describe the full transition in household demand.
-
-## Data and code availability {.unnumbered}
-
-All data are official statistics from DESNZ, ONS, MHCLG and the Welsh Government under the Open Government Licence v3.0 (Contains OS data © Crown copyright and database right). The full pipeline is in this project's folder: `prep/` downloads and harmonises the raw data (`run_all.py`, with a source and checksum manifest), `analysis/` runs the dynamics (`run_dynamics.py`) and models (`b_run_models.py`), and `analysis/c_page_figures.py` prepares the figures shown here. The code cells on this page read the cached result tables those scripts write.
 
 ## References {.unnumbered}
 

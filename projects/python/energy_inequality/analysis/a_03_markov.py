@@ -278,6 +278,28 @@ def heat(ax, P, title, names=None, fmt="{:.2f}"):
         s.set_visible(False)
 
 
+def shorrocks_figure(a, b, d):
+    """Annual Shorrocks index for LSOAs, LSOAs excl. split and LADs (rows of ``markov_annual``)."""
+    fig, ax = plt.subplots(figsize=(5.2, 3.9))
+    ax.plot(a.to_year, a.shorrocks, color=CAT[0], marker="o", ms=3.5, label="LSOAs")
+    ax.plot(b.to_year, b.shorrocks, color=CAT[0], ls=":", lw=1.5, label="LSOAs excl. split")
+    ax.plot(d.to_year, d.shorrocks, color=CAT[1], marker="s", ms=3.5, ls="--", label="LADs")
+    ax.set_ylabel("Shorrocks mobility index")
+    ax.set_title("Year-to-year quintile mobility", pad=10)
+    ax.set_xticks(range(2011, 2025, 2))
+    # headroom above the data holds the event labels, inside the axes and clear of the title
+    lo, hi = ax.get_ylim()
+    ax.set_ylim(lo, hi + 0.18 * (hi - lo))
+    for t, lab, ha in ((2015, "2015 break", "left"), (2020, "COVID-19", "right"), (2022, "price crisis", "left")):
+        ax.axvline(t, color=AXIS, lw=0.8, zorder=0)
+        ax.text(t + (0.15 if ha == "left" else -0.15), 0.97, lab, transform=ax.get_xaxis_transform(),
+                fontsize=8.5, color=INK2, ha=ha, va="top")
+    ax.legend(fontsize=9, loc="upper center", bbox_to_anchor=(0.5, -0.12), ncol=3, frameon=False,
+              handlelength=2.2, columnspacing=1.2)
+    fig.tight_layout()
+    return savefig(fig, "markov_shorrocks_annual")
+
+
 def figures(LS, LD, SM, annual_core_noSX, rose_objs, P5):
     files = []
     fig, ax = plt.subplots(figsize=(4.6, 4.4))
@@ -298,23 +320,10 @@ def figures(LS, LD, SM, annual_core_noSX, rose_objs, P5):
     fig.tight_layout()
     files += savefig(fig, "markov_spatial_lsoa_extremes")
 
-    fig, ax = plt.subplots(figsize=(5.2, 3.6))
     a = pd.DataFrame([{k: v for k, v in x.items() if k != "T"} for x in LS["annual"]])
     b = pd.DataFrame([{k: v for k, v in x.items() if k != "T"} for x in annual_core_noSX])
     d = pd.DataFrame([{k: v for k, v in x.items() if k != "T"} for x in LD["annual"]])
-    ax.plot(a.to_year, a.shorrocks, color=CAT[0], marker="o", ms=3.5, label="LSOAs")
-    ax.plot(b.to_year, b.shorrocks, color=CAT[0], ls=":", lw=1.5, label="LSOAs excl. split")
-    ax.plot(d.to_year, d.shorrocks, color=CAT[1], marker="s", ms=3.5, ls="--", label="LADs")
-    ax.set_ylabel("Shorrocks mobility index")
-    ax.set_title("Year-to-year quintile mobility")
-    ax.set_xticks(range(2011, 2025, 2))
-    ax.legend(fontsize=9, loc="center left", bbox_to_anchor=(0.0, 0.62))
-    for t, lab in ((2015, "2015 break"), (2020, "COVID-19"), (2022, "price crisis")):
-        ax.axvline(t, color=AXIS, lw=0.8, zorder=0)
-        ax.text(t, 0.995, lab, transform=ax.get_xaxis_transform(), fontsize=8.5, color=INK2, ha="center",
-                va="bottom")
-    fig.tight_layout()
-    files += savefig(fig, "markov_shorrocks_annual")
+    files += shorrocks_figure(a, b, d)
 
     fig, ax = plt.subplots(figsize=(5.2, 4.8))
     heat(ax, P5, "LISA Markov (FDR clusters), 2015–24", names=["HH", "LH", "LL", "HL", "ns"])
