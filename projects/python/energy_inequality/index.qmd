@@ -3,7 +3,7 @@ title: "Spatial Inequality and Distribution Dynamics of Domestic Electricity Con
 description: "A neighbourhood-scale study of 35,672 LSOAs over fifteen years: spatial clustering, inequality decomposition, spatial Markov chains, place-mobility decomposition, Phillips–Sul convergence clubs and multiscale geographically weighted models of what drives domestic electricity use per meter."
 date: "2024-09-01"
 image: thumbnail.svg
-categories: [Python, Spatial Analysis, Distribution Dynamics, Spatial Econometrics, Energy]
+categories: [Python, Spatial Analysis, Spatial Econometrics, Energy]
 bibliography: references.bib
 toc-expand: 1
 ---
