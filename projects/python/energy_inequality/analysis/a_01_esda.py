@@ -199,7 +199,7 @@ def moran_figure(M):
     ax.text(2014.6, ax.get_ylim()[0], " geography/system break", color=INK2, fontsize=9, va="bottom")
     ax.set_ylabel("Global Moran's I")
     ax.set_title("Spatial autocorrelation of LSOA consumption")
-    ax.legend(fontsize=9, loc="center left", bbox_to_anchor=(0, 0.42))
+    ax.legend(fontsize=9, loc="center left", bbox_to_anchor=(0.52, 0.42))  # right of the break line
     ax.set_xticks(range(2010, 2025, 2))
     fig.tight_layout()
     return savefig(fig, "esda_moran_series")

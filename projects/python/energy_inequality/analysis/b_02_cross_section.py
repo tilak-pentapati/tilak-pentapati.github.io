@@ -155,7 +155,9 @@ def bandwidth_figure(mg, xs, name, title):
     ax.set_yticks(np.arange(len(bw)), [bmod.nice(t) for t in bw.index])
     ax.set_xscale("log")
     ax.axvline(len(mg["ids"]), color=bc.INK2, lw=0.9, ls="--")
-    ax.text(len(mg["ids"]), len(bw) - 0.4, " global", fontsize=10, color=bc.INK2, va="top", ha="right")
+    # a free row above the top bar holds the "global" label clear of the bars and their values
+    ax.set_ylim(-0.6, len(bw) + 0.2)
+    ax.text(len(mg["ids"]) / 1.04, len(bw) - 0.1, "global", fontsize=10, color=bc.INK2, va="top", ha="right")
     for k, v in enumerate(bw.values):
         ax.text(v * 1.05, k, f"{int(v):,}", va="center", fontsize=10.5, color=bc.INK)
     ax.set_xlabel("Bandwidth (nearest MSOAs, log scale)")

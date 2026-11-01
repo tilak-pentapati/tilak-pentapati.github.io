@@ -461,7 +461,6 @@ window.Quarto = {
   <li><a href="#limitations" id="toc-limitations" class="nav-link" data-scroll-target="#limitations"><span class="header-section-number">6.1</span> Limitations</a></li>
   </ul></li>
   <li><a href="#conclusion" id="toc-conclusion" class="nav-link" data-scroll-target="#conclusion"><span class="header-section-number">7</span> Conclusion</a></li>
-  <li><a href="#data-and-code-availability" id="toc-data-and-code-availability" class="nav-link" data-scroll-target="#data-and-code-availability">Data and code availability</a></li>
   <li><a href="#references" id="toc-references" class="nav-link" data-scroll-target="#references">References</a></li>
   </ul>
 <div class="toc-actions"><ul><li><a href="https://github.com/tilak-pentapati/tilak-pentapati.github.io/blob/main/projects/python/energy_inequality/index.qmd" class="toc-action"><i class="bi bi-github"></i>View source</a></li><li><a href="https://github.com/tilak-pentapati/tilak-pentapati.github.io/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div><div class="quarto-code-links"><h2>Code Links</h2><ul><li><a href="https://github.com/tilak-pentapati/tilak-pentapati.github.io/blob/main/projects/python/energy_inequality/index.qmd"><i class="bi bi-github"></i>Page source (.qmd)</a></li><li><a href="https://github.com/tilak-pentapati/tilak-pentapati.github.io/tree/main/projects/python/energy_inequality"><i class="bi bi-code-square"></i>Data and analysis pipeline</a></li></ul></div></nav>
@@ -673,7 +672,7 @@ Code
 <h2 data-number="3" class="anchored" data-anchor-id="data"><span class="header-section-number">3</span> Data</h2>
 <section id="sources" class="level3" data-number="3.1">
 <h3 data-number="3.1" class="anchored" data-anchor-id="sources"><span class="header-section-number">3.1</span> Sources</h3>
-<p>All inputs are official statistics released under the Open Government Licence v3.0 (<a href="#tbl-sources" class="quarto-xref">Table&nbsp;1</a>). The outcome is the mean annual domestic electricity consumption per meter (kWh) for each LSOA, taken from the DESNZ release of December 2025, which covers 2010–2024 <span class="citation" data-cites="desnz2025lsoa"><a href="#ref-desnz2025lsoa" role="doc-biblioref">[1]</a></span>. Domestic gas consumption from the same release, which DESNZ weather-corrects, is used as a comparison. Covariates come from Census 2021 (central-heating type, dwelling type, rooms, household size, tenure, age), the Index of Multiple Deprivation 2019 for England and the Welsh equivalent (ranked within country), the ONS Rural–Urban Classification 2021, ONS mid-year population estimates and the ONS summary of EPC energy efficiency by MSOA <span class="citation" data-cites="mhclg2025epc"><a href="#ref-mhclg2025epc" role="doc-biblioref">[24]</a></span>.</p>
+<p>All inputs are official statistics released under the Open Government Licence v3.0 (<a href="#tbl-sources" class="quarto-xref">Table&nbsp;1</a>); the LSOA, MSOA and local authority boundaries contain OS data © Crown copyright and database right. The outcome is the mean annual domestic electricity consumption per meter (kWh) for each LSOA, taken from the DESNZ release of December 2025, which covers 2010–2024 <span class="citation" data-cites="desnz2025lsoa"><a href="#ref-desnz2025lsoa" role="doc-biblioref">[1]</a></span>. Domestic gas consumption from the same release, which DESNZ weather-corrects, is used as a comparison. Covariates come from Census 2021 (central-heating type, dwelling type, rooms, household size, tenure, age), the Index of Multiple Deprivation 2019 for England and the Welsh equivalent (ranked within country), the ONS Rural–Urban Classification 2021, ONS mid-year population estimates and the ONS summary of EPC energy efficiency by MSOA <span class="citation" data-cites="mhclg2025epc"><a href="#ref-mhclg2025epc" role="doc-biblioref">[24]</a></span>.</p>
 <div class="table-responsive">
 <div id="tbl-sources" class="quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-tbl figure">
@@ -766,7 +765,7 @@ Table&nbsp;1: Data sources.
 <span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>t.columns <span class="op">=</span> [<span class="st">"Year"</span>, <span class="st">"Mean (kWh)"</span>, <span class="st">"Median LSOA (kWh)"</span>, <span class="st">"CV"</span>, <span class="st">"Skew (log)"</span>, <span class="st">"P90/P10"</span>, <span class="st">"Moran's I"</span>]</span>
 <span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>t[<span class="st">"Mean (kWh)"</span>] <span class="op">=</span> t[<span class="st">"Mean (kWh)"</span>].<span class="bu">round</span>(<span class="dv">0</span>).astype(<span class="bu">int</span>)</span>
 <span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>t[<span class="st">"Median LSOA (kWh)"</span>] <span class="op">=</span> t[<span class="st">"Median LSOA (kWh)"</span>].<span class="bu">round</span>(<span class="dv">0</span>).astype(<span class="bu">int</span>)</span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>show_table(t)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>show_table(t, floatfmt<span class="op">=</span>(<span class="st">".0f"</span>, <span class="st">",.0f"</span>, <span class="st">",.0f"</span>, <span class="st">".3f"</span>, <span class="st">".3f"</span>, <span class="st">".3f"</span>, <span class="st">".3f"</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div id="tbl-national" class="cell quarto-float quarto-figure quarto-figure-center anchored" data-execution_count="2">
 <figure class="quarto-float quarto-float-tbl figure">
@@ -777,7 +776,7 @@ Table&nbsp;2: National trajectory: meter-weighted mean, median LSOA mean and dis
 <div class="cell-output cell-output-display cell-output-markdown">
 <table class="cell caption-top table table-sm table-striped small">
 <colgroup>
-<col style="width: 11%">
+<col style="width: 9%">
 <col style="width: 15%">
 <col style="width: 23%">
 <col style="width: 7%">
@@ -798,135 +797,135 @@ Table&nbsp;2: National trajectory: meter-weighted mean, median LSOA mean and dis
 </thead>
 <tbody>
 <tr class="odd">
-<td style="text-align: right;">2010.000</td>
-<td style="text-align: right;">4148.000</td>
-<td style="text-align: right;">3970.000</td>
+<td style="text-align: right;">2010</td>
+<td style="text-align: right;">4,148</td>
+<td style="text-align: right;">3,970</td>
 <td style="text-align: right;">0.216</td>
 <td style="text-align: right;">0.839</td>
 <td style="text-align: right;">1.623</td>
 <td style="text-align: right;">0.586</td>
 </tr>
 <tr class="even">
-<td style="text-align: right;">2011.000</td>
-<td style="text-align: right;">4080.000</td>
-<td style="text-align: right;">3911.000</td>
+<td style="text-align: right;">2011</td>
+<td style="text-align: right;">4,080</td>
+<td style="text-align: right;">3,911</td>
 <td style="text-align: right;">0.212</td>
 <td style="text-align: right;">0.866</td>
 <td style="text-align: right;">1.603</td>
 <td style="text-align: right;">0.584</td>
 </tr>
 <tr class="odd">
-<td style="text-align: right;">2012.000</td>
-<td style="text-align: right;">4021.000</td>
-<td style="text-align: right;">3830.000</td>
+<td style="text-align: right;">2012</td>
+<td style="text-align: right;">4,021</td>
+<td style="text-align: right;">3,830</td>
 <td style="text-align: right;">0.223</td>
 <td style="text-align: right;">0.915</td>
 <td style="text-align: right;">1.626</td>
 <td style="text-align: right;">0.584</td>
 </tr>
 <tr class="even">
-<td style="text-align: right;">2013.000</td>
-<td style="text-align: right;">3950.000</td>
-<td style="text-align: right;">3777.000</td>
+<td style="text-align: right;">2013</td>
+<td style="text-align: right;">3,950</td>
+<td style="text-align: right;">3,777</td>
 <td style="text-align: right;">0.215</td>
 <td style="text-align: right;">0.916</td>
 <td style="text-align: right;">1.601</td>
 <td style="text-align: right;">0.589</td>
 </tr>
 <tr class="odd">
-<td style="text-align: right;">2014.000</td>
-<td style="text-align: right;">3946.000</td>
-<td style="text-align: right;">3770.000</td>
+<td style="text-align: right;">2014</td>
+<td style="text-align: right;">3,946</td>
+<td style="text-align: right;">3,770</td>
 <td style="text-align: right;">0.217</td>
 <td style="text-align: right;">0.919</td>
 <td style="text-align: right;">1.605</td>
 <td style="text-align: right;">0.587</td>
 </tr>
 <tr class="even">
-<td style="text-align: right;">2015.000</td>
-<td style="text-align: right;">3945.000</td>
-<td style="text-align: right;">3761.000</td>
+<td style="text-align: right;">2015</td>
+<td style="text-align: right;">3,945</td>
+<td style="text-align: right;">3,761</td>
 <td style="text-align: right;">0.222</td>
 <td style="text-align: right;">0.906</td>
 <td style="text-align: right;">1.614</td>
 <td style="text-align: right;">0.573</td>
 </tr>
 <tr class="odd">
-<td style="text-align: right;">2016.000</td>
-<td style="text-align: right;">3850.000</td>
-<td style="text-align: right;">3658.000</td>
+<td style="text-align: right;">2016</td>
+<td style="text-align: right;">3,850</td>
+<td style="text-align: right;">3,658</td>
 <td style="text-align: right;">0.228</td>
 <td style="text-align: right;">0.918</td>
 <td style="text-align: right;">1.626</td>
 <td style="text-align: right;">0.576</td>
 </tr>
 <tr class="even">
-<td style="text-align: right;">2017.000</td>
-<td style="text-align: right;">3788.000</td>
-<td style="text-align: right;">3585.000</td>
+<td style="text-align: right;">2017</td>
+<td style="text-align: right;">3,788</td>
+<td style="text-align: right;">3,585</td>
 <td style="text-align: right;">0.234</td>
 <td style="text-align: right;">0.993</td>
 <td style="text-align: right;">1.648</td>
 <td style="text-align: right;">0.576</td>
 </tr>
 <tr class="odd">
-<td style="text-align: right;">2018.000</td>
-<td style="text-align: right;">3682.000</td>
-<td style="text-align: right;">3485.000</td>
+<td style="text-align: right;">2018</td>
+<td style="text-align: right;">3,682</td>
+<td style="text-align: right;">3,485</td>
 <td style="text-align: right;">0.235</td>
 <td style="text-align: right;">1.025</td>
 <td style="text-align: right;">1.644</td>
 <td style="text-align: right;">0.577</td>
 </tr>
 <tr class="even">
-<td style="text-align: right;">2019.000</td>
-<td style="text-align: right;">3641.000</td>
-<td style="text-align: right;">3444.000</td>
+<td style="text-align: right;">2019</td>
+<td style="text-align: right;">3,641</td>
+<td style="text-align: right;">3,444</td>
 <td style="text-align: right;">0.236</td>
 <td style="text-align: right;">1.040</td>
 <td style="text-align: right;">1.645</td>
 <td style="text-align: right;">0.582</td>
 </tr>
 <tr class="odd">
-<td style="text-align: right;">2020.000</td>
-<td style="text-align: right;">3818.000</td>
-<td style="text-align: right;">3611.000</td>
+<td style="text-align: right;">2020</td>
+<td style="text-align: right;">3,818</td>
+<td style="text-align: right;">3,611</td>
 <td style="text-align: right;">0.241</td>
 <td style="text-align: right;">0.996</td>
 <td style="text-align: right;">1.667</td>
 <td style="text-align: right;">0.584</td>
 </tr>
 <tr class="even">
-<td style="text-align: right;">2021.000</td>
-<td style="text-align: right;">3572.000</td>
-<td style="text-align: right;">3364.000</td>
+<td style="text-align: right;">2021</td>
+<td style="text-align: right;">3,572</td>
+<td style="text-align: right;">3,364</td>
 <td style="text-align: right;">0.244</td>
 <td style="text-align: right;">1.049</td>
 <td style="text-align: right;">1.675</td>
 <td style="text-align: right;">0.583</td>
 </tr>
 <tr class="odd">
-<td style="text-align: right;">2022.000</td>
-<td style="text-align: right;">3256.000</td>
-<td style="text-align: right;">3056.000</td>
+<td style="text-align: right;">2022</td>
+<td style="text-align: right;">3,256</td>
+<td style="text-align: right;">3,056</td>
 <td style="text-align: right;">0.241</td>
 <td style="text-align: right;">1.173</td>
 <td style="text-align: right;">1.645</td>
 <td style="text-align: right;">0.574</td>
 </tr>
 <tr class="even">
-<td style="text-align: right;">2023.000</td>
-<td style="text-align: right;">3317.000</td>
-<td style="text-align: right;">3132.000</td>
+<td style="text-align: right;">2023</td>
+<td style="text-align: right;">3,317</td>
+<td style="text-align: right;">3,132</td>
 <td style="text-align: right;">0.233</td>
 <td style="text-align: right;">1.125</td>
 <td style="text-align: right;">1.628</td>
 <td style="text-align: right;">0.573</td>
 </tr>
 <tr class="odd">
-<td style="text-align: right;">2024.000</td>
-<td style="text-align: right;">3343.000</td>
-<td style="text-align: right;">3135.000</td>
+<td style="text-align: right;">2024</td>
+<td style="text-align: right;">3,343</td>
+<td style="text-align: right;">3,135</td>
 <td style="text-align: right;">0.246</td>
 <td style="text-align: right;">1.152</td>
 <td style="text-align: right;">1.663</td>
@@ -2429,10 +2428,6 @@ Table&nbsp;10: Hypotheses and verdicts.
 <h2 data-number="7" class="anchored" data-anchor-id="conclusion"><span class="header-section-number">7</span> Conclusion</h2>
 <p>Using fifteen years of meter-based statistics for every neighbourhood in England and Wales, this study shows that domestic electricity consumption is spatially clustered, mostly unequal within rather than between local authorities, highly persistent, conditioned by neighbourhood context and stratified into ordered, spatially concentrated convergence clubs rather than converging. Housing and heating composition explains most of the cross-section, but its associations operate at distinct spatial scales. The pandemic and the 2022 price crisis shifted the whole distribution without lasting change to the relative positions of places, and the electrification of heat is emerging as a new source of divergence. Future work should add regional degree-days to separate weather from behaviour, link small-area heat-pump, solar and EV installation records, and extend the analysis to gas and total energy to describe the full transition in household demand.</p>
 </section>
-<section id="data-and-code-availability" class="level2 unnumbered">
-<h2 class="unnumbered anchored" data-anchor-id="data-and-code-availability">Data and code availability</h2>
-<p>All data are official statistics from DESNZ, ONS, MHCLG and the Welsh Government under the Open Government Licence v3.0 (Contains OS data © Crown copyright and database right). The full pipeline is in this project’s folder: <code>prep/</code> downloads and harmonises the raw data (<code>run_all.py</code>, with a source and checksum manifest), <code>analysis/</code> runs the dynamics (<code>run_dynamics.py</code>) and models (<code>b_run_models.py</code>), and <code>analysis/c_page_figures.py</code> prepares the figures shown here. The code cells on this page read the cached result tables those scripts write.</p>
-</section>
 <section id="references" class="level2 unnumbered">
 <h2 class="unnumbered anchored" data-anchor-id="references">References</h2>
 <div id="refs" class="references csl-bib-body" data-entry-spacing="0" role="list">
@@ -3287,7 +3282,7 @@ window._ojs.runtime.interpretFromScriptTags();
 <span id="cb13-91"><a href="#cb13-91" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb13-92"><a href="#cb13-92" aria-hidden="true" tabindex="-1"></a><span class="fu">### Sources</span></span>
 <span id="cb13-93"><a href="#cb13-93" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-94"><a href="#cb13-94" aria-hidden="true" tabindex="-1"></a>All inputs are official statistics released under the Open Government Licence v3.0 (@tbl-sources). The outcome is the mean annual domestic electricity consumption per meter (kWh) for each LSOA, taken from the DESNZ release of December 2025, which covers 2010–2024 <span class="co">[</span><span class="ot">@desnz2025lsoa</span><span class="co">]</span>. Domestic gas consumption from the same release, which DESNZ weather-corrects, is used as a comparison. Covariates come from Census 2021 (central-heating type, dwelling type, rooms, household size, tenure, age), the Index of Multiple Deprivation 2019 for England and the Welsh equivalent (ranked within country), the ONS Rural–Urban Classification 2021, ONS mid-year population estimates and the ONS summary of EPC energy efficiency by MSOA <span class="co">[</span><span class="ot">@mhclg2025epc</span><span class="co">]</span>.</span>
+<span id="cb13-94"><a href="#cb13-94" aria-hidden="true" tabindex="-1"></a>All inputs are official statistics released under the Open Government Licence v3.0 (@tbl-sources); the LSOA, MSOA and local authority boundaries contain OS data © Crown copyright and database right. The outcome is the mean annual domestic electricity consumption per meter (kWh) for each LSOA, taken from the DESNZ release of December 2025, which covers 2010–2024 <span class="co">[</span><span class="ot">@desnz2025lsoa</span><span class="co">]</span>. Domestic gas consumption from the same release, which DESNZ weather-corrects, is used as a comparison. Covariates come from Census 2021 (central-heating type, dwelling type, rooms, household size, tenure, age), the Index of Multiple Deprivation 2019 for England and the Welsh equivalent (ranked within country), the ONS Rural–Urban Classification 2021, ONS mid-year population estimates and the ONS summary of EPC energy efficiency by MSOA <span class="co">[</span><span class="ot">@mhclg2025epc</span><span class="co">]</span>.</span>
 <span id="cb13-95"><a href="#cb13-95" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb13-96"><a href="#cb13-96" aria-hidden="true" tabindex="-1"></a>::: {.table-responsive}</span>
 <span id="cb13-97"><a href="#cb13-97" aria-hidden="true" tabindex="-1"></a></span>
@@ -3322,7 +3317,7 @@ window._ojs.runtime.interpretFromScriptTags();
 <span id="cb13-128"><a href="#cb13-128" aria-hidden="true" tabindex="-1"></a>t.columns <span class="op">=</span> [<span class="st">"Year"</span>, <span class="st">"Mean (kWh)"</span>, <span class="st">"Median LSOA (kWh)"</span>, <span class="st">"CV"</span>, <span class="st">"Skew (log)"</span>, <span class="st">"P90/P10"</span>, <span class="st">"Moran's I"</span>]</span>
 <span id="cb13-129"><a href="#cb13-129" aria-hidden="true" tabindex="-1"></a>t[<span class="st">"Mean (kWh)"</span>] <span class="op">=</span> t[<span class="st">"Mean (kWh)"</span>].<span class="bu">round</span>(<span class="dv">0</span>).astype(<span class="bu">int</span>)</span>
 <span id="cb13-130"><a href="#cb13-130" aria-hidden="true" tabindex="-1"></a>t[<span class="st">"Median LSOA (kWh)"</span>] <span class="op">=</span> t[<span class="st">"Median LSOA (kWh)"</span>].<span class="bu">round</span>(<span class="dv">0</span>).astype(<span class="bu">int</span>)</span>
-<span id="cb13-131"><a href="#cb13-131" aria-hidden="true" tabindex="-1"></a>show_table(t)</span>
+<span id="cb13-131"><a href="#cb13-131" aria-hidden="true" tabindex="-1"></a>show_table(t, floatfmt<span class="op">=</span>(<span class="st">".0f"</span>, <span class="st">",.0f"</span>, <span class="st">",.0f"</span>, <span class="st">".3f"</span>, <span class="st">".3f"</span>, <span class="st">".3f"</span>, <span class="st">".3f"</span>))</span>
 <span id="cb13-132"><a href="#cb13-132" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
 <span id="cb13-133"><a href="#cb13-133" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb13-134"><a href="#cb13-134" aria-hidden="true" tabindex="-1"></a>Mean consumption fell by a fifth, from 4,148 kWh per meter in 2010 to 3,343 kWh in 2024 (@tbl-national). The two exceptions are 2020, when lockdowns pushed it up by 4.9%, and 2022, when the price crisis cut it by 8.8%. The coefficient of variation and the log skewness both rose, so the distribution became wider and more right-skewed while its centre fell.</span>
@@ -3715,14 +3710,10 @@ window._ojs.runtime.interpretFromScriptTags();
 <span id="cb13-541"><a href="#cb13-541" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb13-542"><a href="#cb13-542" aria-hidden="true" tabindex="-1"></a>Using fifteen years of meter-based statistics for every neighbourhood in England and Wales, this study shows that domestic electricity consumption is spatially clustered, mostly unequal within rather than between local authorities, highly persistent, conditioned by neighbourhood context and stratified into ordered, spatially concentrated convergence clubs rather than converging. Housing and heating composition explains most of the cross-section, but its associations operate at distinct spatial scales. The pandemic and the 2022 price crisis shifted the whole distribution without lasting change to the relative positions of places, and the electrification of heat is emerging as a new source of divergence. Future work should add regional degree-days to separate weather from behaviour, link small-area heat-pump, solar and EV installation records, and extend the analysis to gas and total energy to describe the full transition in household demand.</span>
 <span id="cb13-543"><a href="#cb13-543" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-544"><a href="#cb13-544" aria-hidden="true" tabindex="-1"></a><span class="fu">## Data and code availability {.unnumbered}</span></span>
+<span id="cb13-544"><a href="#cb13-544" aria-hidden="true" tabindex="-1"></a><span class="fu">## References {.unnumbered}</span></span>
 <span id="cb13-545"><a href="#cb13-545" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-546"><a href="#cb13-546" aria-hidden="true" tabindex="-1"></a>All data are official statistics from DESNZ, ONS, MHCLG and the Welsh Government under the Open Government Licence v3.0 (Contains OS data © Crown copyright and database right). The full pipeline is in this project's folder: <span class="in">`prep/`</span> downloads and harmonises the raw data (<span class="in">`run_all.py`</span>, with a source and checksum manifest), <span class="in">`analysis/`</span> runs the dynamics (<span class="in">`run_dynamics.py`</span>) and models (<span class="in">`b_run_models.py`</span>), and <span class="in">`analysis/c_page_figures.py`</span> prepares the figures shown here. The code cells on this page read the cached result tables those scripts write.</span>
-<span id="cb13-547"><a href="#cb13-547" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-548"><a href="#cb13-548" aria-hidden="true" tabindex="-1"></a><span class="fu">## References {.unnumbered}</span></span>
-<span id="cb13-549"><a href="#cb13-549" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-550"><a href="#cb13-550" aria-hidden="true" tabindex="-1"></a>::: {#refs}</span>
-<span id="cb13-551"><a href="#cb13-551" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb13-546"><a href="#cb13-546" aria-hidden="true" tabindex="-1"></a>::: {#refs}</span>
+<span id="cb13-547"><a href="#cb13-547" aria-hidden="true" tabindex="-1"></a>:::</span>
 </code></pre></div><button title="Copy to Clipboard" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></div>
 </div></div></div></div></div>
 </div> <!-- /content -->
